@@ -16,6 +16,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -95,6 +100,77 @@ class LocalBlobStorageIntegrationTest {
 
         try (BlobResource resource = storage.get("overwrite/key")) {
             assertArrayEquals("second".getBytes(StandardCharsets.UTF_8), readAll(resource.content()));
+        }
+    }
+
+    @Test
+    void putSupportsMaximumLengthFilename() throws IOException {
+        properties.setRootDirectory(tempRoot);
+        LocalBlobStorage storage = new LocalBlobStorage(properties);
+        String objectKey = "l".repeat(255);
+        byte[] payload = "long-filename-content".getBytes(StandardCharsets.UTF_8);
+
+        storage.put(request(objectKey, payload));
+
+        assertArrayEquals(payload, Files.readAllBytes(tempRoot.resolve(objectKey)));
+    }
+
+    @Test
+    void concurrentSameKeyPutsFromSeparateInstancesPublishCompleteBytes() throws Exception {
+        LocalBlobStorageProperties firstProperties = new LocalBlobStorageProperties();
+        firstProperties.setRootDirectory(tempRoot);
+        LocalBlobStorageProperties secondProperties = new LocalBlobStorageProperties();
+        secondProperties.setRootDirectory(tempRoot);
+        LocalBlobStorage firstStorage = new LocalBlobStorage(firstProperties);
+        LocalBlobStorage secondStorage = new LocalBlobStorage(secondProperties);
+        byte[] firstPayload = "first-concurrent-payload".repeat(4_096)
+                .getBytes(StandardCharsets.UTF_8);
+        byte[] secondPayload = "second-concurrent-payload".repeat(4_096)
+                .getBytes(StandardCharsets.UTF_8);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<StoredBlob> first = executor.submit(() -> {
+                await(start);
+                return firstStorage.put(request("same/key", firstPayload));
+            });
+            Future<StoredBlob> second = executor.submit(() -> {
+                await(start);
+                return secondStorage.put(request("same/key", secondPayload));
+            });
+            start.countDown();
+
+            assertDoesNotThrow(() -> first.get(10L, TimeUnit.SECONDS));
+            assertDoesNotThrow(() -> second.get(10L, TimeUnit.SECONDS));
+
+            byte[] published = Files.readAllBytes(tempRoot.resolve("same/key"));
+            assertTrue(java.util.Arrays.equals(firstPayload, published)
+                    || java.util.Arrays.equals(secondPayload, published));
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void failedPutPreservesExistingTargetAndCleansTemporaryPublication() throws IOException {
+        properties.setRootDirectory(tempRoot);
+        LocalBlobStorage storage = new LocalBlobStorage(properties);
+        byte[] existing = "existing-complete-content".getBytes(StandardCharsets.UTF_8);
+        Files.createDirectories(tempRoot.resolve("failure"));
+        Files.write(tempRoot.resolve("failure/key"), existing);
+        FailingInputStream failingContent = new FailingInputStream(
+                "replacement-that-must-not-be-published".getBytes(StandardCharsets.UTF_8));
+
+        assertThrows(com.edem.blobhelper.core.exception.BlobStorageException.class,
+                () -> storage.put(new PutBlobRequest(
+                        "failure/key", failingContent, 100L,
+                        "application/octet-stream", null, null)));
+
+        assertTrue(failingContent.closed);
+        assertArrayEquals(existing, Files.readAllBytes(tempRoot.resolve("failure/key")));
+        try (var files = Files.list(tempRoot.resolve("failure"))) {
+            assertEquals(java.util.List.of(tempRoot.resolve("failure/key")), files.toList());
         }
     }
 
@@ -182,6 +258,36 @@ class LocalBlobStorageIntegrationTest {
             return stream.readAllBytes();
         } catch (IOException failure) {
             throw new IllegalStateException(failure);
+        }
+    }
+
+    private static void await(CountDownLatch start) throws InterruptedException {
+        if (!start.await(5L, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("Timed out waiting for concurrent put start");
+        }
+    }
+
+    private static final class FailingInputStream extends InputStream {
+
+        private final byte[] bytes;
+        private int position;
+        private boolean closed;
+
+        private FailingInputStream(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (position++ >= bytes.length / 2) {
+                throw new IOException("simulated source failure");
+            }
+            return bytes[position - 1] & 0xff;
+        }
+
+        @Override
+        public void close() {
+            closed = true;
         }
     }
 }

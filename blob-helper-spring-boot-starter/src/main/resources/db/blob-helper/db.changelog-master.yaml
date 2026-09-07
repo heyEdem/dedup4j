@@ -1,0 +1,3 @@
+databaseChangeLog:
+  - include:
+      file: db/blob-helper/changes/001-create-asset-content.yaml

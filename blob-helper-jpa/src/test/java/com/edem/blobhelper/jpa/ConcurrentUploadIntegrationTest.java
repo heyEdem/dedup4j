@@ -81,8 +81,15 @@ class ConcurrentUploadIntegrationTest {
             }
 
             entityManager.getTransaction().begin();
-            AssetContent content = new AssetContentMutationService(entityManager)
-                    .createOrRetain(newContent());
+            AssetContent candidate = newContent();
+            AssetContent content;
+            try {
+                content = new AssetContentMutationService(entityManager).createOrRetain(candidate);
+            } catch (DuplicateContentIdentityException race) {
+                entityManager.getTransaction().rollback();
+                entityManager.getTransaction().begin();
+                content = new AssetContentMutationService(entityManager).createOrRetain(candidate);
+            }
             entityManager.getTransaction().commit();
             return content.getId();
         } catch (RuntimeException | Error failure) {

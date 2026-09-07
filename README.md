@@ -84,8 +84,38 @@ before creating a default client. An application `BlobStorage` bean replaces
 the provider defaults entirely. A supported provider selection is required
 even with custom storage, and multiple storage beans fail startup. Startup
 constructs clients without contacting storage; successful startup does not
-verify cloud access. These settings configure storage only; automatic JPA
-and upload-service wiring is covered separately by PLAN-011.
+verify cloud access.
+
+The starter uses the application's `DataSource`, JPA entity manager, and Spring
+transaction manager, and automatically supplies `BlobDeduplicationService`
+and its internal collaborators. No Blob Helper configuration class is needed.
+Each collaborator can be replaced with an application bean of the same type.
+The consumer supplies its database driver and connection configuration; H2 is
+not a runtime dependency of the starter.
+
+`blob-helper.persistence.initialize-schema` controls the packaged Liquibase
+migration:
+
+| Mode | Behavior |
+|---|---|
+| `embedded` (default) | Initialize supported embedded databases; validate existing schema on external databases. |
+| `always` | Explicitly authorize initialization on the consumer database. |
+| `never` | Validate existing schema without running Blob Helper migrations. |
+
+The migration is packaged at
+`classpath:db/blob-helper/db.changelog-master.yaml`. It creates
+`blob_helper_asset_content` and uses separate
+`BLOB_HELPER_DATABASE_CHANGELOG` / `BLOB_HELPER_DATABASE_CHANGELOG_LOCK`
+tracking tables. Missing schema causes a startup error with migration guidance.
+The initial changelog does not transfer data from the earlier
+`blob_asset_content` table; existing installations must migrate that metadata
+as part of their database rollout.
+
+The auto-configured service runs each operation in a new Spring metadata
+transaction. A concurrent identity conflict rolls back before a fresh
+transaction retains the winning row, without replaying the input stream or
+writing storage again during recovery. These transactions do not include the
+application's logical records or make object storage and the database atomic.
 
 The optional management module exposes local read-only operational data and
 self-registers instances with the standalone dashboard. The dashboard polls

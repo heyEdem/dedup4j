@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.util.unit.DataSize;
+import com.edem.blobhelper.autoconfigure.persistence.SchemaInitialization;
 
 import java.util.Map;
 import java.net.URI;
@@ -46,6 +47,29 @@ class BlobHelperPropertiesTest {
         BlobHelperProperties properties = new BlobHelperProperties();
 
         assertFalse(properties.getCleanup().isReconciliationEnabled());
+    }
+
+    @Test
+    void bindsSchemaInitializationModesWithRelaxedNames() {
+        assertEquals(SchemaInitialization.ALWAYS, bindSchemaMode("always"));
+        assertEquals(SchemaInitialization.NEVER, bindSchemaMode("never"));
+        assertEquals(SchemaInitialization.EMBEDDED, bindSchemaMode("embedded"));
+    }
+
+    @Test
+    void initializesSchemaForEmbeddedDatabasesByDefault() {
+        assertEquals(SchemaInitialization.EMBEDDED,
+                new BlobHelperProperties().getPersistence().getInitializeSchema());
+    }
+
+    private SchemaInitialization bindSchemaMode(String value) {
+        MapConfigurationPropertySource source = new MapConfigurationPropertySource(Map.of(
+                "blob-helper.persistence.initialize-schema", value));
+        return new Binder(source)
+                .bind("blob-helper", Bindable.of(BlobHelperProperties.class))
+                .orElseThrow(AssertionError::new)
+                .getPersistence()
+                .getInitializeSchema();
     }
 
     @Test

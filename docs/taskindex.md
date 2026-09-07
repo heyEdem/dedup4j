@@ -22,16 +22,16 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 
 ## Source Map
 
-| Epic | ADRs | Implementation Plan | Epic Folder |
-|---|---|---|---|
-| 1 | [ADR-001](adrs/ADR-001-content-identity-and-core-boundaries.md), [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md) | [PLAN-001](implementation-plans/PLAN-001-core-library.md) | [epic-001-core-library](epics/epic-001-core-library/README.md) |
+| Epic | ADRs                                                                                                                                                                                             | Implementation Plan | Epic Folder |
+|---|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|---|
+| 1 | [ADR-001](adrs/ADR-001-content-identity-and-core-boundaries.md), [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md)                                         | [PLAN-001](implementation-plans/PLAN-001-core-library.md) | [epic-001-core-library](epics/epic-001-core-library/README.md) |
 | 2 | [ADR-001](adrs/ADR-001-content-identity-and-core-boundaries.md), [ADR-002](adrs/ADR-002-deduplicated-upload-reference-counting.md), [ADR-003](adrs/ADR-003-release-delete-and-reconciliation.md) | [PLAN-002](implementation-plans/PLAN-002-jpa-metadata-and-reference-counting.md) | [epic-002-jpa-metadata-reference-counting](epics/epic-002-jpa-metadata-reference-counting/README.md) |
-| 3 | [ADR-002](adrs/ADR-002-deduplicated-upload-reference-counting.md), [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md) | [PLAN-003](implementation-plans/PLAN-003-spring-boot-starter-service-api.md) | [epic-003-spring-boot-starter-service-api](epics/epic-003-spring-boot-starter-service-api/README.md) |
-| 4 | [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md) | [PLAN-004](implementation-plans/PLAN-004-local-storage-adapter-and-integration-tests.md) | [epic-004-local-storage-integration-tests](epics/epic-004-local-storage-integration-tests/README.md) |
-| 5 | [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md) | [PLAN-005](implementation-plans/PLAN-005-s3-azure-storage-adapters.md) | [epic-005-s3-azure-storage-adapters](epics/epic-005-s3-azure-storage-adapters/README.md) |
-| 6 | [ADR-003](adrs/ADR-003-release-delete-and-reconciliation.md) | [PLAN-006](implementation-plans/PLAN-006-reconciliation-observability.md) | [epic-006-reconciliation-observability](epics/epic-006-reconciliation-observability/README.md) |
-| 7 | [ADR-005](adrs/ADR-005-local-dashboard-pull-monitoring.md) | [PLAN-007](implementation-plans/PLAN-007-local-dashboard-monitoring.md) | [epic-007-local-dashboard-monitoring](epics/epic-007-local-dashboard-monitoring/README.md) |
-| 8 | [ADR-006](adrs/ADR-006-embedded-dashboard-starter.md) | [PLAN-008](implementation-plans/PLAN-008-embedded-dashboard-starter.md) | — |
+| 3 | [ADR-002](adrs/ADR-002-deduplicated-upload-reference-counting.md), [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md)                                                          | [PLAN-003](implementation-plans/PLAN-003-spring-boot-starter-service-api.md) | [epic-003-spring-boot-starter-service-api](epics/epic-003-spring-boot-starter-service-api/README.md) |
+| 4 | [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md)                                                                                                                             | [PLAN-004](implementation-plans/PLAN-004-local-storage-adapter-and-integration-tests.md) | [epic-004-local-storage-integration-tests](epics/epic-004-local-storage-integration-tests/README.md) |
+| 5 | [ADR-004](adrs/ADR-004-pluggable-storage-and-spring-boot-starter.md)                                                                                                                             | [PLAN-005](implementation-plans/PLAN-005-s3-azure-storage-adapters.md) | [epic-005-s3-azure-storage-adapters](epics/epic-005-s3-azure-storage-adapters/README.md) |
+| 6 | [ADR-003](adrs/ADR-003-release-delete-and-reconciliation.md)                                                                                                                                     | [PLAN-006](implementation-plans/PLAN-006-reconciliation-observability.md) | [epic-006-reconciliation-observability](epics/epic-006-reconciliation-observability/README.md) |
+| 7 | [ADR-005](adrs/ADR-005-local-dashboard-pull-monitoring.md)                                                                                                                                       | [PLAN-007](implementation-plans/PLAN-007-local-dashboard-monitoring.md) | [epic-007-local-dashboard-monitoring](epics/epic-007-local-dashboard-monitoring/README.md) |
+| 8 | [ADR-006](adrs/ADR-006-embedded-dashboard-starter.md)                                                                                                                                            | [PLAN-008](implementation-plans/PLAN-008-embedded-dashboard-starter.md) | — |
 
 ## Verification Commands
 
@@ -116,6 +116,10 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 
 ## Notes
 
+### Integration add-ons
+
+- [x] PLAN-011 — Consumer JPA and schema auto-configuration, completed 2026-09-07. Includes transaction-neutral duplicate signaling, guarded prefixed migrations, conditional service assembly, Spring retry, and the local concurrent-publication correction. Clean full-reactor verification: 168 tests passed. See [execution record](plans/2026-09-06-plan011-execution.md). Delivered locally under PLAN-011's Git exclusion; the original 43-task milestone totals above are unchanged.
+
 | Date | Note |
 |---|---|
 | 2026-09-01 | Completed Epic 8 with the optional embedded dashboard starter, current-process read-only API, default-on MVC auto-configuration, relative-path static UI, custom base-path support, standalone compatibility verification, and full reactor verification. Project scope is now 43/43 tasks complete. |
@@ -144,7 +148,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | 2026-08-24 | Completed task 3.3 with buffered upload hashing, deterministic object-key generation, one physical storage write, and `AssetContent` creation through the JPA create-or-retain service. |
 | 2026-08-22 | Completed task 3.2 with the provider-neutral `BlobDeduplicationService` contract, default retain/release/get facade, and missing-content coverage. |
 | 2026-08-21 | Completed task 3.1 with the Spring Boot starter module, `blob-helper.*` properties binding, upload-size parsing, and disabled-by-default reconciliation. |
-| 2026-08-21 | Completed task 2.6 with a coordinated two-transaction duplicate upload integration test that verifies one identity row and one retained reference per worker. |
+ | 2026-08-21 | Completed task 2.6 with a coordinated two-transaction duplicate upload integration test that verifies one identity row and one retained reference per worker. |
 | 2026-08-20 | Completed task 2.5 with create-or-retain duplicate-key retry, locked winner reload, exact reference increment, and coordinated JPA race coverage. |
 | 2026-08-20 | Completed task 2.4 with final-reference physical delete delegation, non-final release protection, and idempotent storage-delete coverage. |
 | 2026-08-20 | Completed task 2.3 with lock-aware retain/release operations, core exception handling, and underflow tests. |

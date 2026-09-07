@@ -94,10 +94,10 @@ class AssetContentMappingTest {
         Table table = AssetContent.class.getAnnotation(Table.class);
 
         assertNotNull(table);
-        assertEquals("blob_asset_content", table.name());
+        assertEquals("blob_helper_asset_content", table.name());
 
         UniqueConstraint identityConstraint = table.uniqueConstraints()[0];
-        assertEquals("uk_blob_asset_content_identity", identityConstraint.name());
+        assertEquals("uk_blob_helper_asset_content_identity", identityConstraint.name());
         assertEquals(
                 Arrays.asList("hash_algorithm", "content_hash", "size_bytes"),
                 Arrays.asList(identityConstraint.columnNames())
@@ -106,9 +106,9 @@ class AssetContentMappingTest {
         Map<String, String> indexes = Arrays.stream(table.indexes())
                 .collect(Collectors.toMap(Index::name, Index::columnList));
         assertEquals(Map.of(
-                "idx_blob_asset_content_hash", "content_hash",
-                "idx_blob_asset_content_object_key", "object_key",
-                "idx_blob_asset_content_ref_count", "ref_count"
+                "idx_blob_helper_asset_content_hash", "content_hash",
+                "idx_blob_helper_asset_content_object_key", "object_key",
+                "idx_blob_helper_asset_content_ref_count", "ref_count"
         ), indexes);
     }
 

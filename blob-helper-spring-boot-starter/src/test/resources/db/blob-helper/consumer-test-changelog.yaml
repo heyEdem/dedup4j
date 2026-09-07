@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: consumer-marker
+      author: test
+      changes:
+        - createTable:
+            tableName: consumer_${marker}_marker
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    primaryKey: true

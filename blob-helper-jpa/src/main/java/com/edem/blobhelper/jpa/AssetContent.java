@@ -17,15 +17,15 @@ import java.util.UUID;
 
 @Entity
 @Table(
-        name = "blob_asset_content",
+        name = "blob_helper_asset_content",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_blob_asset_content_identity",
+                name = "uk_blob_helper_asset_content_identity",
                 columnNames = {"hash_algorithm", "content_hash", "size_bytes"}
         ),
         indexes = {
-                @Index(name = "idx_blob_asset_content_hash", columnList = "content_hash"),
-                @Index(name = "idx_blob_asset_content_object_key", columnList = "object_key"),
-                @Index(name = "idx_blob_asset_content_ref_count", columnList = "ref_count")
+                @Index(name = "idx_blob_helper_asset_content_hash", columnList = "content_hash"),
+                @Index(name = "idx_blob_helper_asset_content_object_key", columnList = "object_key"),
+                @Index(name = "idx_blob_helper_asset_content_ref_count", columnList = "ref_count")
         }
 )
 public class AssetContent {

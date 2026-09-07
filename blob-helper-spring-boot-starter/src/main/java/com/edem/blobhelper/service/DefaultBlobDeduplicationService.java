@@ -119,18 +119,7 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
 
     private BlobReference retainDuplicate(AssetContent existing) {
         referenceCountService.retain(existing.getId());
-        return new BlobReference(
-                existing.getId(),
-                new ContentHash(
-                        existing.getHashAlgorithm(),
-                        existing.getContentHash(),
-                        existing.getSizeBytes()
-                ),
-                existing.getContentType(),
-                existing.getStorageProvider(),
-                existing.getObjectKey(),
-                true
-        );
+        return BlobReferences.from(existing, true);
     }
 
     private BlobReference storeNewContent(
@@ -160,14 +149,7 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         );
 
         AssetContent persisted = mutationService.createOrRetain(candidate);
-        return new BlobReference(
-                persisted.getId(),
-                contentHash,
-                command.contentType(),
-                persisted.getStorageProvider(),
-                persisted.getObjectKey(),
-                persisted != candidate
-        );
+        return BlobReferences.from(persisted, persisted != candidate);
     }
 
     @Override

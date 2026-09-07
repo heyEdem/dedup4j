@@ -1,5 +1,7 @@
 package com.edem.blobhelper.autoconfigure;
 
+import com.edem.blobhelper.autoconfigure.persistence.BlobHelperPersistenceAutoConfiguration;
+import com.edem.blobhelper.autoconfigure.service.BlobHelperServiceAutoConfiguration;
 import com.edem.blobhelper.core.storage.BlobStorage;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -17,7 +19,10 @@ import java.util.Locale;
  * {@link BlobStorage}; this configuration validates that exactly one provider
  * is selected at startup.</p>
  */
-@AutoConfiguration
+@AutoConfiguration(after = {
+        BlobHelperPersistenceAutoConfiguration.class,
+        BlobHelperServiceAutoConfiguration.class
+})
 @EnableConfigurationProperties(BlobHelperProperties.class)
 public class BlobHelperAutoConfiguration {
 

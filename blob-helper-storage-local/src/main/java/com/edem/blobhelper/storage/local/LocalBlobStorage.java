@@ -10,6 +10,7 @@ import com.edem.blobhelper.core.storage.StoredBlob;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -18,6 +19,7 @@ import java.time.Instant;
 public class LocalBlobStorage implements BlobStorage {
 
     public static final String PROVIDER = "local";
+    private static final String TEMPORARY_FILE_PREFIX = ".blob-helper-";
 
     private final LocalBlobStorageProperties properties;
 
@@ -28,13 +30,40 @@ public class LocalBlobStorage implements BlobStorage {
     @Override
     public StoredBlob put(PutBlobRequest request) {
         Path target = resolve(request.objectKey());
+        Path temporary = null;
+        BlobStorageException publicationFailure = null;
         try {
-            Files.createDirectories(target.getParent());
+            Path parent = target.getParent();
+            Files.createDirectories(parent);
+            temporary = Files.createTempFile(parent, TEMPORARY_FILE_PREFIX, ".tmp");
             try (InputStream content = request.content()) {
-                Files.copy(content, target, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(content, temporary, StandardCopyOption.REPLACE_EXISTING);
+            }
+            try {
+                Files.move(temporary, target,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException failure) {
-            throw new BlobStorageException("Failed to store object: " + request.objectKey(), failure);
+            publicationFailure = new BlobStorageException(
+                    "Failed to store object: " + request.objectKey(), failure);
+            throw publicationFailure;
+        } finally {
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (IOException cleanupFailure) {
+                    if (publicationFailure != null) {
+                        publicationFailure.addSuppressed(cleanupFailure);
+                    } else {
+                        throw new BlobStorageException(
+                                "Failed to clean up temporary object for: " + request.objectKey(),
+                                cleanupFailure);
+                    }
+                }
+            }
         }
         return new StoredBlob(
                 request.objectKey(),

@@ -3,6 +3,7 @@ package com.edem.blobhelper.jpa;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AssetContentMutationServiceTest {
@@ -86,7 +90,48 @@ class AssetContentMutationServiceTest {
     }
 
     @Test
-    void retriesDuplicateInsertByReloadingAndRetainingExistingContent()
+    void duplicateInsertEscapesForCallerRetryWithoutManagingTheTransaction() {
+        AssetContent candidate = newContent("e".repeat(64));
+        AtomicInteger transactionCalls = new AtomicInteger();
+        AtomicInteger clearCalls = new AtomicInteger();
+        EntityManager failingEntityManager = (EntityManager) Proxy.newProxyInstance(
+                EntityManager.class.getClassLoader(),
+                new Class<?>[]{EntityManager.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("flush") && method.getParameterCount() == 0) {
+                        throw new PersistenceException(new SQLException("duplicate", "23505"));
+                    }
+                    if (method.getName().equals("getTransaction")) {
+                        transactionCalls.incrementAndGet();
+                    }
+                    if (method.getName().equals("clear")) {
+                        clearCalls.incrementAndGet();
+                    }
+                    try {
+                        return method.invoke(entityManager, args);
+                    } catch (InvocationTargetException exception) {
+                        throw exception.getCause();
+                    }
+                }
+        );
+        AssetContentMutationService failingService = new AssetContentMutationService(failingEntityManager);
+
+        entityManager.getTransaction().begin();
+        DuplicateContentIdentityException failure = assertThrows(
+                DuplicateContentIdentityException.class,
+                () -> failingService.createOrRetain(candidate)
+        );
+
+        assertEquals("SHA-256", failure.getHashAlgorithm());
+        assertEquals(candidate.getContentHash(), failure.getContentHash());
+        assertEquals(42L, failure.getSizeBytes());
+        assertTrue(failure.getMessage().contains(candidate.getContentHash()));
+        assertEquals(0, transactionCalls.get());
+        assertEquals(0, clearCalls.get());
+    }
+
+    @Test
+    void callerRollsBackAndRetriesDuplicateInsertByReloadingAndRetainingExistingContent()
             throws Exception {
         String contentHash = "c".repeat(64);
         EntityManager firstEntityManager = entityManagerFactory.createEntityManager();
@@ -113,7 +158,13 @@ class AssetContentMutationServiceTest {
             assertTrue(secondFlushStarted.await(5L, TimeUnit.SECONDS));
             firstEntityManager.getTransaction().commit();
 
-            AssetContent retained = get(retryResult);
+            ExecutionException wrappedRace = assertThrows(ExecutionException.class, () -> get(retryResult));
+            DuplicateContentIdentityException race = (DuplicateContentIdentityException) wrappedRace.getCause();
+            assertEquals(contentHash, race.getContentHash());
+            secondEntityManager.getTransaction().rollback();
+            secondEntityManager.getTransaction().begin();
+            AssetContent retained = new AssetContentMutationService(secondEntityManager)
+                    .createOrRetain(newContent(contentHash));
             secondEntityManager.getTransaction().commit();
 
             assertEquals(firstCandidate.getId(), retained.getId());

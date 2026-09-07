@@ -1,5 +1,6 @@
 package com.edem.blobhelper.autoconfigure;
 
+import com.edem.blobhelper.autoconfigure.persistence.SchemaInitialization;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.util.unit.DataSize;
@@ -20,6 +21,9 @@ public class BlobHelperProperties {
     @NestedConfigurationProperty
     private final Cleanup cleanup = new Cleanup();
 
+    @NestedConfigurationProperty
+    private final Persistence persistence = new Persistence();
+
     public Storage getStorage() {
         return storage;
     }
@@ -30,6 +34,24 @@ public class BlobHelperProperties {
 
     public Cleanup getCleanup() {
         return cleanup;
+    }
+
+    public Persistence getPersistence() {
+        return persistence;
+    }
+
+    public static class Persistence {
+
+        private SchemaInitialization initializeSchema = SchemaInitialization.EMBEDDED;
+
+        public SchemaInitialization getInitializeSchema() {
+            return initializeSchema;
+        }
+
+        public void setInitializeSchema(SchemaInitialization initializeSchema) {
+            this.initializeSchema = Objects.requireNonNull(initializeSchema,
+                    "initializeSchema must not be null");
+        }
     }
 
     public static class Storage {

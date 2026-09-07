@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-07 — Consumer JPA and guarded schema auto-configuration
+
+- Implemented PLAN-011 using Luna workers: consumer entity discovery, independently replaceable defaults, prefixed Liquibase metadata migrations, guarded initialization modes, and actionable schema validation before JPA startup.
+- Moved duplicate-key recovery across Spring `REQUIRES_NEW` transactions without replaying upload input or storage writes; retained framework-neutral JPA behavior and application-managed migration configuration.
+- Fixed local concurrent publication through same-directory temporary files and atomic replacement; added failed-stream preservation and maximum-filename coverage. Corrected the S3 client test proxy for Spring persistence lifecycle callbacks.
+- Updated consumer guidance, architecture/implementation indexes, patterns, decisions, and completion records. Legacy table data requires a separate application-managed transition.
+- Modules affected: `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and `blob-helper-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
+
 ## 2026-09-05 — Auto-configure selected storage providers
 
 - Implemented PLAN-010 with nested local/S3/Azure settings, selected-provider client and storage defaults, application-client reuse, and complete back-off for application storage.

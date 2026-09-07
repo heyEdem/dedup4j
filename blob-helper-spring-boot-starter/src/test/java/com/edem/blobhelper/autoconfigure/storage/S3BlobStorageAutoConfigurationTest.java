@@ -9,6 +9,8 @@ import com.edem.blobhelper.storage.local.LocalBlobStorageProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.util.ReflectionTestUtils;
 import java.lang.reflect.Proxy;
 import java.net.URI;
@@ -74,12 +76,23 @@ class S3BlobStorageAutoConfigurationTest {
         S3Client client = (S3Client) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{S3Client.class},
                 (proxy, method, args) -> {
                     if (method.getName().equals("close")) { closes.incrementAndGet(); return null; }
+                    if (method.getName().equals("toString")) { return "applicationS3Client"; }
+                    if (method.getName().equals("hashCode")) { return System.identityHashCode(proxy); }
+                    if (method.getName().equals("equals")) { return proxy == args[0]; }
                     throw new AssertionError("Unexpected client method during startup: " + method.getName());
                 });
-        runner.withBean(S3Client.class, () -> client)
-                .withPropertyValues("blob-helper.storage.provider=s3", "blob-helper.storage.s3.bucket=media")
-                .run(context -> context.close());
-        assertThat(closes).hasValue(1);
+        applicationClient = client;
+        try {
+            runner.withUserConfiguration(ApplicationClientConfiguration.class)
+                    .withPropertyValues("blob-helper.storage.provider=s3", "blob-helper.storage.s3.bucket=media")
+                    .run(context -> {
+                        assertThat(context).hasNotFailed();
+                        context.close();
+                    });
+            assertThat(closes).hasValue(1);
+        } finally {
+            applicationClient = null;
+        }
     }
 
     @Test
@@ -125,6 +138,17 @@ class S3BlobStorageAutoConfigurationTest {
                 .withPropertyValues("blob-helper.storage.provider=local")
                 .run(context -> assertThat(context).doesNotHaveBean(S3Client.class)
                         .doesNotHaveBean(S3BlobStorage.class));
+    }
+
+    private static S3Client applicationClient;
+
+    @Configuration(proxyBeanMethods = false)
+    static class ApplicationClientConfiguration {
+
+        @Bean(destroyMethod = "close")
+        S3Client applicationClient() {
+            return S3BlobStorageAutoConfigurationTest.applicationClient;
+        }
     }
 
 }

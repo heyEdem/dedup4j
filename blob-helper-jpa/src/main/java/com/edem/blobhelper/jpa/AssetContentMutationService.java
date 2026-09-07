@@ -1,7 +1,6 @@
 package com.edem.blobhelper.jpa;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.PersistenceException;
 
 import java.sql.SQLException;
@@ -13,10 +12,10 @@ import java.util.UUID;
  * supplied content identity.
  *
  * <p>The caller owns the entity manager and transaction. Inserts are flushed
- * explicitly so a unique-identity race can be handled before the caller's
- * commit. A duplicate insert is converted into a locked reload and one
- * reference-count increment. This service does not perform physical storage
- * operations.</p>
+ * explicitly so a unique-identity race can be reported before the caller's
+ * commit. The Spring integration retries the operation after rollback when a
+ * duplicate identity is reported. This service does not perform physical
+ * storage operations.</p>
  */
 public final class AssetContentMutationService {
 
@@ -24,8 +23,15 @@ public final class AssetContentMutationService {
     private final AssetContentRepository repository;
 
     public AssetContentMutationService(EntityManager entityManager) {
+        this(entityManager, new AssetContentRepository(entityManager));
+    }
+
+    public AssetContentMutationService(
+            EntityManager entityManager,
+            AssetContentRepository repository
+    ) {
         this.entityManager = Objects.requireNonNull(entityManager, "entityManager must not be null");
-        this.repository = new AssetContentRepository(entityManager);
+        this.repository = Objects.requireNonNull(repository, "repository must not be null");
     }
 
     public AssetContent createOrRetain(AssetContent candidate) {
@@ -49,31 +55,14 @@ public final class AssetContentMutationService {
             if (!isDuplicateKeyFailure(failure)) {
                 throw failure;
             }
-
-            restartTransactionAfterFailedInsert();
-            entityManager.clear();
-            return repository.findByIdentity(
-                            candidate.getHashAlgorithm(),
-                            candidate.getContentHash(),
-                            candidate.getSizeBytes()
-                    )
-                    .map(existing -> retain(existing.getId()))
-                    .orElseThrow(() -> failure);
+            throw new DuplicateContentIdentityException(candidate, failure);
         }
-    }
-
-    private void restartTransactionAfterFailedInsert() {
-        EntityTransaction transaction = entityManager.getTransaction();
-        if (transaction.isActive()) {
-            transaction.rollback();
-        }
-        transaction.begin();
     }
 
     private AssetContent retain(UUID assetContentId) {
         AssetContent existing = repository.findByIdForUpdate(assetContentId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Asset content disappeared during duplicate-key retry: " + assetContentId
+                        "Asset content disappeared while retaining content: " + assetContentId
                 ));
         existing.incrementRefCount();
         return existing;
