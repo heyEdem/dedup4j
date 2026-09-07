@@ -1,6 +1,7 @@
 package com.edem.blobhelper.service;
 
 import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.blobhelper.core.model.BlobLocation;
 import com.edem.blobhelper.core.model.StoreBlobCommand;
 import com.edem.blobhelper.core.storage.BlobResource;
 import com.edem.blobhelper.jpa.AssetContent;
@@ -70,6 +71,11 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     @Override
     public BlobResource get(UUID assetContentId) {
         return requiredResult(() -> delegate.get(assetContentId));
+    }
+
+    @Override
+    public BlobLocation location(UUID assetContentId) {
+        return requiredResult(() -> delegate.location(assetContentId));
     }
 
     private <T> T requiredResult(Supplier<T> action) {

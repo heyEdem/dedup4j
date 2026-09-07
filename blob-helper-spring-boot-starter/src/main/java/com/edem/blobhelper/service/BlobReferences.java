@@ -19,6 +19,7 @@ final class BlobReferences {
                 ),
                 content.getContentType(),
                 content.getStorageProvider(),
+                content.getBucketOrContainer(),
                 content.getObjectKey(),
                 duplicate
         );

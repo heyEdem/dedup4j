@@ -17,6 +17,8 @@ import com.edem.blobhelper.observability.BlobHelperMetrics;
 import com.edem.blobhelper.service.BlobDeduplicationService;
 import com.edem.blobhelper.service.DefaultBlobDeduplicationService;
 import com.edem.blobhelper.service.SpringTransactionalBlobDeduplicationService;
+import com.edem.blobhelper.facade.BlobHelper;
+import com.edem.blobhelper.facade.DefaultBlobHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -138,6 +140,12 @@ public class BlobHelperServiceAutoConfiguration {
         return new SpringTransactionalBlobDeduplicationService(
                 delegate, repository, referenceCountService, transactionManager
         );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(BlobHelper.class)
+    BlobHelper blobHelper(BlobDeduplicationService service, BlobHelperProperties properties) {
+        return new DefaultBlobHelper(service, properties);
     }
 
     private static EntityManager resolveEntityManager(

@@ -117,6 +117,29 @@ transaction retains the winning row, without replaying the input stream or
 writing storage again during recovery. These transactions do not include the
 application's logical records or make object storage and the database atomic.
 
+For common Spring upload flows, inject the auto-configured `BlobHelper` facade:
+
+```java
+public String uploadImage(MultipartFile file) {
+    BlobReference stored = blobHelper.store(file);
+    BlobLocation location = stored.location();
+    uploadRepository.save(new Upload(location.objectKey(), stored.assetContentId()));
+    return publicUrlMapper.toUrl(location);
+}
+```
+
+`blobHelper.store` is the only physical upload call; the application must not
+call `S3Client.putObject` or another provider SDK afterward. The application
+creates its logical row for every successful call, including duplicates, and
+may return its own URL, DTO, ID, `BlobReference`, or empty response. A stable
+`BlobLocation` is provider-neutral storage identity, not an access URL; the
+application owns public URL and presigned URL creation.
+
+The facade also accepts `Path`, `byte[]`, and described `InputStream` sources.
+`storeAll(MultipartFile[])` processes sequentially and returns one ordered
+success or failure outcome for every input, allowing later uploads to continue
+after an individual failure without claiming all-or-nothing semantics.
+
 The optional management module exposes local read-only operational data and
 self-registers instances with the standalone dashboard. The dashboard polls
 multiple local instances and stores aggregate history in

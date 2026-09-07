@@ -51,6 +51,11 @@ public final class AssetContentRepository {
         ));
     }
 
+    public Optional<AssetContent> findById(UUID id) {
+        Objects.requireNonNull(id, "id must not be null");
+        return Optional.ofNullable(entityManager.find(AssetContent.class, id));
+    }
+
     public List<AssetContent> findAll() {
         return entityManager.createQuery("select content from AssetContent content", AssetContent.class)
                 .getResultList();

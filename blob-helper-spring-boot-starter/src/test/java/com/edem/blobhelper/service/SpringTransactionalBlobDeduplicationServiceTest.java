@@ -1,6 +1,7 @@
 package com.edem.blobhelper.service;
 
 import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.blobhelper.core.model.BlobLocation;
 import com.edem.blobhelper.core.model.StoreBlobCommand;
 import com.edem.blobhelper.core.storage.BlobResource;
 import com.edem.blobhelper.jpa.AssetContent;
@@ -56,6 +57,7 @@ class SpringTransactionalBlobDeduplicationServiceTest {
             @Override public void retain(UUID ignored) { throw new AssertionError("delegate retain called"); }
             @Override public void release(UUID ignored) { throw new AssertionError("delegate release called"); }
             @Override public BlobResource get(UUID ignored) { throw new AssertionError("delegate get called"); }
+            @Override public BlobLocation location(UUID ignored) { throw new AssertionError("delegate location called"); }
         };
         SpringTransactionalBlobDeduplicationService service = new SpringTransactionalBlobDeduplicationService(
                 delegate, repository, references, transactions
@@ -108,7 +110,7 @@ class SpringTransactionalBlobDeduplicationServiceTest {
         BlobDeduplicationService delegate = new BlobDeduplicationService() {
             @Override public BlobReference store(StoreBlobCommand command) {
                 calls.incrementAndGet();
-                return new BlobReference(UUID.randomUUID(), new com.edem.blobhelper.core.hash.ContentHash("sha-256", "a", 0), "text/plain", "test", "key", false);
+                return new BlobReference(UUID.randomUUID(), new com.edem.blobhelper.core.hash.ContentHash("sha-256", "a", 0), "text/plain", "test", "bucket", "key", false);
             }
             @Override public void retain(UUID id) { calls.incrementAndGet(); }
             @Override public void release(UUID id) { calls.incrementAndGet(); }
@@ -116,6 +118,7 @@ class SpringTransactionalBlobDeduplicationServiceTest {
                 calls.incrementAndGet();
                 return new BlobResource("key", new ByteArrayInputStream(new byte[0]), 0, "application/octet-stream", Map.of());
             }
+            @Override public BlobLocation location(UUID id) { calls.incrementAndGet(); return new BlobLocation("test", "bucket", "key"); }
         };
         AssetContentRepository repository = new AssetContentRepository(entityManagerReturning(null, transactions.events));
         SpringTransactionalBlobDeduplicationService service = new SpringTransactionalBlobDeduplicationService(
@@ -126,13 +129,14 @@ class SpringTransactionalBlobDeduplicationServiceTest {
         service.retain(id);
         service.release(id);
         service.get(id);
+        service.location(id);
         service.store(new StoreBlobCommand(new ByteArrayInputStream(new byte[0]), "a", "text/plain", 0, Map.of()));
 
-        assertEquals(4, calls.get());
-        assertEquals(4, transactions.beginCount.get());
-        assertEquals(4, transactions.commitCount.get());
+        assertEquals(5, calls.get());
+        assertEquals(5, transactions.beginCount.get());
+        assertEquals(5, transactions.commitCount.get());
         assertEquals(0, transactions.rollbackCount.get());
-        assertEquals(4, transactions.propagations.stream()
+        assertEquals(5, transactions.propagations.stream()
                 .filter(value -> value == TransactionDefinition.PROPAGATION_REQUIRES_NEW).count());
     }
 
@@ -153,6 +157,7 @@ class SpringTransactionalBlobDeduplicationServiceTest {
         @Override public void retain(UUID id) { throw new AssertionError(); }
         @Override public void release(UUID id) { throw new AssertionError(); }
         @Override public BlobResource get(UUID id) { throw new AssertionError(); }
+        @Override public BlobLocation location(UUID id) { throw new AssertionError(); }
     }
 
     private static EntityManager entityManagerReturning(AssetContent winner, java.util.List<String> events) {

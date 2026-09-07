@@ -2,6 +2,7 @@ package com.edem.blobhelper.service;
 
 import com.edem.blobhelper.core.hash.ContentHasher;
 import com.edem.blobhelper.core.hash.Sha256ContentHasher;
+import com.edem.blobhelper.core.exception.BlobValidationException;
 import com.edem.blobhelper.core.key.HashObjectKeyStrategy;
 import com.edem.blobhelper.core.model.BlobReference;
 import com.edem.blobhelper.core.model.StoreBlobCommand;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BlobDeduplicationServiceTest {
@@ -102,6 +104,8 @@ class BlobDeduplicationServiceTest {
                         + "/" + reference.contentHash().hash(),
                 reference.objectKey());
         assertEquals(storage.lastStored.provider(), reference.storageProvider());
+        assertEquals("test-bucket", reference.bucketOrContainer());
+        assertEquals(reference.location(), service.location(reference.assetContentId()));
 
         assertEquals(1, storage.putCount.get());
         assertEquals(1.0, metricsRegistry.get("blob.helper.uploads").counter().count());
@@ -140,6 +144,7 @@ class BlobDeduplicationServiceTest {
         assertTrue(duplicate.duplicate());
         assertEquals(original.assetContentId(), duplicate.assetContentId());
         assertEquals(original.contentHash(), duplicate.contentHash());
+        assertEquals(original.location(), duplicate.location());
         assertEquals(1, storage.putCount.get());
         assertEquals(2.0, metricsRegistry.get("blob.helper.uploads").counter().count());
         assertEquals(1.0, metricsRegistry.get("blob.helper.duplicates").counter().count());
@@ -155,6 +160,19 @@ class BlobDeduplicationServiceTest {
                         "select count(content) from AssetContent content", Long.class)
                 .getSingleResult();
         assertEquals(1L, rowCount);
+    }
+
+    @Test
+    void rejectsDeclaredSizeMismatch() {
+        assertThrows(BlobValidationException.class, () -> service.store(new StoreBlobCommand(
+                new ByteArrayInputStream(CONTENT),
+                "report.txt",
+                "text/plain",
+                CONTENT.length - 1,
+                Map.of()
+        )));
+
+        assertEquals(0, storage.putCount.get());
     }
 
     private static final class RecordingBlobStorage implements BlobStorage {

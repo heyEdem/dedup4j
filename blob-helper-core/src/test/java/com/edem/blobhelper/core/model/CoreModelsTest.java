@@ -42,11 +42,13 @@ class CoreModelsTest {
                 hash,
                 "text/plain",
                 "local",
+                "bucket",
                 "sha-256/ab/abc",
                 true
         );
 
         assertSame(hash, reference.contentHash());
+        assertEquals(new BlobLocation("local", "bucket", "sha-256/ab/abc"), reference.location());
         assertTrue(reference.duplicate());
     }
 
@@ -63,6 +65,7 @@ class CoreModelsTest {
                         new ContentHash("SHA-256", "abc", 3),
                         null,
                         "local",
+                        "bucket",
                         "key",
                         false
                 )

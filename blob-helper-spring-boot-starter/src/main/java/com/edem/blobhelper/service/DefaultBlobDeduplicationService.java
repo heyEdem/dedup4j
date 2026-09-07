@@ -6,7 +6,9 @@ import com.edem.blobhelper.core.hash.ContentHash;
 import com.edem.blobhelper.core.hash.ContentHasher;
 import com.edem.blobhelper.core.key.ObjectKeyStrategy;
 import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.blobhelper.core.model.BlobLocation;
 import com.edem.blobhelper.core.model.StoreBlobCommand;
+import com.edem.blobhelper.core.exception.BlobValidationException;
 import com.edem.blobhelper.core.storage.BlobResource;
 import com.edem.blobhelper.core.storage.BlobStorage;
 import com.edem.blobhelper.core.storage.PutBlobRequest;
@@ -97,6 +99,12 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         Objects.requireNonNull(command, "command must not be null");
 
         byte[] bytes = readAll(command.content());
+        if (bytes.length != command.sizeBytes()) {
+            throw new BlobValidationException(
+                    "Declared size " + command.sizeBytes()
+                            + " does not match actual size " + bytes.length
+            );
+        }
         ContentHash contentHash = hash(bytes);
         return repository.findByIdentity(
                         contentHash.algorithm(),
@@ -174,6 +182,20 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         Objects.requireNonNull(assetContentId, "assetContentId must not be null");
         return repository.findByIdForUpdate(assetContentId)
                 .map(content -> storage.get(content.getObjectKey()))
+                .orElseThrow(() -> new ContentNotFoundException(
+                        "Asset content not found: " + assetContentId
+                ));
+    }
+
+    @Override
+    public BlobLocation location(UUID assetContentId) {
+        Objects.requireNonNull(assetContentId, "assetContentId must not be null");
+        return repository.findById(assetContentId)
+                .map(content -> new BlobLocation(
+                        content.getStorageProvider(),
+                        content.getBucketOrContainer(),
+                        content.getObjectKey()
+                ))
                 .orElseThrow(() -> new ContentNotFoundException(
                         "Asset content not found: " + assetContentId
                 ));

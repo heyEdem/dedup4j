@@ -4,6 +4,7 @@ import com.edem.blobhelper.core.hash.ContentHasher;
 import com.edem.blobhelper.core.hash.ContentHash;
 import com.edem.blobhelper.core.key.ObjectKeyStrategy;
 import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.blobhelper.core.model.BlobLocation;
 import com.edem.blobhelper.core.model.StoreBlobCommand;
 import com.edem.blobhelper.core.storage.BlobResource;
 import com.edem.blobhelper.core.storage.BlobStorage;
@@ -14,6 +15,8 @@ import com.edem.blobhelper.jpa.AssetContentRepository;
 import com.edem.blobhelper.jpa.ReferenceCountService;
 import com.edem.blobhelper.observability.BlobHelperMetrics;
 import com.edem.blobhelper.service.BlobDeduplicationService;
+import com.edem.blobhelper.facade.BlobHelper;
+import com.edem.blobhelper.facade.DefaultBlobHelper;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -46,6 +49,18 @@ class BlobHelperServiceAutoConfigurationTest {
             assertEquals(1, context.getBeansOfType(ContentHasher.class).size());
             assertEquals(1, context.getBeansOfType(ObjectKeyStrategy.class).size());
             assertEquals(1, context.getBeansOfType(BlobHelperMetrics.class).size());
+            assertEquals(1, context.getBeansOfType(BlobDeduplicationService.class).size());
+            assertEquals(1, context.getBeansOfType(BlobHelper.class).size());
+            org.assertj.core.api.Assertions.assertThat(context.getBean(BlobHelper.class))
+                    .isInstanceOf(DefaultBlobHelper.class);
+        });
+    }
+
+    @Test
+    void backsOffForApplicationFacade() {
+        FacadeOverride override = new FacadeOverride();
+        runner.withUserConfiguration(FacadeOverride.class).run(context -> {
+            assertSame(override.FACADE, context.getBean(BlobHelper.class));
             assertEquals(1, context.getBeansOfType(BlobDeduplicationService.class).size());
         });
     }
@@ -153,10 +168,11 @@ class BlobHelperServiceAutoConfigurationTest {
     @Configuration(proxyBeanMethods = false)
     static class ServiceOverride {
         static final BlobDeduplicationService SERVICE = new BlobDeduplicationService() {
-            @Override public BlobReference store(StoreBlobCommand command) { return new BlobReference(UUID.randomUUID(), new ContentHash("sha-256", "a", 0), "text/plain", "test", "a", false); }
+            @Override public BlobReference store(StoreBlobCommand command) { return new BlobReference(UUID.randomUUID(), new ContentHash("sha-256", "a", 0), "text/plain", "test", "bucket", "a", false); }
             @Override public void retain(UUID id) { }
             @Override public void release(UUID id) { }
             @Override public BlobResource get(UUID id) { return null; }
+            @Override public BlobLocation location(UUID id) { return new BlobLocation("test", "bucket", "a"); }
         };
         @Bean BlobDeduplicationService service() { return SERVICE; }
     }
@@ -166,6 +182,21 @@ class BlobHelperServiceAutoConfigurationTest {
         @Bean MeterRegistry meterRegistry() {
             return new SimpleMeterRegistry();
         }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class FacadeOverride {
+        private static final BlobHelper FACADE = new TestFacade();
+
+        @Bean BlobHelper blobHelper() { return FACADE; }
+    }
+
+    private static final class TestFacade implements BlobHelper {
+        @Override public BlobReference store(org.springframework.web.multipart.MultipartFile file) { return null; }
+        @Override public BlobReference store(java.nio.file.Path path) { return null; }
+        @Override public BlobReference store(byte[] content, String filename, String contentType) { return null; }
+        @Override public BlobReference store(java.io.InputStream content, long sizeBytes, String filename, String contentType, java.util.Map<String, String> metadata) { return null; }
+        @Override public com.edem.blobhelper.facade.BatchStoreResult storeAll(org.springframework.web.multipart.MultipartFile[] files) { return null; }
     }
 
     static final class TestStorage implements BlobStorage {

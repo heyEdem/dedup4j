@@ -1,6 +1,7 @@
 package com.edem.blobhelper.service;
 
 import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.blobhelper.core.model.BlobLocation;
 import com.edem.blobhelper.core.model.StoreBlobCommand;
 import com.edem.blobhelper.core.storage.BlobResource;
 
@@ -21,4 +22,6 @@ public interface BlobDeduplicationService {
     void release(UUID assetContentId);
 
     BlobResource get(UUID assetContentId);
+
+    BlobLocation location(UUID assetContentId);
 }

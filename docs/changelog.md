@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-07 — Add friendly upload facade, stable locations, and ordered batches
+
+- Added provider-neutral `BlobLocation` values and complete locations on new and duplicate `BlobReference` results, plus metadata-only location lookup through the transactional service.
+- Added the Spring-facing `BlobHelper` facade for multipart, path, byte-array, and described-stream uploads with size enforcement, and auto-configured it with application back-off.
+- Added ordered success/failure batch outcomes with continue-on-failure semantics and MVC usage coverage without introducing a library controller.
+- Modules affected: `blob-helper-core`, `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and project documentation.
+
 ## 2026-09-07 — Consumer JPA and guarded schema auto-configuration
 
 - Implemented PLAN-011 using Luna workers: consumer entity discovery, independently replaceable defaults, prefixed Liquibase metadata migrations, guarded initialization modes, and actionable schema validation before JPA startup.

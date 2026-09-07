@@ -10,6 +10,7 @@ public record BlobReference(
         ContentHash contentHash,
         String contentType,
         String storageProvider,
+        String bucketOrContainer,
         String objectKey,
         boolean duplicate
 ) {
@@ -24,8 +25,15 @@ public record BlobReference(
         if (storageProvider == null || storageProvider.isBlank()) {
             throw new BlobValidationException("storageProvider must not be blank");
         }
+        if (bucketOrContainer == null || bucketOrContainer.isBlank()) {
+            throw new BlobValidationException("bucketOrContainer must not be blank");
+        }
         if (objectKey == null || objectKey.isBlank()) {
             throw new BlobValidationException("objectKey must not be blank");
         }
+    }
+
+    public BlobLocation location() {
+        return new BlobLocation(storageProvider, bucketOrContainer, objectKey);
     }
 }
