@@ -38,6 +38,7 @@ blob-helper-storage-s3
 blob-helper-storage-azure
 blob-helper-spring-boot-management  (optional local management API)
 blob-helper-spring-boot-dashboard   (optional embedded read-only dashboard)
+blob-helper-spring-boot-observability (optional embedded management + dashboard)
 blob-helper-dashboard                (standalone local monitoring console)
 blob-helper-storage-local
 ```
@@ -60,6 +61,27 @@ The starter supplies the local, S3, and Azure adapters. Their provider SDKs
 remain declared and versioned only in the corresponding adapter modules. The
 management API, embedded dashboard, and standalone dashboard are separate
 optional artifacts and are not part of the generic upload starter.
+
+For one dependency that supplies the embedded single-application observability
+pieces, add:
+
+```xml
+<dependency>
+  <groupId>com.edem</groupId>
+  <artifactId>blob-helper-spring-boot-observability</artifactId>
+  <version>${blob-helper.version}</version>
+</dependency>
+```
+
+This aggregate installs the embedded dashboard and makes the management module
+available. Management remains an explicit choice and is not exposed until the
+consumer enables it:
+
+```yaml
+blob-helper:
+  management:
+    enabled: true
+```
 
 Select the storage provider in application configuration. For local storage:
 
@@ -145,9 +167,10 @@ self-registers instances with the standalone dashboard. The dashboard polls
 multiple local instances and stores aggregate history in
 SQLite; it does not manage blob bytes or provider credentials.
 
-For a single Spring Boot application, add `blob-helper-spring-boot-dashboard`
-alongside the main starter and open `http://localhost:8080/blob-helper/dashboard`.
-Embedded mode is enabled by default and can be disabled with:
+For a single Spring Boot application, the
+`blob-helper-spring-boot-observability` aggregate supplies the embedded current-
+application UI/API; open `http://localhost:8080/blob-helper/dashboard`.
+Embedded dashboard mode is enabled by default and can be disabled with:
 
 ```yaml
 blob-helper:
@@ -155,8 +178,9 @@ blob-helper:
     enabled: false
 ```
 
-Use the standalone dashboard when you need multi-instance registration and
-SQLite history.
+`blob-helper-spring-boot-observability` is the embedded current-application
+UI/API. Use the separate `blob-helper-dashboard` application when you need
+multi-instance polling and SQLite history.
 
 ## High-Level Flow
 

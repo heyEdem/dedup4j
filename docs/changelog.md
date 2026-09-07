@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-07 — Add combined observability starter
+
+- Added the dependency-only `blob-helper-spring-boot-observability` aggregate for the embedded management and current-application dashboard modules.
+- Added classpath, activation, disablement, servlet, and read-only route coverage while keeping the generic upload starter and standalone fleet dashboard separate.
+- Documented the one-dependency embedded setup and the explicit `blob-helper.management.enabled=true` choice.
+- Modules affected: root Maven reactor, `blob-helper-spring-boot-observability`, `README.md`, and project documentation.
+
 ## 2026-09-07 — Add friendly upload facade, stable locations, and ordered batches
 
 - Added provider-neutral `BlobLocation` values and complete locations on new and duplicate `BlobReference` results, plus metadata-only location lookup through the transactional service.

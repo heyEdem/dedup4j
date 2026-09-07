@@ -39,6 +39,7 @@
         <module>blob-helper-storage-azure</module>
         <module>blob-helper-spring-boot-management</module>
         <module>blob-helper-spring-boot-dashboard</module>
+        <module>blob-helper-spring-boot-observability</module>
         <module>blob-helper-dashboard</module>
     </modules>
 

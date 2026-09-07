@@ -2,7 +2,7 @@
 
 ## Entry Points
 
-- `pom.xml`: parent Maven reactor. Declares the core, persistence, starter, storage, management, and dashboard modules, manages JUnit/Spring Boot dependency BOMs, and configures Surefire to ignore a named test pattern in modules that do not contain that test.
+- `pom.xml`: parent Maven reactor. Declares the core, persistence, starter, storage, management, embedded-dashboard, and observability aggregate modules, manages JUnit/Spring Boot dependency BOMs, and configures Surefire to ignore a named test pattern in modules that do not contain that test.
 - `blob-helper-core/pom.xml`: core module build file. Depends on JUnit Jupiter for tests.
 - `blob-helper-jpa/pom.xml`: persistence module build file. Depends on `blob-helper-core`, exposes Jakarta Persistence, and uses Hibernate/H2 in test scope.
 - `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java`: JPA entity for unique physical content identity, object location, metadata, reference count, timestamps, and optimistic locking.
@@ -102,6 +102,9 @@
 - `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardController.java`: exposes GET-only overview, status, empty history, and failure routes and maps the packaged UI for custom base paths.
 - `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardView.java`: dashboard-shaped immutable JSON view records matching the standalone console’s field meanings.
 - `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard`: embedded light/dark responsive UI with relative API requests.
+- `blob-helper-spring-boot-observability/pom.xml`: dependency-only aggregate JAR that directly depends on the management and embedded-dashboard modules; it publishes no production Java source or `AutoConfiguration.imports` file.
+- `blob-helper-spring-boot-observability/src/test/java/com/edem/blobhelper/observability/ObservabilityStarterClasspathTest.java`: verifies management and embedded-dashboard classes/resources are transitively available while standalone fleet application and persistence classes remain absent.
+- `blob-helper-spring-boot-observability/src/test/java/com/edem/blobhelper/observability/ObservabilityStarterContextTest.java`: verifies default dashboard activation, explicit management activation, independent disablement, servlet-only dashboard creation, and GET/HEAD-only controller mappings.
 - `blob-helper-dashboard/pom.xml`: standalone executable dashboard with Spring Web, Spring JDBC, SQLite JDBC, and Spring Boot repackaging.
 - `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/BlobHelperDashboardApplication.java`: standalone dashboard entry point with loopback/9090 defaults.
 - `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/registration/InstanceRegistration.java`: validated provider-neutral registration record.
@@ -189,6 +192,12 @@
 - **Key classes/functions:** `BlobHelperDashboardApplication`, persistence/polling services, `DashboardController`, and `DashboardView` provide persistent collection and read-only JSON views; the static UI renders overview, instances, trend, and failure states with the demo console's slate/amber/blue visual language and a manual light/dark theme toggle. The failures endpoint names its optional `since` request parameter explicitly for Spring MVC binding.
 - **Initialization:** Standalone Spring Boot application defaults to `127.0.0.1:9090`; it stores its own registry and history in a configurable SQLite file.
 - **Non-obvious logic:** Poll failures are isolated per instance; counter resets after an instance restart never produce negative deltas; detailed failures expire after seven days while aggregate snapshots remain. `MultiInstanceDashboardIntegrationTest` validates the complete local flow with two in-process management endpoints and temporary SQLite storage.
+
+### blob-helper-spring-boot-observability
+
+- **Entry point:** `blob-helper-spring-boot-observability/pom.xml`
+- **Key behavior:** Empty-code aggregate JAR with direct compile dependencies on `blob-helper-spring-boot-management` and `blob-helper-spring-boot-dashboard`; Spring Boot discovers the existing component auto-configurations and static resources from those dependency JARs.
+- **Boundary:** The aggregate deliberately excludes the standalone `blob-helper-dashboard` executable and its SQLite persistence. The generic upload starter also remains free of management, embedded-dashboard, aggregate, and standalone-dashboard artifacts, as verified by `GenericStarterDependencyTest`.
 
 ### Provider Testing
 
