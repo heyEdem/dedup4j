@@ -255,7 +255,7 @@ class SpringTransactionalBlobDeduplicationServiceTest {
             beginCount.incrementAndGet();
             events.add("begin");
             propagations.add(definition.getPropagationBehavior());
-            return new DefaultTransactionStatus(new Object(), true, false, false, false, null);
+            return new DefaultTransactionStatus("test", new Object(), true, false, false, false, false, null);
         }
         @Override public void commit(TransactionStatus status) { commitCount.incrementAndGet(); events.add("commit"); }
         @Override public void rollback(TransactionStatus status) { rollbackCount.incrementAndGet(); events.add("rollback"); }

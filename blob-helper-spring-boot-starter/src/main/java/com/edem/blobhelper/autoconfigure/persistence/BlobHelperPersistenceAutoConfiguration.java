@@ -8,16 +8,16 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
-import org.springframework.boot.autoconfigure.domain.EntityScanPackages;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.SchemaManagement;
 import org.springframework.boot.jdbc.SchemaManagementProvider;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
+import org.springframework.boot.liquibase.autoconfigure.LiquibaseProperties;
+import org.springframework.boot.persistence.autoconfigure.EntityScanPackages;
 import org.springframework.boot.sql.init.dependency.DatabaseInitializationDependencyConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProp
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnResource;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,7 +38,7 @@ import java.util.List;
 @AutoConfiguration(after = DataSourceAutoConfiguration.class, before = HibernateJpaAutoConfiguration.class)
 @ConditionalOnClass({EntityManagerFactory.class, SpringLiquibase.class, JdbcTemplate.class})
 @ConditionalOnBean(DataSource.class)
-@org.springframework.boot.context.properties.EnableConfigurationProperties(BlobHelperProperties.class)
+@EnableConfigurationProperties({BlobHelperProperties.class, LiquibaseProperties.class})
 @Import(DatabaseInitializationDependencyConfigurer.class)
 public class BlobHelperPersistenceAutoConfiguration {
 
@@ -62,8 +63,31 @@ public class BlobHelperPersistenceAutoConfiguration {
     @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
     @ConditionalOnBooleanProperty(name = "spring.liquibase.enabled", matchIfMissing = true)
     @Conditional(ConsumerChangelogCondition.class)
-    @Import(LiquibaseAutoConfiguration.LiquibaseConfiguration.class)
     static class ConsumerLiquibaseConfiguration {
+
+        @Bean(name = "liquibase")
+        SpringLiquibase consumerLiquibase(DataSource dataSource, LiquibaseProperties properties) {
+            SpringLiquibase liquibase = new SpringLiquibase();
+            liquibase.setDataSource(dataSource);
+            liquibase.setChangeLog(properties.getChangeLog());
+            liquibase.setClearCheckSums(properties.isClearChecksums());
+            liquibase.setDropFirst(properties.isDropFirst());
+            liquibase.setShouldRun(properties.isEnabled());
+            liquibase.setChangeLogParameters(properties.getParameters());
+            liquibase.setTestRollbackOnUpdate(properties.isTestRollbackOnUpdate());
+            liquibase.setTag(properties.getTag());
+            liquibase.setDefaultSchema(properties.getDefaultSchema());
+            liquibase.setLiquibaseSchema(properties.getLiquibaseSchema());
+            liquibase.setDatabaseChangeLogTable(properties.getDatabaseChangeLogTable());
+            liquibase.setDatabaseChangeLogLockTable(properties.getDatabaseChangeLogLockTable());
+            if (properties.getContexts() != null) {
+                liquibase.setContexts(String.join(",", properties.getContexts()));
+            }
+            if (properties.getLabelFilter() != null) {
+                liquibase.setLabels(String.join(",", properties.getLabelFilter()));
+            }
+            return liquibase;
+        }
     }
 
     static final class ConsumerChangelogCondition extends AnyNestedCondition {

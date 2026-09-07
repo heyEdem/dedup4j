@@ -7,8 +7,6 @@ import com.edem.blobhelper.storage.local.LocalBlobStorage;
 import com.edem.blobhelper.storage.s3.S3BlobStorage;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.MapPropertySource;
@@ -92,10 +90,7 @@ class ProviderAutoConfigurationDiscoveryTest {
     }
 
     @Configuration(proxyBeanMethods = false)
-    @EnableAutoConfiguration(exclude = {
-            DataSourceAutoConfiguration.class,
-            HibernateJpaAutoConfiguration.class
-    })
+    @EnableAutoConfiguration
     static class MinimalConsumer {
     }
 }

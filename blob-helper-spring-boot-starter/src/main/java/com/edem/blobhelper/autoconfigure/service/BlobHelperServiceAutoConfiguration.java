@@ -30,8 +30,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.ConfigurationCondition.ConfigurationPhase;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.orm.jpa.SharedEntityManagerCreator;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -42,7 +42,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 @AutoConfigureAfter(
         value = {
                 HibernateJpaAutoConfiguration.class,
-                JpaRepositoriesAutoConfiguration.class,
+                DataJpaRepositoriesAutoConfiguration.class,
                 LocalBlobStorageAutoConfiguration.class,
                 S3BlobStorageAutoConfiguration.class,
                 AzureBlobStorageAutoConfiguration.class
@@ -59,7 +59,7 @@ public class BlobHelperServiceAutoConfiguration {
             super(ConfigurationPhase.REGISTER_BEAN);
         }
 
-        @ConditionalOnBean(EntityManagerFactory.class)
+        @ConditionalOnBean({EntityManagerFactory.class, BlobStorage.class})
         static class BootJpaInfrastructure {
         }
 

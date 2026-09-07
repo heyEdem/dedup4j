@@ -3,7 +3,7 @@ package com.edem.blobhelper.dashboard.polling;
 import com.edem.blobhelper.dashboard.persistence.FailureEventRepository;
 import com.edem.blobhelper.dashboard.persistence.InstanceRepository;
 import com.edem.blobhelper.dashboard.persistence.MetricSnapshotRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -24,7 +24,7 @@ public class InstancePollingService {
     private final FailureEventRepository failures;
     private final DashboardDatabaseProperties properties;
     private final HttpClient client = HttpClient.newBuilder().build();
-    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+    private final ObjectMapper mapper = new ObjectMapper();
     private final Map<UUID, MetricDeltaCalculator.Cumulative> previous = new java.util.concurrent.ConcurrentHashMap<>();
 
     public InstancePollingService(InstanceRepository instances, MetricSnapshotRepository snapshots,

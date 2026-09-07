@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -195,7 +195,7 @@ class BlobHelperPersistenceAutoConfigurationTest {
         new ApplicationContextRunner()
                 .withUserConfiguration(TestDataSourceConfiguration.class, ExplicitEntityScanConfiguration.class,
                         BlobHelperPersistenceAutoConfiguration.class)
-                .run(context -> assertThat(org.springframework.boot.autoconfigure.domain.EntityScanPackages
+                .run(context -> assertThat(org.springframework.boot.persistence.autoconfigure.EntityScanPackages
                         .get(context).getPackageNames())
                         .contains(ExplicitEntity.class.getPackageName(), AssetContent.class.getPackageName()));
     }
@@ -205,7 +205,7 @@ class BlobHelperPersistenceAutoConfigurationTest {
         new ApplicationContextRunner()
                 .withUserConfiguration(TestDataSourceConfiguration.class, DefaultEntityPackageConfiguration.class,
                         BlobHelperPersistenceAutoConfiguration.class)
-                .run(context -> assertThat(org.springframework.boot.autoconfigure.domain.EntityScanPackages
+                .run(context -> assertThat(org.springframework.boot.persistence.autoconfigure.EntityScanPackages
                         .get(context).getPackageNames())
                         .contains(DefaultEntity.class.getPackageName(), AssetContent.class.getPackageName()));
     }

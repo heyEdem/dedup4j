@@ -9,9 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -28,7 +27,7 @@ class EmbeddedDashboardControllerTest {
         var service = new EmbeddedDashboardSnapshotService(empty(MeterRegistry.class), empty(AssetContentRepository.class), new BlobHelperProperties(), management);
         var controller = new EmbeddedDashboardController(service, props, since -> List.of());
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapper().registerModule(new JavaTimeModule()))).build();
+                .setMessageConverters(new JacksonJsonHttpMessageConverter(JsonMapper.builder().build())).build();
 
         var overview = mvc.perform(get("/blob-helper/dashboard/api/v1/overview"))
                 .andExpect(status().isOk()).andReturn();

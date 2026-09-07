@@ -85,3 +85,12 @@
 **Why:** PLAN-011 implements ADR-008 by emitting a transaction-neutral identity-conflict signal from JPA and recovering only after Spring rolls back. The starter owns additive entity discovery, granular defaults, prefixed migrations, and validation before persistence initialization.  
 **Tradeoffs:** Public metadata operations commit independently of caller transactions; object storage remains outside the database transaction. The initial prefixed migration requires an explicit data transition for legacy installations. Consumer Liquibase configuration must remain effective alongside Blob Helper's dedicated initializer.  
 **Alternatives considered:** Restarting resource-local transactions on a shared EntityManager is invalid. Suppressing consumer entity scans or migrations violates consumer infrastructure reuse. A service-global storage lock was rejected when forced concurrency exposed a local-filesystem publication race; that fix belongs in the adapter.
+
+## Adopt Spring Boot 4.1 and Jackson 3
+
+**Date:** 2026-09-06
+
+**Why:** The project is still early enough to absorb Spring Boot 4's module and package changes before more consumers depend on the Boot 3 surface. The standalone dashboard therefore uses the Boot 4 MVC and Jackson starters and Jackson 3 APIs.
+
+**Tradeoffs:** Boot 4 is a major upgrade; consumers and future integrations must use the Boot 4-compatible auto-configuration and JSON module layout.
+**Alternatives considered:** Remaining on Spring Boot 3.5 was rejected because it would defer migration cost and leave the project on the older framework line while the public API is still forming.
