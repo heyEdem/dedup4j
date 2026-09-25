@@ -36,7 +36,7 @@
         <module>blob-helper-spring-boot-starter</module>
         <module>dedup4j-storage-local</module>
         <module>dedup4j-storage-s3</module>
-        <module>blob-helper-storage-azure</module>
+        <module>dedup4j-storage-azure</module>
         <module>blob-helper-spring-boot-management</module>
         <module>blob-helper-spring-boot-dashboard</module>
         <module>blob-helper-spring-boot-observability</module>

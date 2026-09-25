@@ -6,7 +6,7 @@ Provider SDKs stay isolated from the provider-neutral core and starter modules. 
 
 These tests require no cloud credentials or external services:
 
-- `ProviderDependencyBoundaryTest` parses the reactor POMs and verifies AWS coordinates are owned only by `dedup4j-storage-s3` and Azure coordinates only by `blob-helper-storage-azure`.
+- `ProviderDependencyBoundaryTest` parses the reactor POMs and verifies AWS coordinates are owned only by `dedup4j-storage-s3` and Azure coordinates only by `dedup4j-storage-azure`.
 - `CoreModuleBoundaryTest` scans the core test classpath for Spring, JPA, AWS, and Azure packages.
 - `S3BlobStorageContractTest` uses an in-process SDK fake.
 - `AzureBlobStorageContractTest` uses the Azure SDK against an in-process JDK HTTP server.
@@ -21,7 +21,7 @@ Run provider tests or the complete reactor with:
 
 ```bash
 ./mvnw -pl dedup4j-storage-s3 test
-./mvnw -pl blob-helper-storage-azure test
+./mvnw -pl dedup4j-storage-azure test
 ./mvnw --batch-mode --no-transfer-progress verify
 ```
 
@@ -31,7 +31,7 @@ Credential-dependent tests are not part of the default path. When an external S3
 
 ```bash
 ./mvnw -pl dedup4j-storage-s3 -Dgroups=external-provider test
-./mvnw -pl blob-helper-storage-azure -Dgroups=external-provider test
+./mvnw -pl dedup4j-storage-azure -Dgroups=external-provider test
 ```
 
 Do not add cloud credentials, secrets, or required external endpoints to the normal Maven verification workflow.

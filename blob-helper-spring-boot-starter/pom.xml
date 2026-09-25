@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>com.edem</groupId>
-            <artifactId>blob-helper-storage-azure</artifactId>
+            <artifactId>dedup4j-storage-azure</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

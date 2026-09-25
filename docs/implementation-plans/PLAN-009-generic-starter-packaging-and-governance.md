@@ -59,7 +59,7 @@
 ```java
 package com.edem.blobhelper.autoconfigure;
 
-import com.edem.blobhelper.storage.azure.AzureBlobStorage;
+import com.edem.dedup4j.storage.azure.AzureBlobStorage;
 import com.edem.dedup4j.storage.local.LocalBlobStorage;
 import com.edem.dedup4j.storage.s3.S3BlobStorage;
 import org.junit.jupiter.api.Test;
@@ -117,7 +117,7 @@ Expected: test compilation fails because the S3 and Azure adapter packages are a
 </dependency>
 <dependency>
     <groupId>com.edem</groupId>
-    <artifactId>blob-helper-storage-azure</artifactId>
+    <artifactId>dedup4j-storage-azure</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```

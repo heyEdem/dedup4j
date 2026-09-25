@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Keep the dashboard read-only; it must not add blob mutation or repair endpoints.
-- Keep provider SDKs isolated in `dedup4j-storage-s3` and `blob-helper-storage-azure`.
+- Keep provider SDKs isolated in `dedup4j-storage-s3` and `dedup4j-storage-azure`.
 - Keep the existing `blob-helper-spring-boot-starter` free of dashboard controllers and UI resources.
 - The dashboard must be disabled explicitly with `blob-helper.dashboard.enabled=false`.
 - The embedded UI default route is `/blob-helper/dashboard`.

@@ -1,4 +1,4 @@
-package com.edem.blobhelper.storage.azure;
+package com.edem.dedup4j.storage.azure;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;

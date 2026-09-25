@@ -10,8 +10,8 @@ Implement `BlobStorage` with Azure Blob Storage.
 
 ## Files
 
-- Create: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java`
-- Create: `blob-helper-storage-azure/src/test/java/com/edem/blobhelper/storage/azure/AzureBlobStorageContractTest.java`
+- Create: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java`
+- Create: `dedup4j-storage-azure/src/test/java/com/edem/dedup4j/storage/azure/AzureBlobStorageContractTest.java`
 
 ## Steps
 

@@ -23,13 +23,13 @@ class ProviderDependencyBoundaryTest {
 
     private static final Map<String, String> PROVIDER_OWNERS = Map.of(
             "software.amazon.awssdk", "dedup4j-storage-s3",
-            "com.azure", "blob-helper-storage-azure"
+            "com.azure", "dedup4j-storage-azure"
     );
 
     private static final Set<String> STARTER_PROVIDER_ADAPTERS = Set.of(
             "com.edem:dedup4j-storage-local",
             "com.edem:dedup4j-storage-s3",
-            "com.edem:blob-helper-storage-azure"
+            "com.edem:dedup4j-storage-azure"
     );
 
     @Test

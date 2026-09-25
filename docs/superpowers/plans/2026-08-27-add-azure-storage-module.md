@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add an isolated `blob-helper-storage-azure` Maven module with Azure Blob SDK dependency management and configurable Azure connection properties.
+**Goal:** Add an isolated `dedup4j-storage-azure` Maven module with Azure Blob SDK dependency management and configurable Azure connection properties.
 
 **Architecture:** Add the provider module to the root reactor, import the Azure SDK BOM inside that module only, and expose a plain properties bean that contains container, connection string, endpoint, and account name settings. No core or starter API changes are needed; the Azure adapter implementation remains task 5.4.
 
@@ -14,9 +14,9 @@
 
 **Files:**
 - Modify: `pom.xml`
-- Create: `blob-helper-storage-azure/pom.xml`
-- Create: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorageProperties.java`
-- Test: `blob-helper-storage-azure/src/test/java/com/edem/blobhelper/storage/azure/AzureBlobStoragePropertiesTest.java`
+- Create: `dedup4j-storage-azure/pom.xml`
+- Create: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorageProperties.java`
+- Test: `dedup4j-storage-azure/src/test/java/com/edem/dedup4j/storage/azure/AzureBlobStoragePropertiesTest.java`
 
 - [x] **Step 1: Write the failing test**
 
@@ -42,27 +42,27 @@ void storesAzureConnectionSettings() {
 
 - [x] **Step 2: Run the test and verify it fails because the module and properties type do not exist**
 
-Run: `./mvnw -pl blob-helper-storage-azure test`
+Run: `./mvnw -pl dedup4j-storage-azure test`
 
 Expected: Maven reports that the requested project/module is not present in the reactor.
 
 - [x] **Step 3: Add the reactor entry, isolated Azure BOM/dependency, properties bean, and test**
 
-Add `<module>blob-helper-storage-azure</module>` to the root `<modules>` list. The new module imports `com.azure:azure-sdk-bom` version `1.3.8`, declares `com.azure:azure-storage-blob` without a version, depends on `dedup4j-core`, and adds JUnit Jupiter in test scope.
+Add `<module>dedup4j-storage-azure</module>` to the root `<modules>` list. The new module imports `com.azure:azure-sdk-bom` version `1.3.8`, declares `com.azure:azure-storage-blob` without a version, depends on `dedup4j-core`, and adds JUnit Jupiter in test scope.
 
 Implement `AzureBlobStorageProperties` with nullable `String container`, `String connectionString`, `URI endpoint`, and `String accountName` fields plus conventional getters and setters. Keep the class free of Azure SDK imports so it can be used as provider configuration without changing core APIs.
 
 - [x] **Step 4: Run the focused module test and verify it passes**
 
-Run: `./mvnw -pl blob-helper-storage-azure test`
+Run: `./mvnw -pl dedup4j-storage-azure test`
 
 Expected: `AzureBlobStoragePropertiesTest` passes and Maven resolves Azure SDK artifacts only for the new module.
 
 - [x] **Step 5: Verify dependency isolation and the full reactor**
 
-Run: `./mvnw -pl blob-helper-storage-azure dependency:tree -Dincludes=com.azure` and `./mvnw verify`.
+Run: `./mvnw -pl dedup4j-storage-azure dependency:tree -Dincludes=com.azure` and `./mvnw verify`.
 
-Expected: the dependency tree contains Azure artifacts for `blob-helper-storage-azure`; the full reactor exits with code 0.
+Expected: the dependency tree contains Azure artifacts for `dedup4j-storage-azure`; the full reactor exits with code 0.
 
 - [x] **Step 6: Update project indexes and task status**
 

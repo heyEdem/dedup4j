@@ -2,7 +2,7 @@ package com.edem.blobhelper.autoconfigure;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.edem.dedup4j.core.storage.BlobStorage;
-import com.edem.blobhelper.storage.azure.AzureBlobStorage;
+import com.edem.dedup4j.storage.azure.AzureBlobStorage;
 import com.edem.dedup4j.storage.local.LocalBlobStorage;
 import com.edem.dedup4j.storage.s3.S3BlobStorage;
 import org.junit.jupiter.api.Test;

@@ -28,7 +28,7 @@
 - Create: `.../autoconfigure/storage/LocalBlobStorageAutoConfiguration.java`.
 - Create: `.../autoconfigure/storage/S3BlobStorageAutoConfiguration.java`.
 - Create: `.../autoconfigure/storage/AzureBlobStorageAutoConfiguration.java`.
-- Modify: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java` — expose its existing client factory to auto-configuration.
+- Modify: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java` — expose its existing client factory to auto-configuration.
 - Modify: `.../autoconfigure/BlobHelperAutoConfiguration.java` — require an explicit provider and validate the final bean graph by type, not bean-name substring.
 - Modify: `blob-helper-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
 - Modify: `.../autoconfigure/BlobHelperPropertiesTest.java`.
@@ -250,7 +250,7 @@ Expected: all tests pass without an external S3 call.
 
 - Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/storage/AzureBlobStorageAutoConfiguration.java`
 - Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/storage/AzureBlobStorageAutoConfigurationTest.java`
-- Modify: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java`
+- Modify: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java`
 
 - [ ] **Step 1: Write failing context tests**
 
@@ -303,7 +303,7 @@ Change the existing `AzureBlobStorage.createClient(AzureBlobStorageProperties)` 
 - [ ] **Step 3: Run the focused Azure test**
 
 ```bash
-./mvnw -pl blob-helper-storage-azure,blob-helper-spring-boot-starter -am test -Dtest=AzureBlobStorageAutoConfigurationTest,AzureBlobStorageContractTest
+./mvnw -pl dedup4j-storage-azure,blob-helper-spring-boot-starter -am test -Dtest=AzureBlobStorageAutoConfigurationTest,AzureBlobStorageContractTest
 ```
 
 Expected: configuration and existing provider contracts pass without Azure credentials.

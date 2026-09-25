@@ -42,7 +42,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | JPA module tests | `./mvnw -pl dedup4j-jpa test` |
 | Starter tests | `./mvnw -pl blob-helper-spring-boot-starter test` |
 | Local storage tests | `./mvnw -pl dedup4j-storage-local test` |
-| Azure module tests | `./mvnw -pl blob-helper-storage-azure test` |
+| Azure module tests | `./mvnw -pl dedup4j-storage-azure test` |
 | Dependency boundary checks | `./mvnw test -Dtest='*BoundaryTest'` |
 | Dashboard module tests | `./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test` |
 | Inspect tracked planning docs | `git status --short docs` |
@@ -136,7 +136,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | 2026-08-28 | Added approved Epic 7 for a fully local, read-only, pull-based dashboard with YAML self-registration, SQLite aggregate history, and seven-day failure retention. Project scope is now 25/35 tasks complete. |
 | 2026-08-27 | Completed task 5.5 with reactor POM ownership checks for AWS/Azure SDKs, credential-free provider-testing documentation, and a passing `ProviderDependencyBoundaryTest`. Epic 5 is complete (5/5). |
 | 2026-08-27 | Completed task 5.4 with streaming Azure put/get, idempotent delete, existence checks, core exception mapping, and credential-free SDK-backed contract tests using an in-process HTTP fake. Epic 5 is in progress (4/5). |
-| 2026-08-27 | Completed task 5.3 with the isolated `blob-helper-storage-azure` module, Azure SDK BOM/dependency, and configurable container, connection string, endpoint, and account name properties. Epic 5 is in progress (3/5). |
+| 2026-08-27 | Completed task 5.3 with the isolated `dedup4j-storage-azure` module, Azure SDK BOM/dependency, and configurable container, connection string, endpoint, and account name properties. Epic 5 is in progress (3/5). |
 | 2026-08-26 | Completed task 5.2 with streaming S3 put/get, idempotent delete, head-based existence checks, domain exception mapping, and credential-free contract tests. Epic 5 is in progress (2/5). |
 | 2026-08-26 | Completed task 5.1 with the isolated `dedup4j-storage-s3` module, AWS SDK v2 module-local BOM, and configurable bucket, region, endpoint override, and path-style access properties. Epic 5 is in progress. |
 | 2026-08-26 | Completed task 4.4 with a real local-provider service integration test covering temporary-directory storage, readback, duplicate physical-write avoidance, and final-reference deletion. Epic 4 is complete. |

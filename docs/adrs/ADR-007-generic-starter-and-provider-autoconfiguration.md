@@ -31,7 +31,7 @@ For S3, provider and bucket are the only Blob Helper-required properties. Region
 | Consumer dependency aggregation | `blob-helper-spring-boot-starter/pom.xml` |
 | Provider conditions and property binding | starter auto-configuration package |
 | AWS implementation | `dedup4j-storage-s3` |
-| Azure implementation | `blob-helper-storage-azure` |
+| Azure implementation | `dedup4j-storage-azure` |
 | Local implementation | `dedup4j-storage-local` |
 | Convergence/security gates | root Maven build and `.github` workflows |
 

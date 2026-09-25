@@ -147,7 +147,7 @@ Responsibilities:
 - delete objects from S3
 - return object metadata and access information
 
-### blob-helper-storage-azure
+### dedup4j-storage-azure
 
 Azure Blob Storage adapter.
 

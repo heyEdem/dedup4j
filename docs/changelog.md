@@ -34,7 +34,7 @@
 - Implemented PLAN-010 with nested local/S3/Azure settings, selected-provider client and storage defaults, application-client reuse, and complete back-off for application storage.
 - Required explicit provider selection and exactly one storage bean by type; Spring owns S3 client shutdown, and Azure exposes its existing client factory for shared construction.
 - Added provider context, client lifecycle, and automatic-discovery coverage. Full reactor verification passed: 137 tests, zero failures, errors, or skips.
-- Modules affected: `blob-helper-spring-boot-starter`, `blob-helper-storage-azure`, and consumer/project documentation.
+- Modules affected: `blob-helper-spring-boot-starter`, `dedup4j-storage-azure`, and consumer/project documentation.
 
 ## 2026-09-01 — Fix embedded dashboard root asset paths
 
@@ -119,14 +119,14 @@
 
 - Added streaming Azure Blob Storage put/get, idempotent delete, existence checks, and core exception mapping.
 - Added credential-free SDK-backed contract tests using an in-process HTTP fake.
-- Modules affected: `blob-helper-storage-azure` and Epic 5 planning/status documentation.
+- Modules affected: `dedup4j-storage-azure` and Epic 5 planning/status documentation.
 
 ## 2026-08-27 — Add Azure storage module
 
-- Added `blob-helper-storage-azure` to the Maven reactor with a module-local Azure SDK BOM and `azure-storage-blob` dependency.
+- Added `dedup4j-storage-azure` to the Maven reactor with a module-local Azure SDK BOM and `azure-storage-blob` dependency.
 - Added `AzureBlobStorageProperties` for container, connection string, endpoint, and account name configuration without Azure SDK types.
 - Added credential-free properties coverage and verified the focused module test, Azure dependency tree, and full reactor build.
-- Modules affected: root reactor, `blob-helper-storage-azure`, and Epic 5 planning/status documentation.
+- Modules affected: root reactor, `dedup4j-storage-azure`, and Epic 5 planning/status documentation.
 
 ## 2026-08-26 — Implement S3 BlobStorage adapter
 
@@ -339,4 +339,9 @@
 ## 2026-09-25 — Rename s3 module to dedup4j
 
 - Renamed the S3 adapter artifact and packages, consumer references, SDK ownership assertions, and affected documentation; provider behavior is unchanged.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename azure module to dedup4j
+
+- Renamed the Azure adapter artifact and packages, consumer references, SDK ownership assertions, and affected documentation; in-process Azure contract tests passed.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.
