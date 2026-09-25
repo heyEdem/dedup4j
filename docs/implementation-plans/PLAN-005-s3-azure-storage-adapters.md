@@ -15,7 +15,7 @@ The library must support cloud storage providers without leaking provider SDK de
 
 ## What to Build
 
-- Add `blob-helper-storage-s3` module.
+- Add `dedup4j-storage-s3` module.
 - Add S3 properties for bucket, region, and key prefix.
 - Implement S3 `put`, `get`, `delete`, and `exists`.
 - Add `blob-helper-storage-azure` module.
@@ -27,7 +27,7 @@ The library must support cloud storage providers without leaking provider SDK de
 
 | Logic | Location |
 |-------|----------|
-| S3 SDK implementation | `blob-helper-storage-s3/src/main/java/.../s3` |
+| S3 SDK implementation | `dedup4j-storage-s3/src/main/java/.../s3` |
 | Azure SDK implementation | `blob-helper-storage-azure/src/main/java/.../azure` |
 | Provider-specific properties | Provider modules and starter property binding |
 | Provider-neutral API | `dedup4j-core` |

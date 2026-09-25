@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProviderDependencyBoundaryTest {
 
     private static final Map<String, String> PROVIDER_OWNERS = Map.of(
-            "software.amazon.awssdk", "blob-helper-storage-s3",
+            "software.amazon.awssdk", "dedup4j-storage-s3",
             "com.azure", "blob-helper-storage-azure"
     );
 
     private static final Set<String> STARTER_PROVIDER_ADAPTERS = Set.of(
             "com.edem:dedup4j-storage-local",
-            "com.edem:blob-helper-storage-s3",
+            "com.edem:dedup4j-storage-s3",
             "com.edem:blob-helper-storage-azure"
     );
 

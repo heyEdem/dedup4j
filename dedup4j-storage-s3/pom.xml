@@ -10,9 +10,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>blob-helper-storage-s3</artifactId>
-    <name>blob-helper-storage-s3</name>
-    <description>AWS S3 storage adapter for Blob Helper.</description>
+    <artifactId>dedup4j-storage-s3</artifactId>
+    <name>dedup4j-storage-s3</name>
+    <description>AWS S3 storage adapter for dedup4j.</description>
 
     <properties>
         <aws.sdk.version>2.54.4</aws.sdk.version>

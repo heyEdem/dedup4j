@@ -1,4 +1,4 @@
-package com.edem.blobhelper.storage.s3;
+package com.edem.dedup4j.storage.s3;
 
 import org.junit.jupiter.api.Test;
 

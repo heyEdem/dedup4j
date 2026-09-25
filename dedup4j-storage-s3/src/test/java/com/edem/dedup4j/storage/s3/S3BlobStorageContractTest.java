@@ -1,4 +1,4 @@
-package com.edem.blobhelper.storage.s3;
+package com.edem.dedup4j.storage.s3;
 
 import com.edem.dedup4j.core.exception.BlobStorageException;
 import com.edem.dedup4j.core.exception.ContentNotFoundException;

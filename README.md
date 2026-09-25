@@ -34,7 +34,7 @@ Many logical assets can point to one physical content record.
 dedup4j-core
 dedup4j-jpa
 blob-helper-spring-boot-starter
-blob-helper-storage-s3
+dedup4j-storage-s3
 blob-helper-storage-azure
 blob-helper-spring-boot-management  (optional local management API)
 blob-helper-spring-boot-dashboard   (optional embedded read-only dashboard)

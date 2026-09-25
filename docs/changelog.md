@@ -132,14 +132,14 @@
 
 - Added streaming S3 put/get, idempotent delete, and head-based exists behavior with bucket and object metadata mapping.
 - Mapped S3 404 responses to core not-found semantics and other provider failures to `BlobStorageException`; added credential-free contract tests because no external S3-compatible target is configured in the repository.
-- Modules affected: `blob-helper-storage-s3` and Epic 5 planning/status documentation.
+- Modules affected: `dedup4j-storage-s3` and Epic 5 planning/status documentation.
 
 ## 2026-08-26 — Add S3 storage module
 
-- Added `blob-helper-storage-s3` to the Maven reactor with a module-local AWS SDK for Java 2.x BOM and S3 dependency.
+- Added `dedup4j-storage-s3` to the Maven reactor with a module-local AWS SDK for Java 2.x BOM and S3 dependency.
 - Added configurable S3 properties for bucket, region, optional endpoint override, and path-style access, which defaults to disabled.
 - Verified AWS SDK isolation from `dedup4j-core` and `blob-helper-spring-boot-starter`; Epic 5 is in progress (1/5).
-- Modules affected: root reactor, `blob-helper-storage-s3`, and Epic 5 planning/status documentation.
+- Modules affected: root reactor, `dedup4j-storage-s3`, and Epic 5 planning/status documentation.
 
 ## 2026-08-26 — Add local storage service integration tests
 
@@ -334,4 +334,9 @@
 ## 2026-09-25 — Rename local storage module to dedup4j
 
 - Renamed the local adapter artifact and packages, consumer references, and module documentation; retained the existing storage-directory default pending persistence work.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename s3 module to dedup4j
+
+- Renamed the S3 adapter artifact and packages, consumer references, SDK ownership assertions, and affected documentation; provider behavior is unchanged.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.

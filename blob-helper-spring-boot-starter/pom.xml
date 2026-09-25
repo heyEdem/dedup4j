@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>com.edem</groupId>
-            <artifactId>blob-helper-storage-s3</artifactId>
+            <artifactId>dedup4j-storage-s3</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

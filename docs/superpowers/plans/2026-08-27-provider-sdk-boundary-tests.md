@@ -4,7 +4,7 @@
 
 **Goal:** Prove AWS and Azure SDK dependencies remain isolated to their provider modules and document the credential-free versus external provider test workflow.
 
-**Architecture:** Add a root-level JUnit boundary test that reads the reactor POMs and verifies forbidden provider coordinates are owned only by `blob-helper-storage-s3` and `blob-helper-storage-azure`. Keep provider contract tests in their provider modules, with external credential-dependent tests documented as an explicit opt-in path.
+**Architecture:** Add a root-level JUnit boundary test that reads the reactor POMs and verifies forbidden provider coordinates are owned only by `dedup4j-storage-s3` and `blob-helper-storage-azure`. Keep provider contract tests in their provider modules, with external credential-dependent tests documented as an explicit opt-in path.
 
 **Tech Stack:** Java 21, Maven, JUnit 5, standard DOM XML parsing, existing provider modules and contract tests.
 
@@ -18,7 +18,7 @@
 
 - [x] **Step 1: Write the failing test**
 
-Parse the root reactor POM and each module POM. Assert that AWS coordinates occur only in `blob-helper-storage-s3`, Azure coordinates occur only in `blob-helper-storage-azure`, and neither provider coordinate occurs in `dedup4j-core` or `blob-helper-spring-boot-starter`.
+Parse the root reactor POM and each module POM. Assert that AWS coordinates occur only in `dedup4j-storage-s3`, Azure coordinates occur only in `blob-helper-storage-azure`, and neither provider coordinate occurs in `dedup4j-core` or `blob-helper-spring-boot-starter`.
 
 - [x] **Step 2: Run the boundary test to verify it fails**
 

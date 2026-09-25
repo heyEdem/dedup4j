@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add an isolated `blob-helper-storage-s3` Maven module with AWS SDK v2 support and configurable S3 bucket, region, endpoint override, and path-style access properties.
+**Goal:** Add an isolated `dedup4j-storage-s3` Maven module with AWS SDK v2 support and configurable S3 bucket, region, endpoint override, and path-style access properties.
 
 **Architecture:** Register a new provider module in the root reactor. Keep the AWS SDK BOM and `s3` dependency inside that module, with only `dedup4j-core` as its project dependency; defer all `BlobStorage` implementation behavior to task 5.2. Keep the properties class plain and provider-specific so the starter and core remain free of AWS types.
 
@@ -13,8 +13,8 @@
 ### Task 1: Define S3 configuration behavior with tests
 
 **Files:**
-- Create: `blob-helper-storage-s3/src/main/java/com/edem/blobhelper/storage/s3/S3BlobStorageProperties.java`
-- Create: `blob-helper-storage-s3/src/test/java/com/edem/blobhelper/storage/s3/S3BlobStoragePropertiesTest.java`
+- Create: `dedup4j-storage-s3/src/main/java/com/edem/dedup4j/storage/s3/S3BlobStorageProperties.java`
+- Create: `dedup4j-storage-s3/src/test/java/com/edem/dedup4j/storage/s3/S3BlobStoragePropertiesTest.java`
 
 - [x] **Step 1: Write the failing properties tests**
 
@@ -22,7 +22,7 @@ Add tests proving the properties object accepts a bucket, region, URI endpoint o
 
 - [x] **Step 2: Run the tests to verify the expected failure**
 
-Run: `./mvnw -pl blob-helper-storage-s3 test`
+Run: `./mvnw -pl dedup4j-storage-s3 test`
 
 Expected: the module is not yet available in the reactor, so Maven fails before executing the new tests.
 
@@ -32,7 +32,7 @@ Add private fields `String bucket`, `String region`, `URI endpointOverride`, and
 
 - [x] **Step 4: Run the properties tests to verify they pass**
 
-Run: `./mvnw -pl blob-helper-storage-s3 test`
+Run: `./mvnw -pl dedup4j-storage-s3 test`
 
 Expected: the module builds and the properties tests pass.
 
@@ -40,11 +40,11 @@ Expected: the module builds and the properties tests pass.
 
 **Files:**
 - Modify: `pom.xml`
-- Create: `blob-helper-storage-s3/pom.xml`
+- Create: `dedup4j-storage-s3/pom.xml`
 
 - [x] **Step 1: Add the module to the reactor**
 
-Add `<module>blob-helper-storage-s3</module>` to the root module list.
+Add `<module>dedup4j-storage-s3</module>` to the root module list.
 
 - [x] **Step 2: Add module-local AWS dependency management**
 
@@ -52,7 +52,7 @@ Configure the module with an AWS SDK v2 BOM and the `software.amazon.awssdk:s3` 
 
 - [x] **Step 3: Compile and run the module tests**
 
-Run: `./mvnw -pl blob-helper-storage-s3 test`
+Run: `./mvnw -pl dedup4j-storage-s3 test`
 
 Expected: `BUILD SUCCESS` with the S3 properties tests passing and no AWS credentials required.
 
@@ -87,7 +87,7 @@ Run: `git diff HEAD~1 --name-only` after committing, then re-scan only the chang
 Run:
 
 ```bash
-git add pom.xml blob-helper-storage-s3 \
+git add pom.xml dedup4j-storage-s3 \
   docs/architecture.md docs/implementation.md docs/taskindex.md docs/changelog.md \
   docs/epics/epic-005-s3-azure-storage-adapters/README.md \
   docs/epics/epic-005-s3-azure-storage-adapters/tasks/task-001-add-s3-storage-module.md \

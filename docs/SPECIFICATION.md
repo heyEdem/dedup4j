@@ -135,7 +135,7 @@ Responsibilities:
 - delete/reference service bean
 - optional scheduled reconciliation bean
 
-### blob-helper-storage-s3
+### dedup4j-storage-s3
 
 AWS S3 adapter.
 
