@@ -75,12 +75,12 @@ The result remains local: no commits, branch changes, pushes, or pull requests. 
 JPA:
 
 ```text
-blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java
-blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentMutationService.java
-blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/DuplicateContentIdentityException.java
-blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMappingTest.java
-blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMutationServiceTest.java
-blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/ConcurrentUploadIntegrationTest.java
+dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java
+dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentMutationService.java
+dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/DuplicateContentIdentityException.java
+dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java
+dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java
+dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/ConcurrentUploadIntegrationTest.java
 ```
 
 Starter production and migrations:

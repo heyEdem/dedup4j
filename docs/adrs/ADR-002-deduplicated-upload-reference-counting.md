@@ -25,7 +25,7 @@ The upload service computes content identity, looks up existing content, and eit
 | Concern | Owner |
 |---------|-------|
 | Upload orchestration | `blob-helper-spring-boot-starter` upload service |
-| Lookup, insert, locking, and reference count mutation | `blob-helper-jpa` |
+| Lookup, insert, locking, and reference count mutation | `dedup4j-jpa` |
 | Physical writes | `BlobStorage` implementation |
 | Logical asset creation | Consuming application |
 

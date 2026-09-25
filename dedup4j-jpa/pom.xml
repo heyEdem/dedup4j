@@ -10,9 +10,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>blob-helper-jpa</artifactId>
-    <name>blob-helper-jpa</name>
-    <description>Relational metadata persistence for Blob Helper.</description>
+    <artifactId>dedup4j-jpa</artifactId>
+    <name>dedup4j-jpa</name>
+    <description>Relational metadata persistence for dedup4j.</description>
 
     <dependencies>
         <dependency>

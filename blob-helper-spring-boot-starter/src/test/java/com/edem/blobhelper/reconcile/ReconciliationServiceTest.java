@@ -1,8 +1,8 @@
 package com.edem.blobhelper.reconcile;
 
-import com.edem.blobhelper.jpa.AssetContent;
-import com.edem.blobhelper.jpa.AssetContentRepository;
-import com.edem.blobhelper.jpa.ReferenceCountService;
+import com.edem.dedup4j.jpa.AssetContent;
+import com.edem.dedup4j.jpa.AssetContentRepository;
+import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.dedup4j.core.storage.PutBlobRequest;

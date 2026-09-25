@@ -15,7 +15,7 @@ Deduplication depends on a durable `AssetContent` record with a unique content i
 
 ## What to Build
 
-- Add `blob-helper-jpa` module.
+- Add `dedup4j-jpa` module.
 - Add `AssetContent` JPA entity mapped to `blob_asset_content`.
 - Add unique constraint on `hash_algorithm`, `content_hash`, and `size_bytes`.
 - Add indexes for hash, object key, and reference count.
@@ -27,10 +27,10 @@ Deduplication depends on a durable `AssetContent` record with a unique content i
 
 | Logic | Location |
 |-------|----------|
-| Physical content metadata | `blob-helper-jpa/src/main/java/.../jpa/AssetContent.java` |
-| Lookup and locks | `blob-helper-jpa/src/main/java/.../jpa/AssetContentRepository.java` |
-| Reference count mutation | `blob-helper-jpa/src/main/java/.../jpa/ReferenceCountService.java` |
-| Duplicate-key retry | `blob-helper-jpa` service/repository boundary |
+| Physical content metadata | `dedup4j-jpa/src/main/java/.../jpa/AssetContent.java` |
+| Lookup and locks | `dedup4j-jpa/src/main/java/.../jpa/AssetContentRepository.java` |
+| Reference count mutation | `dedup4j-jpa/src/main/java/.../jpa/ReferenceCountService.java` |
+| Duplicate-key retry | `dedup4j-jpa` service/repository boundary |
 
 ## Acceptance Criteria (from Q4)
 

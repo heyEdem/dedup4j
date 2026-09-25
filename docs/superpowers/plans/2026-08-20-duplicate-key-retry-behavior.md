@@ -23,10 +23,10 @@
 ### Task 1: Add failing mutation-service tests
 
 **Files:**
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMutationServiceTest.java`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java`
 
 **Interfaces:**
-- Consumes: `AssetContent`, `AssetContentRepository`, and the existing `blob-helper-jpa-test` persistence unit.
+- Consumes: `AssetContent`, `AssetContentRepository`, and the existing `dedup4j-jpa-test` persistence unit.
 - Produces: Tests specifying `AssetContentMutationService(EntityManager)` and `AssetContent createOrRetain(AssetContent candidate)`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -70,7 +70,7 @@
   Run:
 
   ```bash
-  ./mvnw -pl blob-helper-jpa -am -Dtest=AssetContentMutationServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+  ./mvnw -pl dedup4j-jpa -am -Dtest=AssetContentMutationServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
   ```
 
   Expected: compilation failure because `AssetContentMutationService` does not exist yet.
@@ -78,7 +78,7 @@
 ### Task 2: Implement create-or-retain and duplicate-key retry
 
 **Files:**
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentMutationService.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentMutationService.java`
 
 **Interfaces:**
 - Consumes: `AssetContentRepository.findByIdentity(String, String, long)` and `findByIdForUpdate(UUID)`; package-private `AssetContent.incrementRefCount()`.
@@ -107,7 +107,7 @@
   Run:
 
   ```bash
-  ./mvnw -pl blob-helper-jpa -am -Dtest=AssetContentMutationServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+  ./mvnw -pl dedup4j-jpa -am -Dtest=AssetContentMutationServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
   ```
 
   Expected: all create, existing-row, and duplicate-race tests pass.
@@ -139,8 +139,8 @@
   Run:
 
   ```bash
-  ./mvnw -pl blob-helper-jpa -Dtest=AssetContentMutationServiceTest test
-  ./mvnw -pl blob-helper-jpa test
+  ./mvnw -pl dedup4j-jpa -Dtest=AssetContentMutationServiceTest test
+  ./mvnw -pl dedup4j-jpa test
   ./mvnw verify
   git diff --check
   git diff HEAD~1 --name-only
@@ -151,4 +151,4 @@
 
 - [ ] **Step 5: Re-scan changed files and direct neighbors**
 
-  Read the changed Java files and the other files in `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa` and `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa`, then confirm the implementation and indexed documentation agree before reporting completion.
+  Read the changed Java files and the other files in `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa` and `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa`, then confirm the implementation and indexed documentation agree before reporting completion.

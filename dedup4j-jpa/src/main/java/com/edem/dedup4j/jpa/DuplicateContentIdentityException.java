@@ -1,4 +1,4 @@
-package com.edem.blobhelper.jpa;
+package com.edem.dedup4j.jpa;
 
 /**
  * Signals that another transaction inserted the same physical content

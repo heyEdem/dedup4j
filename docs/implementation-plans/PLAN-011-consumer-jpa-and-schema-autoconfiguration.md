@@ -26,17 +26,17 @@ Initial read-only repository inspection preceded reading this plan's Git exclusi
 
 - **Protected outcome (Q1):** an application with a working `DataSource`, JPA entity manager, and selected `BlobStorage` receives a usable `BlobDeduplicationService` without a `GeneralConfig` class.
 - **Invariants (Q2):** one shared metadata database, conditional defaults, no resource-local transaction calls on a Spring `EntityManager`, one reference per successful call, guarded schema mutation.
-- **Owner (Q3):** `blob-helper-jpa` owns persistence behavior; the starter owns Spring transactions, bean assembly, and schema policy.
+- **Owner (Q3):** `dedup4j-jpa` owns persistence behavior; the starter owns Spring transactions, bean assembly, and schema policy.
 - **Proof (Q4):** focused mutation, schema-mode, override, context-start, and concurrent-duplicate tests below.
 - **Exclusions (Q5):** no private SQLite database, no application logical-asset tables, no cross-resource S3/database transaction claim, no Git operations.
 
 ## File Map
 
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java` — use the prefixed table name.
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentMutationService.java` — remove manual transaction restart.
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/DuplicateContentIdentityException.java`.
-- Modify: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMappingTest.java`.
-- Modify: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMutationServiceTest.java`.
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java` — use the prefixed table name.
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentMutationService.java` — remove manual transaction restart.
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/DuplicateContentIdentityException.java`.
+- Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java`.
+- Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java`.
 - Modify: `blob-helper-spring-boot-starter/pom.xml` — add Spring Data JPA, JDBC, and Liquibase integration dependencies.
 - Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperProperties.java` — add persistence schema mode.
 - Create: `.../autoconfigure/persistence/SchemaInitialization.java`.
@@ -80,9 +80,9 @@ Initial read-only repository inspection preceded reading this plan's Git exclusi
 
 **Files:**
 
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/DuplicateContentIdentityException.java`
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentMutationService.java`
-- Modify: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMutationServiceTest.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/DuplicateContentIdentityException.java`
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentMutationService.java`
+- Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java`
 
 - [ ] **Step 1: Write a failing mutation test**
 
@@ -147,7 +147,7 @@ Keep the existing one-argument constructor as a convenience that delegates to th
 - [ ] **Step 3: Run the JPA mutation tests**
 
 ```bash
-./mvnw -pl blob-helper-jpa test -Dtest=AssetContentMutationServiceTest
+./mvnw -pl dedup4j-jpa test -Dtest=AssetContentMutationServiceTest
 ```
 
 Expected: ordinary insert/retain tests and the transaction-neutral duplicate signal pass.
@@ -156,8 +156,8 @@ Expected: ordinary insert/retain tests and the transaction-neutral duplicate sig
 
 **Files:**
 
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java`
-- Modify: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMappingTest.java`
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java`
+- Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java`
 - Create: `blob-helper-spring-boot-starter/src/main/resources/db/blob-helper/db.changelog-master.yaml`
 - Create: `blob-helper-spring-boot-starter/src/main/resources/db/blob-helper/changes/001-create-asset-content.yaml`
 
@@ -195,7 +195,7 @@ The `001` changeset must create `blob_helper_asset_content` with columns matchin
 Extend `AssetContentMappingTest` to assert the exact table/constraint/index names. Add a test that runs the changelog against H2, boots Hibernate with `hibernate.hbm2ddl.auto=validate`, and obtains an `EntityManagerFactory` successfully.
 
 ```bash
-./mvnw -pl blob-helper-jpa,blob-helper-spring-boot-starter -am test -Dtest=AssetContentMappingTest,BlobHelperPersistenceAutoConfigurationTest
+./mvnw -pl dedup4j-jpa,blob-helper-spring-boot-starter -am test -Dtest=AssetContentMappingTest,BlobHelperPersistenceAutoConfigurationTest
 ```
 
 Expected: entity mapping and packaged schema agree.
@@ -450,7 +450,7 @@ exactly one result is duplicate after the race settles
 - [ ] **Step 4: Run starter and JPA verification**
 
 ```bash
-./mvnw --batch-mode --no-transfer-progress -pl blob-helper-jpa,blob-helper-spring-boot-starter -am verify
+./mvnw --batch-mode --no-transfer-progress -pl dedup4j-jpa,blob-helper-spring-boot-starter -am verify
 ```
 
 Expected: `BUILD SUCCESS`, including schema and context-start coverage.

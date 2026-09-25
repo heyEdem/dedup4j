@@ -21,10 +21,10 @@
 ### Task 1: Add failing retain behavior test
 
 **Files:**
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/ReferenceCountServiceTest.java`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/ReferenceCountServiceTest.java`
 
 **Interfaces:**
-- Consumes: `AssetContent`, `AssetContentRepository`, and the test persistence unit `blob-helper-jpa-test`.
+- Consumes: `AssetContent`, `AssetContentRepository`, and the test persistence unit `dedup4j-jpa-test`.
 - Produces: A failing test specifying `new ReferenceCountService(repository).retain(contentId)` increments an existing row once.
 
 - [ ] **Step 1: Write the failing test**
@@ -36,7 +36,7 @@ Create a JPA integration test following `AssetContentRepositoryTest`'s entity-ma
 Run:
 
 ```bash
-./mvnw -pl blob-helper-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+./mvnw -pl dedup4j-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
 Expected: compilation/test failure because `ReferenceCountService` does not exist yet.
@@ -44,8 +44,8 @@ Expected: compilation/test failure because `ReferenceCountService` does not exis
 ### Task 2: Implement retain and entity mutation seam
 
 **Files:**
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/ReferenceCountService.java`
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/ReferenceCountService.java`
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java`
 
 **Interfaces:**
 - Consumes: `AssetContentRepository.findByIdForUpdate(UUID)`.
@@ -64,7 +64,7 @@ Add package-private methods on `AssetContent` that increment and decrement `refC
 Run:
 
 ```bash
-./mvnw -pl blob-helper-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+./mvnw -pl dedup4j-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
 Expected: the retain test passes.
@@ -72,7 +72,7 @@ Expected: the retain test passes.
 ### Task 3: Add release and underflow tests first
 
 **Files:**
-- Modify: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/ReferenceCountServiceTest.java`
+- Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/ReferenceCountServiceTest.java`
 
 **Interfaces:**
 - Consumes: `ReferenceCountService.release(UUID)` and `ReferenceCountUnderflowException`.
@@ -95,7 +95,7 @@ Call `retain(UUID.randomUUID())` and assert `ContentNotFoundException`.
 Run:
 
 ```bash
-./mvnw -pl blob-helper-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+./mvnw -pl dedup4j-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
 Expected: release tests fail because release behavior is not implemented; the retain and missing-content tests may expose any API/setup errors and must be corrected before implementation continues.
@@ -103,7 +103,7 @@ Expected: release tests fail because release behavior is not implemented; the re
 ### Task 4: Implement release and verify the module
 
 **Files:**
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/ReferenceCountService.java`
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/ReferenceCountService.java`
 
 - [ ] **Step 1: Implement release minimally**
 
@@ -114,7 +114,7 @@ Load the row with `findByIdForUpdate`, throw `ContentNotFoundException` when abs
 Run:
 
 ```bash
-./mvnw -pl blob-helper-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
+./mvnw -pl dedup4j-jpa -am -Dtest=ReferenceCountServiceTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
 Expected: all `ReferenceCountServiceTest` tests pass.
@@ -124,7 +124,7 @@ Expected: all `ReferenceCountServiceTest` tests pass.
 Run:
 
 ```bash
-./mvnw -pl blob-helper-jpa -am test
+./mvnw -pl dedup4j-jpa -am test
 ```
 
 Expected: all JPA mapping, repository, and service tests pass without warnings or errors.

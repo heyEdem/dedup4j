@@ -1,4 +1,4 @@
-package com.edem.blobhelper.jpa;
+package com.edem.dedup4j.jpa;
 
 import com.edem.dedup4j.core.exception.ContentNotFoundException;
 import com.edem.dedup4j.core.exception.ReferenceCountUnderflowException;
@@ -32,7 +32,7 @@ class ReferenceCountServiceTest {
 
     @BeforeAll
     static void createEntityManagerFactory() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("blob-helper-jpa-test");
+        entityManagerFactory = Persistence.createEntityManagerFactory("dedup4j-jpa-test");
     }
 
     @AfterAll

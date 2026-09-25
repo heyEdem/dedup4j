@@ -10,15 +10,15 @@ Delete physical storage only when the final logical reference is released.
 
 ## Files
 
-- Modify: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/ReferenceCountService.java`
-- Modify: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/ReferenceCountServiceTest.java`
+- Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/ReferenceCountService.java`
+- Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/ReferenceCountServiceTest.java`
 
 ## Steps
 
 - [x] Accept a `BlobStorage` service collaborator at the release boundary.
 - [x] Keep physical storage when `ref_count` remains above zero.
 - [x] Delegate physical deletion when `ref_count` reaches zero; zero-count metadata remains available for later reconciliation/tombstone policy.
-- [x] Run `./mvnw -pl blob-helper-jpa -Dtest=ReferenceCountServiceTest test`.
+- [x] Run `./mvnw -pl dedup4j-jpa -Dtest=ReferenceCountServiceTest test`.
 
 ## Acceptance
 

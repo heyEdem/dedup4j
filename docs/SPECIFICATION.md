@@ -110,7 +110,7 @@ Responsibilities:
 
 No Spring, JPA, AWS, or Azure dependency should be required here.
 
-### blob-helper-jpa
+### dedup4j-jpa
 
 Persistence module for relational databases.
 

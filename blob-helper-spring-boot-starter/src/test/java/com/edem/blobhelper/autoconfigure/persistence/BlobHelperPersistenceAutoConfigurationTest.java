@@ -1,7 +1,7 @@
 package com.edem.blobhelper.autoconfigure.persistence;
 
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.jpa.AssetContent;
+import com.edem.dedup4j.jpa.AssetContent;
 import example.defaultpkg.DefaultEntity;
 import example.explicit.ExplicitEntity;
 import org.h2.jdbcx.JdbcDataSource;

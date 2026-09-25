@@ -48,7 +48,7 @@
 - Test helpers: none observed.
 - Run all current tests with `./mvnw test`.
 - Run core tests with `./mvnw -pl dedup4j-core test`.
-- Run JPA mapping tests with `./mvnw -pl blob-helper-jpa test`; they use a real Hibernate persistence unit backed by in-memory H2.
+- Run JPA mapping tests with `./mvnw -pl dedup4j-jpa test`; they use a real Hibernate persistence unit backed by in-memory H2.
 - Name dependency boundary tests `*BoundaryTest` so they can be run together with `./mvnw test -Dtest='*BoundaryTest'`.
 - Name dashboard integration tests descriptively around registration, polling isolation, counter-reset handling, and seven-day failure retention; keep them credential-free with in-process HTTP endpoints and temporary SQLite databases.
 

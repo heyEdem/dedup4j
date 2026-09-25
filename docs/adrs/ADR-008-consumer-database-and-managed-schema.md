@@ -30,7 +30,7 @@ Blob Helper stores metadata in clearly prefixed tables and ships versioned schem
 
 | Concern | Owner |
 |---|---|
-| Entity and lock-aware repository behavior | `blob-helper-jpa` |
+| Entity and lock-aware repository behavior | `dedup4j-jpa` |
 | Spring bean and transaction orchestration | `blob-helper-spring-boot-starter` |
 | Schema properties, initialization, validation | starter persistence auto-configuration |
 | Versioned schema resources | starter `src/main/resources/db/blob-helper` |

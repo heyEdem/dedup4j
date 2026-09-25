@@ -1,4 +1,4 @@
-package com.edem.blobhelper.jpa;
+package com.edem.dedup4j.jpa;
 
 import com.edem.dedup4j.core.exception.ContentNotFoundException;
 import com.edem.dedup4j.core.exception.ReferenceCountUnderflowException;

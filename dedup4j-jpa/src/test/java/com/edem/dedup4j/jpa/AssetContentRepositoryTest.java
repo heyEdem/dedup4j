@@ -1,4 +1,4 @@
-package com.edem.blobhelper.jpa;
+package com.edem.dedup4j.jpa;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -27,7 +27,7 @@ class AssetContentRepositoryTest {
 
     @BeforeAll
     static void createEntityManagerFactory() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("blob-helper-jpa-test");
+        entityManagerFactory = Persistence.createEntityManagerFactory("dedup4j-jpa-test");
     }
 
     @AfterAll

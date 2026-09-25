@@ -4,7 +4,7 @@
 
 **Goal:** Add a framework-independent JPA module containing a tested `AssetContent` entity for physical blob metadata.
 
-**Architecture:** Register `blob-helper-jpa` in the Maven reactor and expose only Jakarta Persistence annotations from production code. Use Hibernate ORM and H2 in test scope to prove the mapping produces a usable schema and persists the entity correctly.
+**Architecture:** Register `dedup4j-jpa` in the Maven reactor and expose only Jakarta Persistence annotations from production code. Use Hibernate ORM and H2 in test scope to prove the mapping produces a usable schema and persists the entity correctly.
 
 **Tech Stack:** Java 21, Maven, Jakarta Persistence 3.2, Hibernate ORM 7.4.5.Final, H2 2.4.240, JUnit Jupiter 5.13.4
 
@@ -23,10 +23,10 @@
 
 **Files:**
 - Modify: `pom.xml`
-- Create: `blob-helper-jpa/pom.xml`
-- Create: `blob-helper-jpa/src/test/resources/META-INF/persistence.xml`
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMappingTest.java`
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java`
+- Create: `dedup4j-jpa/pom.xml`
+- Create: `dedup4j-jpa/src/test/resources/META-INF/persistence.xml`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java`
 
 **Interfaces:**
 - Consumes: Jakarta Persistence annotations and lifecycle APIs.
@@ -34,11 +34,11 @@
 
 - [ ] **Step 1: Add the empty Maven module boundary**
 
-Register `<module>blob-helper-jpa</module>` after `dedup4j-core`. Create a child POM with `jakarta.persistence:jakarta.persistence-api:3.2.0` at compile scope and `org.hibernate.orm:hibernate-core:7.4.5.Final`, `com.h2database:h2:2.4.240`, and JUnit Jupiter at test scope.
+Register `<module>dedup4j-jpa</module>` after `dedup4j-core`. Create a child POM with `jakarta.persistence:jakarta.persistence-api:3.2.0` at compile scope and `org.hibernate.orm:hibernate-core:7.4.5.Final`, `com.h2database:h2:2.4.240`, and JUnit Jupiter at test scope.
 
 - [ ] **Step 2: Configure the test persistence unit**
 
-Create `META-INF/persistence.xml` with a resource-local `blob-helper-jpa-test` unit, `org.hibernate.jpa.HibernatePersistenceProvider`, the `AssetContent` class, H2 JDBC settings, and `hibernate.hbm2ddl.auto=create-drop`.
+Create `META-INF/persistence.xml` with a resource-local `dedup4j-jpa-test` unit, `org.hibernate.jpa.HibernatePersistenceProvider`, the `AssetContent` class, H2 JDBC settings, and `hibernate.hbm2ddl.auto=create-drop`.
 
 - [ ] **Step 3: Write the failing mapping test**
 
@@ -78,7 +78,7 @@ Add focused tests using `AssetContent.class.getAnnotation(Table.class)` to asser
 
 - [ ] **Step 4: Run the test to verify RED**
 
-Run: `./mvnw -pl blob-helper-jpa -Dtest=AssetContentMappingTest test`
+Run: `./mvnw -pl dedup4j-jpa -Dtest=AssetContentMappingTest test`
 
 Expected: compilation fails because `AssetContent` does not exist.
 
@@ -148,13 +148,13 @@ Add a protected no-argument constructor for JPA, the public constructor above, v
 
 - [ ] **Step 6: Run the mapping test to verify GREEN**
 
-Run: `./mvnw -pl blob-helper-jpa -Dtest=AssetContentMappingTest test`
+Run: `./mvnw -pl dedup4j-jpa -Dtest=AssetContentMappingTest test`
 
 Expected: all `AssetContentMappingTest` tests pass with zero failures and errors.
 
 - [ ] **Step 7: Refactor and rerun the module test suite**
 
-Remove repeated fixture values in the test only when doing so keeps expectations literal and readable. Run `./mvnw -pl blob-helper-jpa test` and keep the suite green.
+Remove repeated fixture values in the test only when doing so keeps expectations literal and readable. Run `./mvnw -pl dedup4j-jpa test` and keep the suite green.
 
 ### Task 2: Planning status and living codebase index
 
@@ -177,14 +177,14 @@ Change Task 2.1 status to `Complete`, mark all task steps and acceptance checks 
 
 - [ ] **Step 2: Update only affected index sections**
 
-Add `blob-helper-jpa` to the architecture module map and dependency list. Add the entity, POM, and mapping test entry points to implementation docs. Record the JPA entity/lifecycle/test conventions in patterns. Append this dated changelog entry:
+Add `dedup4j-jpa` to the architecture module map and dependency list. Add the entity, POM, and mapping test entry points to implementation docs. Record the JPA entity/lifecycle/test conventions in patterns. Append this dated changelog entry:
 
 ```markdown
 ## 2026-08-18 — Add JPA metadata module and AssetContent entity
 
 - Added the Jakarta Persistence module and mapped physical blob metadata with identity uniqueness, indexes, timestamps, and optimistic locking.
 - Added Hibernate/H2 mapping tests and updated the Maven reactor, planning status, and living project index.
-- Modules affected: root reactor, `blob-helper-jpa`, and `docs`.
+- Modules affected: root reactor, `dedup4j-jpa`, and `docs`.
 ```
 
 - [ ] **Step 3: Run scoped changed-file discovery**

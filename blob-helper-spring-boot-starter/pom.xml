@@ -22,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>com.edem</groupId>
-            <artifactId>blob-helper-jpa</artifactId>
+            <artifactId>dedup4j-jpa</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

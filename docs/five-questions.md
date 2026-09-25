@@ -17,7 +17,7 @@ Byte-identical content is identified consistently and can be shared by many logi
 
 **Q3 - Where should this logic live?**
 - Hashing contracts, SHA-256 implementation, storage-neutral models, `BlobStorage`, and object-key strategy live in `dedup4j-core`.
-- Database uniqueness for content identity lives in `blob-helper-jpa`.
+- Database uniqueness for content identity lives in `dedup4j-jpa`.
 
 **Q4 - What test proves the rule?**
 - `Sha256ContentHasherTest.hashesExactBytes`: given known bytes, when hashed through the streaming hasher, then the lowercase SHA-256 hex digest matches the known value.
@@ -43,7 +43,7 @@ Uploading bytes that already exist reuses the existing physical content and incr
 
 **Q3 - Where should this logic live?**
 - The orchestration lives in the starter upload service.
-- Content lookup, insert, locking, and reference count mutation live in `blob-helper-jpa`.
+- Content lookup, insert, locking, and reference count mutation live in `dedup4j-jpa`.
 - Physical upload lives only behind the `BlobStorage` SPI.
 
 **Q4 - What test proves the rule?**
@@ -69,7 +69,7 @@ Physical blobs are deleted only after the final logical reference is released, a
 - Storage failures after metadata changes must be visible for reconciliation.
 
 **Q3 - Where should this logic live?**
-- Reference locking and underflow protection live in `blob-helper-jpa`.
+- Reference locking and underflow protection live in `dedup4j-jpa`.
 - Release orchestration lives in the starter service.
 - Provider deletion behavior lives in `BlobStorage.delete`.
 - Repair/reporting lives in the reconciliation service.

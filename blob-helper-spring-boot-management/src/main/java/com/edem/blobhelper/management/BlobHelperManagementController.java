@@ -1,8 +1,8 @@
 package com.edem.blobhelper.management;
 
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.jpa.AssetContent;
-import com.edem.blobhelper.jpa.AssetContentRepository;
+import com.edem.dedup4j.jpa.AssetContent;
+import com.edem.dedup4j.jpa.AssetContentRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;

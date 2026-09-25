@@ -26,7 +26,7 @@ Content identity is `hash_algorithm + content_hash + size_bytes`. The first hash
 | Hashing contracts and SHA-256 implementation | `dedup4j-core` |
 | Storage-neutral request/response models | `dedup4j-core` |
 | Object key generation | `dedup4j-core` |
-| Content identity uniqueness | `blob-helper-jpa` |
+| Content identity uniqueness | `dedup4j-jpa` |
 
 **Explicitly excluded layers:** controllers, storage adapters, consuming application logical asset models.
 

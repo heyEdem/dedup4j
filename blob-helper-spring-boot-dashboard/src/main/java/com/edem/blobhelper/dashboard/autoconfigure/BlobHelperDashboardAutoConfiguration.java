@@ -26,7 +26,7 @@ public class BlobHelperDashboardAutoConfiguration {
     @Bean
     EmbeddedDashboardSnapshotService embeddedDashboardSnapshotService(
             ObjectProvider<MeterRegistry> meterRegistry,
-            ObjectProvider<com.edem.blobhelper.jpa.AssetContentRepository> contentRepository,
+            ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
             BlobHelperProperties blobHelperProperties,
             BlobHelperManagementProperties managementProperties) {
         return new EmbeddedDashboardSnapshotService(meterRegistry, contentRepository, blobHelperProperties, managementProperties);

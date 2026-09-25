@@ -164,7 +164,7 @@ This is a planning deliverable. No application rename, data migration, repositor
 Per Edem’s execution instruction, implement and verify one module per commit, including necessary consumer references. Keep persistence changes gated on the compatibility decision. Existing repository and checkout renames remain Edem-owned.
 
 - [x] Core module and consumer imports — clean reactor verify passed (22.993 s); dependency boundary and all downstream tests passed.
-- [ ] JPA module
+- [x] JPA module — clean reactor verify: 189 tests, zero failures/errors.
 - [ ] Local storage module
 - [ ] S3 module
 - [ ] Azure module

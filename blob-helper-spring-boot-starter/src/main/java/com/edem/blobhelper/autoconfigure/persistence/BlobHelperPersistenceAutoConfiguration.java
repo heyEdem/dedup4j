@@ -1,7 +1,7 @@
 package com.edem.blobhelper.autoconfigure.persistence;
 
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.jpa.AssetContent;
+import com.edem.dedup4j.jpa.AssetContent;
 import jakarta.persistence.EntityManagerFactory;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.config.BeanDefinition;

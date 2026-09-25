@@ -19,7 +19,7 @@
 - Added provider-neutral `BlobLocation` values and complete locations on new and duplicate `BlobReference` results, plus metadata-only location lookup through the transactional service.
 - Added the Spring-facing `BlobHelper` facade for multipart, path, byte-array, and described-stream uploads with size enforcement, and auto-configured it with application back-off.
 - Added ordered success/failure batch outcomes with continue-on-failure semantics and MVC usage coverage without introducing a library controller.
-- Modules affected: `dedup4j-core`, `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and project documentation.
+- Modules affected: `dedup4j-core`, `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and project documentation.
 
 ## 2026-09-07 — Consumer JPA and guarded schema auto-configuration
 
@@ -27,7 +27,7 @@
 - Moved duplicate-key recovery across Spring `REQUIRES_NEW` transactions without replaying upload input or storage writes; retained framework-neutral JPA behavior and application-managed migration configuration.
 - Fixed local concurrent publication through same-directory temporary files and atomic replacement; added failed-stream preservation and maximum-filename coverage. Corrected the S3 client test proxy for Spring persistence lifecycle callbacks.
 - Updated consumer guidance, architecture/implementation indexes, patterns, decisions, and completion records. Legacy table data requires a separate application-managed transition.
-- Modules affected: `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and `blob-helper-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
+- Modules affected: `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and `blob-helper-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
 
 ## 2026-09-05 — Auto-configure selected storage providers
 
@@ -93,7 +93,7 @@
 
 - Added a read-only reconciliation service that compares stored reference counts with application-provided logical counts and reports omitted IDs as zero expected references.
 - Added a repository query for loading all physical content metadata and Hibernate/H2 integration coverage proving mismatch details and no database mutation.
-- Modules affected: `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and Epic 6 planning/status documentation.
+- Modules affected: `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and Epic 6 planning/status documentation.
 
 ## 2026-08-28 — Add reconciliation contracts
 
@@ -205,31 +205,31 @@
 
 - Added `ConcurrentUploadIntegrationTest` with separate JPA transactions coordinated to race on the same content identity.
 - Verified concurrent duplicate uploads converge on one `AssetContent` row with one retained reference per worker.
-- Modules affected: `blob-helper-jpa` tests and Epic 2 planning/status documentation.
+- Modules affected: `dedup4j-jpa` tests and Epic 2 planning/status documentation.
 
 ## 2026-08-20 — Add duplicate-key retry behavior
 
 - Added `AssetContentMutationService.createOrRetain` with explicit insert flushing, duplicate-key transaction retry, locked winner reload, and exactly-once reference incrementing.
 - Added coordinated Hibernate/H2 coverage for new content, existing duplicates, and concurrent insert races without storage collaborators.
-- Modules affected: `blob-helper-jpa`, Epic 2 planning/status documentation, and the living implementation indexes.
+- Modules affected: `dedup4j-jpa`, Epic 2 planning/status documentation, and the living implementation indexes.
 
 ## 2026-08-20 — Add final-reference delete orchestration
 
 - Added `BlobStorage` collaboration to `ReferenceCountService` and delete delegation only when a release reaches zero references.
 - Added JPA integration coverage for non-final releases, final physical deletion, and exactly-once delete behavior.
-- Modules affected: `blob-helper-jpa` and Epic 2 planning/status documentation.
+- Modules affected: `dedup4j-jpa` and Epic 2 planning/status documentation.
 
 ## 2026-08-20 — Add reference retain and release service
 
 - Added lock-aware `ReferenceCountService` retain and release operations with missing-content and underflow protection.
 - Added JPA/Hibernate tests for exactly-once increment/decrement behavior and zero-count release rejection.
-- Modules affected: `blob-helper-jpa`, `dedup4j-core` dependency boundary, and Epic 2 planning/status documentation.
+- Modules affected: `dedup4j-jpa`, `dedup4j-core` dependency boundary, and Epic 2 planning/status documentation.
 
 ## 2026-08-20 — Add AssetContent repository lookups and locks
 
 - Added an EntityManager-backed repository for complete content identity lookup and pessimistic write-locked id lookup.
 - Added Hibernate/H2 tests for lookup behavior, missing rows, lock mode, constructor validation, and duplicate identity rejection.
-- Modules affected: `blob-helper-jpa` and Epic 2 planning/status documentation.
+- Modules affected: `dedup4j-jpa` and Epic 2 planning/status documentation.
 
 ## 2026-08-18 — Add global PR writer workflow
 
@@ -241,7 +241,7 @@
 
 - Added the Jakarta Persistence module and mapped physical blob metadata with identity uniqueness, indexes, timestamps, and optimistic locking.
 - Added Hibernate/H2 mapping tests and updated the Maven reactor, planning status, and living project index.
-- Modules affected: root reactor, `blob-helper-jpa`, and `docs`.
+- Modules affected: root reactor, `dedup4j-jpa`, and `docs`.
 
 ## 2026-07-16 — Add core dependency boundary enforcement
 
@@ -325,3 +325,8 @@
 - Renamed the core artifact, source packages, and root exception to `dedup4j-core`, `com.edem.dedup4j.core`, and `Dedup4jException`.
 - Updated consumer imports/dependencies and affected documentation paths; domain contracts and hashing remain unchanged.
 - Full clean reactor verification passed; no architectural decision changed.
+
+## 2026-09-25 — Rename jpa module to dedup4j
+
+- Renamed the JPA artifact and packages, persistence-unit class references, downstream imports, and affected documentation; schema names remain pending the persistence compatibility decision.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.

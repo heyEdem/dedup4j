@@ -135,7 +135,7 @@ git commit -m "docs: decide embedded dashboard starter architecture"
 
 **Interfaces:**
 
-- Consumes: `dedup4j-core`, `blob-helper-jpa`, and `blob-helper-spring-boot-starter`.
+- Consumes: `dedup4j-core`, `dedup4j-jpa`, and `blob-helper-spring-boot-starter`.
 - Produces: `com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardProperties` with `enabled`, `basePath`, and `failureLookback` properties.
 
 The default property values must be:

@@ -27,7 +27,7 @@ public class BlobHelperManagementAutoConfiguration {
             BlobHelperManagementProperties managementProperties,
             BlobHelperProperties blobHelperProperties,
             org.springframework.beans.factory.ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistry,
-            org.springframework.beans.factory.ObjectProvider<com.edem.blobhelper.jpa.AssetContentRepository> contentRepository,
+            org.springframework.beans.factory.ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
             org.springframework.beans.factory.ObjectProvider<BlobHelperManagementSnapshot.FailureSource> failureSource
     ) {
         return new BlobHelperManagementController(

@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-20
 **Status:** Approved
-**Scope:** `blob-helper-jpa` reference-count mutation service
+**Scope:** `dedup4j-jpa` reference-count mutation service
 
 ## Goal
 

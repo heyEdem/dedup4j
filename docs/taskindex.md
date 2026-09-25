@@ -39,7 +39,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 |---|---|
 | Full test suite | `./mvnw test` |
 | Core module tests | `./mvnw -pl dedup4j-core test` |
-| JPA module tests | `./mvnw -pl blob-helper-jpa test` |
+| JPA module tests | `./mvnw -pl dedup4j-jpa test` |
 | Starter tests | `./mvnw -pl blob-helper-spring-boot-starter test` |
 | Local storage tests | `./mvnw -pl blob-helper-storage-local test` |
 | Azure module tests | `./mvnw -pl blob-helper-storage-azure test` |

@@ -10,15 +10,15 @@ Add repository operations for identity lookup and locked reference updates.
 
 ## Files
 
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentRepository.java`
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentRepositoryTest.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentRepository.java`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentRepositoryTest.java`
 
 ## Steps
 
 - [x] Add lookup by `hashAlgorithm`, `contentHash`, and `sizeBytes`.
 - [x] Add pessimistic locked lookup by id.
 - [x] Add test for unique content identity enforcement.
-- [x] Run `./mvnw -pl blob-helper-jpa -Dtest=AssetContentRepositoryTest test`.
+- [x] Run `./mvnw -pl dedup4j-jpa -Dtest=AssetContentRepositoryTest test`.
 
 ## Acceptance
 

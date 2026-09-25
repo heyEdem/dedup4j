@@ -32,7 +32,7 @@ Many logical assets can point to one physical content record.
 
 ```text
 dedup4j-core
-blob-helper-jpa
+dedup4j-jpa
 blob-helper-spring-boot-starter
 blob-helper-storage-s3
 blob-helper-storage-azure

@@ -1,4 +1,4 @@
-package com.edem.blobhelper.jpa;
+package com.edem.dedup4j.jpa;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;

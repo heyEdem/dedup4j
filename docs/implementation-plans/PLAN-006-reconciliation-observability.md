@@ -32,7 +32,7 @@ plan.
 | Logic | Location |
 |-------|----------|
 | Reconciliation contracts | `blob-helper-spring-boot-starter/src/main/java/.../reconcile` |
-| Reference count queries/updates | `blob-helper-jpa` |
+| Reference count queries/updates | `dedup4j-jpa` |
 | Metrics and logs | Starter service orchestration |
 | Application logical count input | App-provided callback/query adapter |
 
