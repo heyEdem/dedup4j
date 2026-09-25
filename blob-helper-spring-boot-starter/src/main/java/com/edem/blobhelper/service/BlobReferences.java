@@ -1,7 +1,7 @@
 package com.edem.blobhelper.service;
 
-import com.edem.blobhelper.core.hash.ContentHash;
-import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.dedup4j.core.hash.ContentHash;
+import com.edem.dedup4j.core.model.BlobReference;
 import com.edem.blobhelper.jpa.AssetContent;
 
 final class BlobReferences {

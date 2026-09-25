@@ -1,9 +1,9 @@
 package com.edem.blobhelper.service;
 
-import com.edem.blobhelper.core.model.BlobReference;
-import com.edem.blobhelper.core.model.BlobLocation;
-import com.edem.blobhelper.core.model.StoreBlobCommand;
-import com.edem.blobhelper.core.storage.BlobResource;
+import com.edem.dedup4j.core.model.BlobReference;
+import com.edem.dedup4j.core.model.BlobLocation;
+import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.core.storage.BlobResource;
 
 import java.util.UUID;
 

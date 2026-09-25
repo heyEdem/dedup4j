@@ -1,14 +1,14 @@
 package com.edem.blobhelper.facade;
 
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.core.exception.BlobValidationException;
-import com.edem.blobhelper.core.hash.ContentHash;
-import com.edem.blobhelper.core.model.BlobReference;
-import com.edem.blobhelper.core.model.StoreBlobCommand;
-import com.edem.blobhelper.core.storage.BlobResource;
-import com.edem.blobhelper.core.storage.BlobStorage;
-import com.edem.blobhelper.core.storage.PutBlobRequest;
-import com.edem.blobhelper.core.storage.StoredBlob;
+import com.edem.dedup4j.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.hash.ContentHash;
+import com.edem.dedup4j.core.model.BlobReference;
+import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.core.storage.BlobResource;
+import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.PutBlobRequest;
+import com.edem.dedup4j.core.storage.StoredBlob;
 import com.edem.blobhelper.service.BlobDeduplicationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -135,6 +135,6 @@ class DefaultBlobHelperTest {
         @Override public void retain(UUID assetContentId) { }
         @Override public void release(UUID assetContentId) { }
         @Override public BlobResource get(UUID assetContentId) { return null; }
-        @Override public com.edem.blobhelper.core.model.BlobLocation location(UUID assetContentId) { return reference.location(); }
+        @Override public com.edem.dedup4j.core.model.BlobLocation location(UUID assetContentId) { return reference.location(); }
     }
 }

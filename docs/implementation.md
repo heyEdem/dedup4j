@@ -3,8 +3,8 @@
 ## Entry Points
 
 - `pom.xml`: parent Maven reactor. Declares the core, persistence, starter, storage, management, embedded-dashboard, and observability aggregate modules, manages JUnit/Spring Boot dependency BOMs, and configures Surefire to ignore a named test pattern in modules that do not contain that test.
-- `blob-helper-core/pom.xml`: core module build file. Depends on JUnit Jupiter for tests.
-- `blob-helper-jpa/pom.xml`: persistence module build file. Depends on `blob-helper-core`, exposes Jakarta Persistence, and uses Hibernate/H2 in test scope.
+- `dedup4j-core/pom.xml`: core module build file. Depends on JUnit Jupiter for tests.
+- `blob-helper-jpa/pom.xml`: persistence module build file. Depends on `dedup4j-core`, exposes Jakarta Persistence, and uses Hibernate/H2 in test scope.
 - `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java`: JPA entity for unique physical content identity, object location, metadata, reference count, timestamps, and optimistic locking.
 - `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentRepository.java`: EntityManager-backed repository for complete identity lookup, unlocked metadata lookup by content id, read-all metadata queries, and pessimistic write-locked lookup by content id; transaction lifecycle remains with the caller.
 - `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentMutationService.java`: create-or-retain service that flushes new inserts and reports SQL-state `23505` through `DuplicateContentIdentityException`; the transaction owner rolls back before recovering. Its two-argument constructor reuses an application-provided repository.
@@ -56,34 +56,34 @@
 - `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/LocalStorageDeduplicationIntegrationTest.java`: verifies the complete service path with a real temporary-directory local provider: readback, one physical file for duplicate uploads, and final-reference deletion.
 - `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/reconcile/ReconciliationContractsTest.java`: verifies callback usage, expected/actual mismatch values, immutable report collections, and validation of invalid counts and IDs.
 - `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/reconcile/ReconciliationServiceTest.java`: Hibernate/H2 integration coverage for mismatch reporting, omitted IDs, checked-row totals, disabled no-mutation behavior, and enabled retain/release repair including final-reference storage deletion.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/package-info.java`: package marker for provider-neutral core APIs.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/hash/ContentHasher.java`: stream-based content hashing contract.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/hash/ContentHash.java`: content identity value carrying algorithm, hash, and byte size.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/hash/Sha256ContentHasher.java`: streaming SHA-256 implementation that returns lowercase hex.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/key/ObjectKeyStrategy.java`: contract for generating storage object keys from content identity.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/key/HashObjectKeyStrategy.java`: deterministic key strategy using `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/BlobStorage.java`: provider-neutral storage SPI for put, get, idempotent delete, and existence checks.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/PutBlobRequest.java`: validated streaming upload request with immutable metadata.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/StoredBlob.java`: provider-neutral persisted object metadata, including provider and bucket/container location.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/BlobResource.java`: validated read resource that owns and closes its content stream.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/StoreBlobCommand.java`: application-facing streaming store command without a caller-controlled object key.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/BlobLocation.java`: validated provider/bucket-or-container/object-key value for stable physical storage identity.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/BlobReference.java`: stored-content reference carrying the asset-content ID, content identity, complete stable location, and duplicate decision.
-- `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception`: unchecked, provider-neutral exception hierarchy for validation, hashing, storage, missing content, and reference-count underflow.
-- `blob-helper-core/src/test/java/com/edem/blobhelper/core/CoreModuleBoundaryTest.java`: scans the effective test classpath and fails when Spring, JPA, AWS SDK, or Azure SDK classes enter core.
-- `blob-helper-core/src/test/java/com/edem/blobhelper/core/ProviderDependencyBoundaryTest.java`: parses the root reactor and child POMs to verify AWS SDK coordinates belong only to `blob-helper-storage-s3` and Azure SDK coordinates only to `blob-helper-storage-azure`.
-- `blob-helper-core/src/test/java/com/edem/blobhelper/core/CoreModuleSmokeTest.java`: verifies the core test package is wired.
-- `blob-helper-storage-local/pom.xml`: local storage adapter module build file. Depends only on `blob-helper-core` and JUnit Jupiter; no cloud SDKs.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/package-info.java`: package marker for provider-neutral core APIs.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/ContentHasher.java`: stream-based content hashing contract.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/ContentHash.java`: content identity value carrying algorithm, hash, and byte size.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/Sha256ContentHasher.java`: streaming SHA-256 implementation that returns lowercase hex.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/key/ObjectKeyStrategy.java`: contract for generating storage object keys from content identity.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/key/HashObjectKeyStrategy.java`: deterministic key strategy using `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobStorage.java`: provider-neutral storage SPI for put, get, idempotent delete, and existence checks.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/PutBlobRequest.java`: validated streaming upload request with immutable metadata.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/StoredBlob.java`: provider-neutral persisted object metadata, including provider and bucket/container location.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobResource.java`: validated read resource that owns and closes its content stream.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/StoreBlobCommand.java`: application-facing streaming store command without a caller-controlled object key.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/BlobLocation.java`: validated provider/bucket-or-container/object-key value for stable physical storage identity.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/BlobReference.java`: stored-content reference carrying the asset-content ID, content identity, complete stable location, and duplicate decision.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception`: unchecked, provider-neutral exception hierarchy for validation, hashing, storage, missing content, and reference-count underflow.
+- `dedup4j-core/src/test/java/com/edem/dedup4j/core/CoreModuleBoundaryTest.java`: scans the effective test classpath and fails when Spring, JPA, AWS SDK, or Azure SDK classes enter core.
+- `dedup4j-core/src/test/java/com/edem/dedup4j/core/ProviderDependencyBoundaryTest.java`: parses the root reactor and child POMs to verify AWS SDK coordinates belong only to `blob-helper-storage-s3` and Azure SDK coordinates only to `blob-helper-storage-azure`.
+- `dedup4j-core/src/test/java/com/edem/dedup4j/core/CoreModuleSmokeTest.java`: verifies the core test package is wired.
+- `blob-helper-storage-local/pom.xml`: local storage adapter module build file. Depends only on `dedup4j-core` and JUnit Jupiter; no cloud SDKs.
 - `blob-helper-storage-local/src/main/java/com/edem/blobhelper/storage/local/LocalBlobStorageProperties.java`: local provider configuration with a configurable `rootDirectory` (defaults to `blob-helper-storage`) that rejects null assignment.
 - `blob-helper-storage-local/src/test/java/com/edem/blobhelper/storage/local/LocalBlobStoragePropertiesTest.java`: verifies the default root directory, custom root binding, and null rejection.
 - `blob-helper-storage-local/src/main/java/com/edem/blobhelper/storage/local/LocalBlobStorage.java`: filesystem `BlobStorage` adapter that resolves object keys under the configured absolute root, streams uploads with parent-directory creation and overwrite semantics, returns owner-managed `BlobResource` streams, throws core `ContentNotFoundException` for missing reads, deletes idempotently via `Files.deleteIfExists`, and reports existence from the filesystem. Key resolution normalizes the resolved path and rejects keys that escape or equal the root with core `BlobValidationException` before any file IO.
 - `blob-helper-storage-local/src/test/java/com/edem/blobhelper/storage/local/LocalBlobStorageIntegrationTest.java`: JUnit temporary-directory coverage for the put/get/delete round trip with filesystem assertions, idempotent missing-object delete, pre-write existence checks, overwrite behavior, blank-key rejection, and traversal protection for `../`, absolute-path, and self-resolving keys plus valid nested-key access.
-- `blob-helper-storage-s3/pom.xml`: S3 provider module build file with `blob-helper-core`, JUnit, and an AWS SDK for Java 2.x BOM plus `software.amazon.awssdk:s3` dependency scoped to this module.
+- `blob-helper-storage-s3/pom.xml`: S3 provider module build file with `dedup4j-core`, JUnit, and an AWS SDK for Java 2.x BOM plus `software.amazon.awssdk:s3` dependency scoped to this module.
 - `blob-helper-storage-s3/src/main/java/com/edem/blobhelper/storage/s3/S3BlobStorageProperties.java`: provider-specific settings for bucket, region, optional endpoint override, and path-style access, with path-style access disabled by default.
 - `blob-helper-storage-s3/src/main/java/com/edem/blobhelper/storage/s3/S3BlobStorage.java`: S3 `BlobStorage` adapter that uploads through `RequestBody.fromInputStream`, exposes `ResponseInputStream` through `BlobResource`, uses `headObject` for existence checks, deletes idempotently, and maps provider failures to core validation, not-found, and storage exceptions. It supports properties-based client construction and injected clients for tests.
 - `blob-helper-storage-s3/src/test/java/com/edem/blobhelper/storage/s3/S3BlobStoragePropertiesTest.java`: verifies S3 connection settings and the default path-style access setting without credentials or network calls.
 - `blob-helper-storage-s3/src/test/java/com/edem/blobhelper/storage/s3/S3BlobStorageContractTest.java`: verifies the S3 adapter round trip, request metadata, missing-object behavior, idempotent deletion, and provider exception mapping with an in-process SDK proxy.
-- `blob-helper-storage-azure/pom.xml`: Azure provider module build file with `blob-helper-core`, JUnit, and a module-local Azure SDK BOM plus `com.azure:azure-storage-blob` dependency.
+- `blob-helper-storage-azure/pom.xml`: Azure provider module build file with `dedup4j-core`, JUnit, and a module-local Azure SDK BOM plus `com.azure:azure-storage-blob` dependency.
 - `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorageProperties.java`: provider configuration bean for the Azure container, connection string, optional endpoint, and account name; it contains no Azure SDK types.
 - `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java`: Azure `BlobStorage` adapter with properties-based or injected-client construction, streaming uploads with content headers and metadata, property-backed reads, idempotent deletion, existence checks, and Azure-to-core exception mapping.
 - `blob-helper-storage-azure/src/test/java/com/edem/blobhelper/storage/azure/AzureBlobStoragePropertiesTest.java`: verifies all Azure connection settings can be assigned and read without credentials or network calls.
@@ -137,12 +137,12 @@
 - **Initialization:** Maven builds modules listed under `<modules>`.
 - **Non-obvious logic:** Root no longer inherits `spring-boot-starter-parent`; it is a plain Maven parent POM.
 
-### blob-helper-core
+### dedup4j-core
 
-- **Entry point:** `blob-helper-core/pom.xml`
+- **Entry point:** `dedup4j-core/pom.xml`
 - **Key classes/functions:** `Sha256ContentHasher.hash(InputStream)` computes lowercase SHA-256 while reading a stream; `HashObjectKeyStrategy.generateKey(ContentHash)` generates deterministic hash-derived relative keys; `BlobStorage` defines provider-neutral storage operations; `PutBlobRequest`, `StoredBlob`, `BlobResource`, `StoreBlobCommand`, and `BlobReference` define the immutable streaming API boundary; `CoreModuleBoundaryTest` inspects classpath directories and JARs for forbidden package roots.
 - **Initialization:** Built as Maven child of root `blob-helper`.
-- **Non-obvious logic:** Object keys are derived from content identity, not user filenames. Empty key prefixes omit the leading prefix segment and still produce relative keys. Core request/result records reject invalid required fields and defensively copy metadata. `BlobResource` implements `AutoCloseable` and delegates closure to its stream. Storage adapters translate provider failures into unchecked `BlobHelperException` subtypes. Maven Enforcer also rejects forbidden direct and transitive dependency coordinates before tests run.
+- **Non-obvious logic:** Object keys are derived from content identity, not user filenames. Empty key prefixes omit the leading prefix segment and still produce relative keys. Core request/result records reject invalid required fields and defensively copy metadata. `BlobResource` implements `AutoCloseable` and delegates closure to its stream. Storage adapters translate provider failures into unchecked `Dedup4jException` subtypes. Maven Enforcer also rejects forbidden direct and transitive dependency coordinates before tests run.
 
 ### blob-helper-jpa
 
@@ -169,14 +169,14 @@
 
 - **Entry point:** `blob-helper-storage-s3/pom.xml`
 - **Key classes/functions:** `S3BlobStorageProperties` carries the S3 bucket, region, optional endpoint override, and path-style access flag. `S3BlobStorage` implements streaming put/get, idempotent delete, `headObject`-based exists, client construction, and provider exception translation.
-- **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `blob-helper-core` and imports the AWS SDK v2 BOM locally so AWS dependencies remain isolated to this provider module.
+- **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `dedup4j-core` and imports the AWS SDK v2 BOM locally so AWS dependencies remain isolated to this provider module.
 - **Non-obvious logic:** The optional endpoint override and path-style access setting support S3-compatible targets such as emulators without affecting core or starter APIs. Reads return the SDK response stream directly and therefore require callers to close `BlobResource`; provider 404 responses become `ContentNotFoundException` for reads and `false` for existence checks.
 
 ### blob-helper-storage-azure
 
 - **Entry point:** `blob-helper-storage-azure/pom.xml`
 - **Key classes/functions:** `AzureBlobStorageProperties` carries the Azure container, connection string, optional endpoint, and account name. `AzureBlobStorage` implements the core `BlobStorage` SPI using an injected or builder-created `BlobContainerClient`; its public static `createClient` factory shares client construction with starter auto-configuration. `put` streams content with Azure HTTP headers and metadata, `get` reads blob properties before returning an owner-managed stream, `delete` uses `deleteIfExists`, and `exists` delegates to the provider.
-- **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `blob-helper-core`, imports the Azure SDK BOM version `1.3.8` locally, and declares `azure-storage-blob` without a version so Azure dependencies remain isolated to this provider module.
+- **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `dedup4j-core`, imports the Azure SDK BOM version `1.3.8` locally, and declares `azure-storage-blob` without a version so Azure dependencies remain isolated to this provider module.
 - **Non-obvious logic:** Azure 404 responses map to core `ContentNotFoundException` for reads and `false` for existence checks; other Azure provider failures become core `BlobStorageException`. The contract test uses the real Azure SDK against an in-process JDK HTTP server, so normal verification needs no Azure credentials or external service.
 
 ### blob-helper-spring-boot-management

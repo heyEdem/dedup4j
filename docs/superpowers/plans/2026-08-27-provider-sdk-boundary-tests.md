@@ -13,12 +13,12 @@
 ### Task 1: Add the provider dependency boundary test
 
 **Files:**
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/ProviderDependencyBoundaryTest.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/ProviderDependencyBoundaryTest.java`
 - Modify: `pom.xml` (root Surefire selector configuration so the reactor command is executable)
 
 - [x] **Step 1: Write the failing test**
 
-Parse the root reactor POM and each module POM. Assert that AWS coordinates occur only in `blob-helper-storage-s3`, Azure coordinates occur only in `blob-helper-storage-azure`, and neither provider coordinate occurs in `blob-helper-core` or `blob-helper-spring-boot-starter`.
+Parse the root reactor POM and each module POM. Assert that AWS coordinates occur only in `blob-helper-storage-s3`, Azure coordinates occur only in `blob-helper-storage-azure`, and neither provider coordinate occurs in `dedup4j-core` or `blob-helper-spring-boot-starter`.
 
 - [x] **Step 2: Run the boundary test to verify it fails**
 
@@ -29,7 +29,7 @@ Expected: the test source does not compile or the test is not discovered until t
 ### Task 2: Implement and verify the boundary
 
 **Files:**
-- Modify: `blob-helper-core/src/test/java/com/edem/blobhelper/core/ProviderDependencyBoundaryTest.java`
+- Modify: `dedup4j-core/src/test/java/com/edem/dedup4j/core/ProviderDependencyBoundaryTest.java`
 - Modify: `pom.xml`
 
 - [x] **Step 1: Implement the minimal POM ownership check**

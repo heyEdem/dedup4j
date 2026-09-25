@@ -2,7 +2,7 @@ package com.edem.blobhelper.autoconfigure;
 
 import com.edem.blobhelper.autoconfigure.persistence.BlobHelperPersistenceAutoConfiguration;
 import com.edem.blobhelper.autoconfigure.service.BlobHelperServiceAutoConfiguration;
-import com.edem.blobhelper.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.BlobStorage;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

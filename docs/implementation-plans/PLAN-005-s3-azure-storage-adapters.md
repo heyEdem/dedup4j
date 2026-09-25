@@ -30,7 +30,7 @@ The library must support cloud storage providers without leaking provider SDK de
 | S3 SDK implementation | `blob-helper-storage-s3/src/main/java/.../s3` |
 | Azure SDK implementation | `blob-helper-storage-azure/src/main/java/.../azure` |
 | Provider-specific properties | Provider modules and starter property binding |
-| Provider-neutral API | `blob-helper-core` |
+| Provider-neutral API | `dedup4j-core` |
 
 ## Acceptance Criteria (from Q4)
 
@@ -40,7 +40,7 @@ The library must support cloud storage providers without leaking provider SDK de
 
 ## Out of Scope (from Q5)
 
-- AWS/Azure SDK code in `blob-helper-core` or the starter — forbidden.
+- AWS/Azure SDK code in `dedup4j-core` or the starter — forbidden.
 - Normal unit tests requiring cloud credentials — provider tests must be isolated.
 - Public URL generation — not included by default.
 

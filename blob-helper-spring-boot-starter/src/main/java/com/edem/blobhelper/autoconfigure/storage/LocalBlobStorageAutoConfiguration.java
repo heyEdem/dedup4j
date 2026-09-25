@@ -2,7 +2,7 @@ package com.edem.blobhelper.autoconfigure.storage;
 
 import com.edem.blobhelper.autoconfigure.BlobHelperAutoConfiguration;
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.blobhelper.storage.local.LocalBlobStorage;
 import com.edem.blobhelper.storage.local.LocalBlobStorageProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

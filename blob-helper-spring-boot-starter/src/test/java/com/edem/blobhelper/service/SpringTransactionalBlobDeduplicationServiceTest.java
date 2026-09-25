@@ -1,9 +1,9 @@
 package com.edem.blobhelper.service;
 
-import com.edem.blobhelper.core.model.BlobReference;
-import com.edem.blobhelper.core.model.BlobLocation;
-import com.edem.blobhelper.core.model.StoreBlobCommand;
-import com.edem.blobhelper.core.storage.BlobResource;
+import com.edem.dedup4j.core.model.BlobReference;
+import com.edem.dedup4j.core.model.BlobLocation;
+import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.blobhelper.jpa.AssetContent;
 import com.edem.blobhelper.jpa.DuplicateContentIdentityException;
 import com.edem.blobhelper.jpa.AssetContentRepository;
@@ -110,7 +110,7 @@ class SpringTransactionalBlobDeduplicationServiceTest {
         BlobDeduplicationService delegate = new BlobDeduplicationService() {
             @Override public BlobReference store(StoreBlobCommand command) {
                 calls.incrementAndGet();
-                return new BlobReference(UUID.randomUUID(), new com.edem.blobhelper.core.hash.ContentHash("sha-256", "a", 0), "text/plain", "test", "bucket", "key", false);
+                return new BlobReference(UUID.randomUUID(), new com.edem.dedup4j.core.hash.ContentHash("sha-256", "a", 0), "text/plain", "test", "bucket", "key", false);
             }
             @Override public void retain(UUID id) { calls.incrementAndGet(); }
             @Override public void release(UUID id) { calls.incrementAndGet(); }
@@ -224,9 +224,9 @@ class SpringTransactionalBlobDeduplicationServiceTest {
         }
     }
 
-    private static com.edem.blobhelper.core.storage.BlobStorage nullStorage() {
-        return new com.edem.blobhelper.core.storage.BlobStorage() {
-            @Override public com.edem.blobhelper.core.storage.StoredBlob put(com.edem.blobhelper.core.storage.PutBlobRequest request) { throw new AssertionError(); }
+    private static com.edem.dedup4j.core.storage.BlobStorage nullStorage() {
+        return new com.edem.dedup4j.core.storage.BlobStorage() {
+            @Override public com.edem.dedup4j.core.storage.StoredBlob put(com.edem.dedup4j.core.storage.PutBlobRequest request) { throw new AssertionError(); }
             @Override public BlobResource get(String objectKey) { throw new AssertionError(); }
             @Override public void delete(String objectKey) { }
             @Override public boolean exists(String objectKey) { return false; }

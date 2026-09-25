@@ -1,7 +1,7 @@
 package com.edem.blobhelper.facade;
 
-import com.edem.blobhelper.core.hash.ContentHash;
-import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.dedup4j.core.hash.ContentHash;
+import com.edem.dedup4j.core.model.BlobReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;

@@ -1,13 +1,13 @@
 package com.edem.blobhelper.facade;
 
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.core.exception.BlobStorageException;
-import com.edem.blobhelper.core.exception.BlobValidationException;
-import com.edem.blobhelper.core.hash.ContentHash;
-import com.edem.blobhelper.core.model.BlobLocation;
-import com.edem.blobhelper.core.model.BlobReference;
-import com.edem.blobhelper.core.model.StoreBlobCommand;
-import com.edem.blobhelper.core.storage.BlobResource;
+import com.edem.dedup4j.core.exception.BlobStorageException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.hash.ContentHash;
+import com.edem.dedup4j.core.model.BlobLocation;
+import com.edem.dedup4j.core.model.BlobReference;
+import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.blobhelper.service.BlobDeduplicationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;

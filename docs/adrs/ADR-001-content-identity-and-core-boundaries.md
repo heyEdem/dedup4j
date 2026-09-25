@@ -10,22 +10,22 @@ Blob Helper deduplicates byte-identical uploads across application-owned logical
 
 ## Decision
 
-Content identity is `hash_algorithm + content_hash + size_bytes`. The first hash algorithm is streaming SHA-256, encoded as lowercase hex. Generated object keys use deterministic hash-derived keys and never trust user filenames. `blob-helper-core` owns hashing, storage-neutral models, object-key strategy, and the `BlobStorage` SPI, and must not depend on Spring, JPA, AWS, or Azure.
+Content identity is `hash_algorithm + content_hash + size_bytes`. The first hash algorithm is streaming SHA-256, encoded as lowercase hex. Generated object keys use deterministic hash-derived keys and never trust user filenames. `dedup4j-core` owns hashing, storage-neutral models, object-key strategy, and the `BlobStorage` SPI, and must not depend on Spring, JPA, AWS, or Azure.
 
 ## Invariants (from Q2)
 
 - [ ] Content identity must use `hash_algorithm + content_hash + size_bytes`.
 - [ ] SHA-256 hashes must be computed from the exact uploaded bytes while streaming.
 - [ ] Generated object keys must not be controlled by user filenames.
-- [ ] `blob-helper-core` must stay framework-neutral.
+- [ ] `dedup4j-core` must stay framework-neutral.
 
 ## Architectural Ownership (from Q3)
 
 | Concern | Owner |
 |---------|-------|
-| Hashing contracts and SHA-256 implementation | `blob-helper-core` |
-| Storage-neutral request/response models | `blob-helper-core` |
-| Object key generation | `blob-helper-core` |
+| Hashing contracts and SHA-256 implementation | `dedup4j-core` |
+| Storage-neutral request/response models | `dedup4j-core` |
+| Object key generation | `dedup4j-core` |
 | Content identity uniqueness | `blob-helper-jpa` |
 
 **Explicitly excluded layers:** controllers, storage adapters, consuming application logical asset models.

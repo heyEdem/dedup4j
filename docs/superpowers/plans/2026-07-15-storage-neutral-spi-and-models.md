@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add provider-neutral storage contracts, immutable command/result records, and domain exceptions to `blob-helper-core`.
+**Goal:** Add provider-neutral storage contracts, immutable command/result records, and domain exceptions to `dedup4j-core`.
 
 **Architecture:** Keep all public types in the core module and express streams with `InputStream`, metadata with immutable `Map<String, String>` values, identity with the existing `ContentHash`, and storage failures with unchecked domain exceptions. `BlobResource` owns its stream and closes it through `AutoCloseable`.
 
@@ -13,18 +13,18 @@
 ### Task 1: Domain Exception Hierarchy
 
 **Files:**
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/exception/DomainExceptionTest.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/BlobHelperException.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/BlobValidationException.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/BlobHashingException.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/BlobStorageException.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/ContentNotFoundException.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/ReferenceCountUnderflowException.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/exception/DomainExceptionTest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/Dedup4jException.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/BlobValidationException.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/BlobHashingException.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/BlobStorageException.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/ContentNotFoundException.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/ReferenceCountUnderflowException.java`
 
 - [x] **Step 1: Write the failing hierarchy test**
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,74 +37,74 @@ class DomainExceptionTest {
     @Test
     void domainExceptionsShareBaseTypeAndRetainCause() {
         RuntimeException cause = new RuntimeException("provider failed");
-        BlobHelperException exception = new BlobStorageException("put failed", cause);
+        Dedup4jException exception = new BlobStorageException("put failed", cause);
 
         assertEquals("put failed", exception.getMessage());
         assertSame(cause, exception.getCause());
-        assertInstanceOf(BlobHelperException.class, new BlobValidationException("invalid"));
-        assertInstanceOf(BlobHelperException.class, new BlobHashingException("hash failed", cause));
-        assertInstanceOf(BlobHelperException.class, new ContentNotFoundException("missing"));
-        assertInstanceOf(BlobHelperException.class, new ReferenceCountUnderflowException("underflow"));
+        assertInstanceOf(Dedup4jException.class, new BlobValidationException("invalid"));
+        assertInstanceOf(Dedup4jException.class, new BlobHashingException("hash failed", cause));
+        assertInstanceOf(Dedup4jException.class, new ContentNotFoundException("missing"));
+        assertInstanceOf(Dedup4jException.class, new ReferenceCountUnderflowException("underflow"));
     }
 }
 ```
 
 - [x] **Step 2: Run the test and verify RED**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=DomainExceptionTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=DomainExceptionTest test`
 Expected: compilation fails because the exception types do not exist.
 
 - [x] **Step 3: Add the exception types**
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
-public class BlobHelperException extends RuntimeException {
-    public BlobHelperException(String message) { super(message); }
-    public BlobHelperException(String message, Throwable cause) { super(message, cause); }
+public class Dedup4jException extends RuntimeException {
+    public Dedup4jException(String message) { super(message); }
+    public Dedup4jException(String message, Throwable cause) { super(message, cause); }
 }
 ```
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
-public final class BlobStorageException extends BlobHelperException {
+public final class BlobStorageException extends Dedup4jException {
     public BlobStorageException(String message) { super(message); }
     public BlobStorageException(String message, Throwable cause) { super(message, cause); }
 }
 ```
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
-public final class BlobValidationException extends BlobHelperException {
+public final class BlobValidationException extends Dedup4jException {
     public BlobValidationException(String message) { super(message); }
     public BlobValidationException(String message, Throwable cause) { super(message, cause); }
 }
 ```
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
-public final class BlobHashingException extends BlobHelperException {
+public final class BlobHashingException extends Dedup4jException {
     public BlobHashingException(String message) { super(message); }
     public BlobHashingException(String message, Throwable cause) { super(message, cause); }
 }
 ```
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
-public final class ContentNotFoundException extends BlobHelperException {
+public final class ContentNotFoundException extends Dedup4jException {
     public ContentNotFoundException(String message) { super(message); }
     public ContentNotFoundException(String message, Throwable cause) { super(message, cause); }
 }
 ```
 
 ```java
-package com.edem.blobhelper.core.exception;
+package com.edem.dedup4j.core.exception;
 
-public final class ReferenceCountUnderflowException extends BlobHelperException {
+public final class ReferenceCountUnderflowException extends Dedup4jException {
     public ReferenceCountUnderflowException(String message) { super(message); }
     public ReferenceCountUnderflowException(String message, Throwable cause) { super(message, cause); }
 }
@@ -112,23 +112,23 @@ public final class ReferenceCountUnderflowException extends BlobHelperException 
 
 - [x] **Step 4: Run the test and verify GREEN**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=DomainExceptionTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=DomainExceptionTest test`
 Expected: one test passes with zero failures.
 
 ### Task 2: Storage Records and Resource Lifecycle
 
 **Files:**
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/storage/StorageModelsTest.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/PutBlobRequest.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/StoredBlob.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/BlobResource.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/storage/StorageModelsTest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/PutBlobRequest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/StoredBlob.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobResource.java`
 
 - [x] **Step 1: Write failing storage-model tests**
 
 ```java
-package com.edem.blobhelper.core.storage;
+package com.edem.dedup4j.core.storage;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -187,15 +187,15 @@ class StorageModelsTest {
 
 - [x] **Step 2: Run the test and verify RED**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=StorageModelsTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=StorageModelsTest test`
 Expected: compilation fails because the three storage records do not exist.
 
 - [x] **Step 3: Implement the storage records**
 
 ```java
-package com.edem.blobhelper.core.storage;
+package com.edem.dedup4j.core.storage;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -212,9 +212,9 @@ public record PutBlobRequest(String objectKey, InputStream content, long sizeByt
 ```
 
 ```java
-package com.edem.blobhelper.core.storage;
+package com.edem.dedup4j.core.storage;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import java.time.Instant;
 
 public record StoredBlob(String objectKey, String provider, String bucketOrContainer,
@@ -230,9 +230,9 @@ public record StoredBlob(String objectKey, String provider, String bucketOrConta
 ```
 
 ```java
-package com.edem.blobhelper.core.storage;
+package com.edem.dedup4j.core.storage;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -252,23 +252,23 @@ public record BlobResource(String objectKey, InputStream content, long sizeBytes
 
 - [x] **Step 4: Run the test and verify GREEN**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=StorageModelsTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=StorageModelsTest test`
 Expected: four tests pass with zero failures.
 
 ### Task 3: Service Command and Reference Models
 
 **Files:**
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/model/CoreModelsTest.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/StoreBlobCommand.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/BlobReference.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/model/CoreModelsTest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/StoreBlobCommand.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/BlobReference.java`
 
 - [x] **Step 1: Write failing model tests**
 
 ```java
-package com.edem.blobhelper.core.model;
+package com.edem.dedup4j.core.model;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
-import com.edem.blobhelper.core.hash.ContentHash;
+import com.edem.dedup4j.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.hash.ContentHash;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -311,15 +311,15 @@ class CoreModelsTest {
 
 - [x] **Step 2: Run the test and verify RED**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=CoreModelsTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=CoreModelsTest test`
 Expected: compilation fails because `StoreBlobCommand` and `BlobReference` do not exist.
 
 - [x] **Step 3: Implement the records**
 
 ```java
-package com.edem.blobhelper.core.model;
+package com.edem.dedup4j.core.model;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -334,10 +334,10 @@ public record StoreBlobCommand(InputStream content, String filename, String cont
 ```
 
 ```java
-package com.edem.blobhelper.core.model;
+package com.edem.dedup4j.core.model;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
-import com.edem.blobhelper.core.hash.ContentHash;
+import com.edem.dedup4j.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.hash.ContentHash;
 import java.util.UUID;
 
 public record BlobReference(UUID assetContentId, ContentHash contentHash, String contentType,
@@ -353,19 +353,19 @@ public record BlobReference(UUID assetContentId, ContentHash contentHash, String
 
 - [x] **Step 4: Run the test and verify GREEN**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=CoreModelsTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=CoreModelsTest test`
 Expected: three tests pass with zero failures.
 
 ### Task 4: BlobStorage SPI
 
 **Files:**
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/storage/BlobStorageApiTest.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/BlobStorage.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/storage/BlobStorageApiTest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobStorage.java`
 
 - [x] **Step 1: Write the failing API-shape test**
 
 ```java
-package com.edem.blobhelper.core.storage;
+package com.edem.dedup4j.core.storage;
 
 import org.junit.jupiter.api.Test;
 
@@ -384,13 +384,13 @@ class BlobStorageApiTest {
 
 - [x] **Step 2: Run the test and verify RED**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=BlobStorageApiTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=BlobStorageApiTest test`
 Expected: compilation fails because `BlobStorage` does not exist.
 
 - [x] **Step 3: Add the SPI**
 
 ```java
-package com.edem.blobhelper.core.storage;
+package com.edem.dedup4j.core.storage;
 
 public interface BlobStorage {
     StoredBlob put(PutBlobRequest request);
@@ -402,7 +402,7 @@ public interface BlobStorage {
 
 - [x] **Step 4: Run the test and verify GREEN**
 
-Run: `./mvnw -pl blob-helper-core -Dtest=BlobStorageApiTest test`
+Run: `./mvnw -pl dedup4j-core -Dtest=BlobStorageApiTest test`
 Expected: one test passes with zero failures.
 
 ### Task 5: Documentation and Verification
@@ -416,7 +416,7 @@ Expected: one test passes with zero failures.
 
 - [x] **Step 1: Run the complete core test suite**
 
-Run: `./mvnw -pl blob-helper-core test`
+Run: `./mvnw -pl dedup4j-core test`
 Expected: all core tests pass with zero failures and zero errors.
 
 - [x] **Step 2: Run the full reactor verification**
@@ -437,7 +437,7 @@ Add the new entry points and behavior to `docs/implementation.md`, mark task 1.4
 ## 2026-07-15 — Add storage-neutral SPI and models
 
 - Added provider-neutral storage contracts, immutable command/result models, and domain exceptions.
-- Affected `blob-helper-core` and the Epic 1 planning/status documentation.
+- Affected `dedup4j-core` and the Epic 1 planning/status documentation.
 ```
 
 - [x] **Step 5: Confirm no new architectural decision was made**
@@ -447,6 +447,6 @@ The implementation realizes ADR-001 and ADR-004 without changing or reversing th
 - [x] **Step 6: Commit the completed feature**
 
 ```bash
-git add blob-helper-core docs
+git add dedup4j-core docs
 git commit -m "feat(core): add storage-neutral SPI and models"
 ```

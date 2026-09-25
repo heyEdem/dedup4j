@@ -15,7 +15,7 @@ The repo currently has a Spring Boot shell and specification. The core module is
 
 ## What to Build
 
-- Convert the project to a Maven multi-module structure with `blob-helper-core`.
+- Convert the project to a Maven multi-module structure with `dedup4j-core`.
 - Add `ContentHasher`, `ContentHash`, and `Sha256ContentHasher`.
 - Add `ObjectKeyStrategy` and `HashObjectKeyStrategy`.
 - Add `BlobStorage`, `PutBlobRequest`, `StoredBlob`, and `BlobResource`.
@@ -26,20 +26,20 @@ The repo currently has a Spring Boot shell and specification. The core module is
 
 | Logic | Location |
 |-------|----------|
-| Hashing contracts and SHA-256 implementation | `blob-helper-core/src/main/java/.../core/hash` |
-| Object key generation | `blob-helper-core/src/main/java/.../core/key` |
-| Storage SPI and models | `blob-helper-core/src/main/java/.../core/storage` |
-| Domain command/result models | `blob-helper-core/src/main/java/.../core/model` |
+| Hashing contracts and SHA-256 implementation | `dedup4j-core/src/main/java/.../core/hash` |
+| Object key generation | `dedup4j-core/src/main/java/.../core/key` |
+| Storage SPI and models | `dedup4j-core/src/main/java/.../core/storage` |
+| Domain command/result models | `dedup4j-core/src/main/java/.../core/model` |
 
 ## Acceptance Criteria (from Q4)
 
 - [x] **Sha256ContentHasherTest.hashesExactBytes:** Given known bytes, when hashed through the streaming hasher, then the lowercase SHA-256 hex digest matches the known value.
 - [x] **HashObjectKeyStrategyTest.generatesDeterministicKey:** Given a prefix, algorithm, and hash, when generating a key, then the key is `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
-- [x] **CoreModuleBoundaryTest.coreHasNoSpringJpaOrProviderDependencies:** Given `blob-helper-core`, then dependency analysis finds no Spring, JPA, AWS, or Azure dependencies.
+- [x] **CoreModuleBoundaryTest.coreHasNoSpringJpaOrProviderDependencies:** Given `dedup4j-core`, then dependency analysis finds no Spring, JPA, AWS, or Azure dependencies.
 
 ## Out of Scope (from Q5)
 
-- `blob-helper-core` Spring/JPA/provider dependencies — must not be added.
+- `dedup4j-core` Spring/JPA/provider dependencies — must not be added.
 - Application-owned logical asset tables — not part of this library.
 - Public URL generation — not supported by default.
 

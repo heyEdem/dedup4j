@@ -17,7 +17,7 @@ Create `blob-helper-storage-local` and its configuration model.
 ## Steps
 
 - [ ] Add local storage module to the reactor.
-- [ ] Depend on `blob-helper-core`.
+- [ ] Depend on `dedup4j-core`.
 - [ ] Add root-directory configuration.
 - [ ] Run `./mvnw -pl blob-helper-storage-local test`.
 

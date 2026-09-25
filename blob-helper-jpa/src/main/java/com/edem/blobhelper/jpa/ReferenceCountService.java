@@ -1,8 +1,8 @@
 package com.edem.blobhelper.jpa;
 
-import com.edem.blobhelper.core.exception.ContentNotFoundException;
-import com.edem.blobhelper.core.exception.ReferenceCountUnderflowException;
-import com.edem.blobhelper.core.storage.BlobStorage;
+import com.edem.dedup4j.core.exception.ContentNotFoundException;
+import com.edem.dedup4j.core.exception.ReferenceCountUnderflowException;
+import com.edem.dedup4j.core.storage.BlobStorage;
 
 import java.util.Objects;
 import java.util.UUID;

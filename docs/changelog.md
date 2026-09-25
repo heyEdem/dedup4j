@@ -19,7 +19,7 @@
 - Added provider-neutral `BlobLocation` values and complete locations on new and duplicate `BlobReference` results, plus metadata-only location lookup through the transactional service.
 - Added the Spring-facing `BlobHelper` facade for multipart, path, byte-array, and described-stream uploads with size enforcement, and auto-configured it with application back-off.
 - Added ordered success/failure batch outcomes with continue-on-failure semantics and MVC usage coverage without introducing a library controller.
-- Modules affected: `blob-helper-core`, `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and project documentation.
+- Modules affected: `dedup4j-core`, `blob-helper-jpa`, `blob-helper-spring-boot-starter`, and project documentation.
 
 ## 2026-09-07 — Consumer JPA and guarded schema auto-configuration
 
@@ -113,7 +113,7 @@
 - Added `ProviderDependencyBoundaryTest` to verify AWS and Azure SDK ownership remains isolated to their provider modules.
 - Added `docs/provider-testing.md` documenting credential-free default tests and opt-in external provider test execution.
 - Epic 5 is complete (5/5); the project task index is 25/30 complete.
-- Modules affected: `blob-helper-core`, root Maven test configuration, provider-testing documentation, and Epic 5 planning/status documentation.
+- Modules affected: `dedup4j-core`, root Maven test configuration, provider-testing documentation, and Epic 5 planning/status documentation.
 
 ## 2026-08-27 — Implement Azure BlobStorage adapter
 
@@ -138,7 +138,7 @@
 
 - Added `blob-helper-storage-s3` to the Maven reactor with a module-local AWS SDK for Java 2.x BOM and S3 dependency.
 - Added configurable S3 properties for bucket, region, optional endpoint override, and path-style access, which defaults to disabled.
-- Verified AWS SDK isolation from `blob-helper-core` and `blob-helper-spring-boot-starter`; Epic 5 is in progress (1/5).
+- Verified AWS SDK isolation from `dedup4j-core` and `blob-helper-spring-boot-starter`; Epic 5 is in progress (1/5).
 - Modules affected: root reactor, `blob-helper-storage-s3`, and Epic 5 planning/status documentation.
 
 ## 2026-08-26 — Add local storage service integration tests
@@ -164,7 +164,7 @@
 
 ## 2026-08-26 — Add local storage module
 
-- Added the `blob-helper-storage-local` Maven module to the reactor with a dependency on `blob-helper-core` and no cloud SDKs.
+- Added the `blob-helper-storage-local` Maven module to the reactor with a dependency on `dedup4j-core` and no cloud SDKs.
 - Added `LocalBlobStorageProperties` with a configurable root directory (`blob-helper-storage` default) and null-rejection on assignment.
 - Added property coverage for defaults, custom roots, and null rejection; full `./mvnw verify` passes.
 - Modules affected: root reactor, `blob-helper-storage-local`, and Epic 4 planning/status documentation.
@@ -223,7 +223,7 @@
 
 - Added lock-aware `ReferenceCountService` retain and release operations with missing-content and underflow protection.
 - Added JPA/Hibernate tests for exactly-once increment/decrement behavior and zero-count release rejection.
-- Modules affected: `blob-helper-jpa`, `blob-helper-core` dependency boundary, and Epic 2 planning/status documentation.
+- Modules affected: `blob-helper-jpa`, `dedup4j-core` dependency boundary, and Epic 2 planning/status documentation.
 
 ## 2026-08-20 — Add AssetContent repository lookups and locks
 
@@ -246,16 +246,16 @@
 ## 2026-07-16 — Add core dependency boundary enforcement
 
 - Added a classpath-scanning JUnit boundary test and Maven Enforcer rules for Spring, JPA, AWS SDK, and Azure SDK dependencies.
-- Completed Epic 1 and updated `blob-helper-core` plus its planning/status documentation.
+- Completed Epic 1 and updated `dedup4j-core` plus its planning/status documentation.
 
 ## 2026-07-15 — Add storage-neutral SPI and models
 
 - Added provider-neutral storage contracts, immutable command/result models, resource stream lifecycle handling, and domain exceptions.
-- Affected `blob-helper-core` and the Epic 1 planning/status documentation.
+- Affected `dedup4j-core` and the Epic 1 planning/status documentation.
 
 ## 2026-07-06 — Add deterministic object key generation
 
-- Added `ObjectKeyStrategy` and `HashObjectKeyStrategy` in `blob-helper-core`.
+- Added `ObjectKeyStrategy` and `HashObjectKeyStrategy` in `dedup4j-core`.
 - Added tests for deterministic hash-derived key generation, lowercase algorithm segments, and empty-prefix relative keys.
 - Updated Epic 1 task status and implementation docs for the new `core/key` package.
 
@@ -273,7 +273,7 @@
 
 - First codebase-indexer scan of Blob Helper.
 - Generated `docs/architecture.md`, `docs/implementation.md`, `docs/patterns.md`, `docs/decisions.md`, and `docs/changelog.md`.
-- Detected Java 21 Maven reactor with current `blob-helper-core` module and planning docs for JPA, Spring Boot starter, local storage, S3/Azure adapters, and reconciliation.
+- Detected Java 21 Maven reactor with current `dedup4j-core` module and planning docs for JPA, Spring Boot starter, local storage, S3/Azure adapters, and reconciliation.
 ## 2026-08-30 — Add Micrometer metrics
 
 - Added optional Micrometer counters and timers for upload outcomes, deduplication savings, hashing and storage latency, delete failures, and reconciliation repairs.
@@ -318,4 +318,10 @@
 
 - Made the Spring Boot starter the single consumer dependency for local, S3, and Azure storage adapters while preserving provider-local SDK ownership.
 - Added Maven dependency-convergence enforcement, Dependabot updates, and a pull-request dependency-review gate; documented the packaging contract and classpath/boundary tests, and repaired the task-index/ADR documentation references found during final review.
-- Modules affected: root Maven build, `blob-helper-spring-boot-starter`, `blob-helper-core` boundary tests, `.github` automation, and project documentation.
+- Modules affected: root Maven build, `blob-helper-spring-boot-starter`, `dedup4j-core` boundary tests, `.github` automation, and project documentation.
+
+## 2026-09-25 — Rename core module to dedup4j
+
+- Renamed the core artifact, source packages, and root exception to `dedup4j-core`, `com.edem.dedup4j.core`, and `Dedup4jException`.
+- Updated consumer imports/dependencies and affected documentation paths; domain contracts and hashing remain unchanged.
+- Full clean reactor verification passed; no architectural decision changed.

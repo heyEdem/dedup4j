@@ -1,12 +1,12 @@
 package com.edem.blobhelper.storage.s3;
 
-import com.edem.blobhelper.core.exception.BlobStorageException;
-import com.edem.blobhelper.core.exception.BlobValidationException;
-import com.edem.blobhelper.core.exception.ContentNotFoundException;
-import com.edem.blobhelper.core.storage.BlobResource;
-import com.edem.blobhelper.core.storage.BlobStorage;
-import com.edem.blobhelper.core.storage.PutBlobRequest;
-import com.edem.blobhelper.core.storage.StoredBlob;
+import com.edem.dedup4j.core.exception.BlobStorageException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.ContentNotFoundException;
+import com.edem.dedup4j.core.storage.BlobResource;
+import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.PutBlobRequest;
+import com.edem.dedup4j.core.storage.StoredBlob;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;

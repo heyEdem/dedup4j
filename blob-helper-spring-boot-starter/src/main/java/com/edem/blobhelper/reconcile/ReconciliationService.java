@@ -1,6 +1,6 @@
 package com.edem.blobhelper.reconcile;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.blobhelper.jpa.AssetContent;
 import com.edem.blobhelper.jpa.AssetContentRepository;
 import com.edem.blobhelper.jpa.ReferenceCountService;

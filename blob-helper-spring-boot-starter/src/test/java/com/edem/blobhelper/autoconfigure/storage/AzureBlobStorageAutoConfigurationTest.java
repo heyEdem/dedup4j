@@ -2,7 +2,7 @@ package com.edem.blobhelper.autoconfigure.storage;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
-import com.edem.blobhelper.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.blobhelper.storage.azure.AzureBlobStorage;
 import com.edem.blobhelper.storage.azure.AzureBlobStorageProperties;
 import com.edem.blobhelper.storage.local.LocalBlobStorage;

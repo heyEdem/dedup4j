@@ -1,15 +1,15 @@
 package com.edem.blobhelper.autoconfigure.service;
 
-import com.edem.blobhelper.core.hash.ContentHasher;
-import com.edem.blobhelper.core.hash.ContentHash;
-import com.edem.blobhelper.core.key.ObjectKeyStrategy;
-import com.edem.blobhelper.core.model.BlobReference;
-import com.edem.blobhelper.core.model.BlobLocation;
-import com.edem.blobhelper.core.model.StoreBlobCommand;
-import com.edem.blobhelper.core.storage.BlobResource;
-import com.edem.blobhelper.core.storage.BlobStorage;
-import com.edem.blobhelper.core.storage.PutBlobRequest;
-import com.edem.blobhelper.core.storage.StoredBlob;
+import com.edem.dedup4j.core.hash.ContentHasher;
+import com.edem.dedup4j.core.hash.ContentHash;
+import com.edem.dedup4j.core.key.ObjectKeyStrategy;
+import com.edem.dedup4j.core.model.BlobReference;
+import com.edem.dedup4j.core.model.BlobLocation;
+import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.core.storage.BlobResource;
+import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.PutBlobRequest;
+import com.edem.dedup4j.core.storage.StoredBlob;
 import com.edem.blobhelper.jpa.AssetContentMutationService;
 import com.edem.blobhelper.jpa.AssetContentRepository;
 import com.edem.blobhelper.jpa.ReferenceCountService;
@@ -149,13 +149,13 @@ class BlobHelperServiceAutoConfigurationTest {
 
     @Configuration(proxyBeanMethods = false)
     static class HasherOverride {
-        static final ContentHasher HASHER = new com.edem.blobhelper.core.hash.Sha256ContentHasher();
+        static final ContentHasher HASHER = new com.edem.dedup4j.core.hash.Sha256ContentHasher();
         @Bean ContentHasher hasher() { return HASHER; }
     }
 
     @Configuration(proxyBeanMethods = false)
     static class KeyOverride {
-        static final ObjectKeyStrategy KEYS = new com.edem.blobhelper.core.key.HashObjectKeyStrategy("override");
+        static final ObjectKeyStrategy KEYS = new com.edem.dedup4j.core.key.HashObjectKeyStrategy("override");
         @Bean ObjectKeyStrategy keys() { return KEYS; }
     }
 

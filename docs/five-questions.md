@@ -13,19 +13,19 @@ Byte-identical content is identified consistently and can be shared by many logi
 - Content identity must use `hash_algorithm + content_hash + size_bytes`.
 - SHA-256 hashes must be computed from the exact uploaded bytes while streaming.
 - Generated object keys must not be controlled by user filenames.
-- `blob-helper-core` must stay framework-neutral.
+- `dedup4j-core` must stay framework-neutral.
 
 **Q3 - Where should this logic live?**
-- Hashing contracts, SHA-256 implementation, storage-neutral models, `BlobStorage`, and object-key strategy live in `blob-helper-core`.
+- Hashing contracts, SHA-256 implementation, storage-neutral models, `BlobStorage`, and object-key strategy live in `dedup4j-core`.
 - Database uniqueness for content identity lives in `blob-helper-jpa`.
 
 **Q4 - What test proves the rule?**
 - `Sha256ContentHasherTest.hashesExactBytes`: given known bytes, when hashed through the streaming hasher, then the lowercase SHA-256 hex digest matches the known value.
 - `HashObjectKeyStrategyTest.generatesDeterministicKey`: given a prefix, algorithm, and hash, when generating a key, then the key is `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
-- `CoreModuleBoundaryTest.coreHasNoSpringJpaOrProviderDependencies`: given `blob-helper-core`, then dependency analysis finds no Spring, JPA, AWS, or Azure dependencies.
+- `CoreModuleBoundaryTest.coreHasNoSpringJpaOrProviderDependencies`: given `dedup4j-core`, then dependency analysis finds no Spring, JPA, AWS, or Azure dependencies.
 
 **Q5 - What should AI not touch?**
-- Do not add Spring, JPA, AWS, or Azure dependencies to `blob-helper-core`.
+- Do not add Spring, JPA, AWS, or Azure dependencies to `dedup4j-core`.
 - Do not make user filenames part of the storage object key.
 - Do not create application-owned logical asset tables in this library.
 
@@ -92,12 +92,12 @@ Applications can switch storage providers through dependencies and configuration
 
 **Q2 - What must never break?**
 - Public service APIs must remain storage-neutral.
-- Provider-specific settings must stay out of `blob-helper-core`.
+- Provider-specific settings must stay out of `dedup4j-core`.
 - The starter must wire exactly one configured provider.
 - Local storage must support deterministic tests without cloud credentials.
 
 **Q3 - Where should this logic live?**
-- Provider-neutral contracts live in `blob-helper-core`.
+- Provider-neutral contracts live in `dedup4j-core`.
 - Auto-configuration and properties live in `blob-helper-spring-boot-starter`.
 - Provider SDK code lives only in provider modules.
 

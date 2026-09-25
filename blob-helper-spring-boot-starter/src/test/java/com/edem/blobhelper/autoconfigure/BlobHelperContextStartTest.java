@@ -1,8 +1,8 @@
 package com.edem.blobhelper.autoconfigure;
 
-import com.edem.blobhelper.core.model.BlobReference;
-import com.edem.blobhelper.core.model.StoreBlobCommand;
-import com.edem.blobhelper.core.storage.BlobResource;
+import com.edem.dedup4j.core.model.BlobReference;
+import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.blobhelper.service.BlobDeduplicationService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;

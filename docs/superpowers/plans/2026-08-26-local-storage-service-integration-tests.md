@@ -6,7 +6,7 @@
 
 **Architecture:** Add a starter-module integration test that constructs the existing provider-neutral service with a real `LocalBlobStorage`, a temporary filesystem root, and the existing Hibernate/H2 test persistence unit. Add the local adapter as a test-scoped Maven dependency because the test belongs to the starter module while production module dependencies remain provider-neutral.
 
-**Tech Stack:** Java 21, Maven, JUnit Jupiter, Jakarta Persistence, Hibernate ORM, H2, `blob-helper-core`, `blob-helper-jpa`, and `blob-helper-storage-local`.
+**Tech Stack:** Java 21, Maven, JUnit Jupiter, Jakarta Persistence, Hibernate ORM, H2, `dedup4j-core`, `blob-helper-jpa`, and `blob-helper-storage-local`.
 
 ---
 

@@ -31,7 +31,7 @@ Many logical assets can point to one physical content record.
 ## Modules
 
 ```text
-blob-helper-core
+dedup4j-core
 blob-helper-jpa
 blob-helper-spring-boot-starter
 blob-helper-storage-s3
@@ -43,7 +43,7 @@ blob-helper-dashboard                (standalone local monitoring console)
 blob-helper-storage-local
 ```
 
-`blob-helper-core` contains hashing, deduplication contracts, and storage-neutral
+`dedup4j-core` contains hashing, deduplication contracts, and storage-neutral
 interfaces. Storage providers live in separate adapter modules, which are
 included transitively by the standard Spring Boot starter.
 

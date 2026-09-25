@@ -1,6 +1,6 @@
 package com.edem.blobhelper.facade;
 
-import com.edem.blobhelper.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 
 import java.util.Objects;
 

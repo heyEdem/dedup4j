@@ -10,17 +10,17 @@ Add SHA-256 hashing that reads the exact uploaded bytes from a stream.
 
 ## Files
 
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/hash/ContentHasher.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/hash/ContentHash.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/hash/Sha256ContentHasher.java`
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/hash/Sha256ContentHasherTest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/ContentHasher.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/ContentHash.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/Sha256ContentHasher.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/hash/Sha256ContentHasherTest.java`
 
 ## Steps
 
 - [x] Write `Sha256ContentHasherTest.hashesExactBytes` with a known SHA-256 digest.
 - [x] Add `ContentHash` with `algorithm`, `hash`, and `sizeBytes`.
 - [x] Implement `Sha256ContentHasher` using `MessageDigest` and streaming reads.
-- [x] Run `./mvnw -pl blob-helper-core -Dtest=Sha256ContentHasherTest test`.
+- [x] Run `./mvnw -pl dedup4j-core -Dtest=Sha256ContentHasherTest test`.
 
 ## Acceptance
 

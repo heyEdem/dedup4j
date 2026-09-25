@@ -95,7 +95,7 @@ Including `size_bytes` provides an extra guard and improves lookup precision.
 
 ## 5. Module Design
 
-### blob-helper-core
+### dedup4j-core
 
 Framework-neutral code.
 

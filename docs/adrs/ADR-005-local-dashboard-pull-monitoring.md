@@ -44,7 +44,7 @@ push collection, and repair controls are deferred features.
 | Dashboard REST API and static UI | `blob-helper-dashboard` |
 | Blob bytes and provider credentials | Consuming application/provider configuration |
 
-**Explicitly excluded layers:** `blob-helper-core`, storage adapters, and the
+**Explicitly excluded layers:** `dedup4j-core`, storage adapters, and the
 consuming application’s logical asset controllers.
 
 ## Consequences

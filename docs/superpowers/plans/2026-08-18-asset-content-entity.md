@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Content identity is exactly `hash_algorithm + content_hash + size_bytes`.
-- `blob-helper-core` remains free of Spring and JPA dependencies.
+- `dedup4j-core` remains free of Spring and JPA dependencies.
 - The persistence table is named `blob_asset_content`.
 - No repository, row-locking service, storage I/O callback, or consuming-application asset table is added in Task 2.1.
 
@@ -34,7 +34,7 @@
 
 - [ ] **Step 1: Add the empty Maven module boundary**
 
-Register `<module>blob-helper-jpa</module>` after `blob-helper-core`. Create a child POM with `jakarta.persistence:jakarta.persistence-api:3.2.0` at compile scope and `org.hibernate.orm:hibernate-core:7.4.5.Final`, `com.h2database:h2:2.4.240`, and JUnit Jupiter at test scope.
+Register `<module>blob-helper-jpa</module>` after `dedup4j-core`. Create a child POM with `jakarta.persistence:jakarta.persistence-api:3.2.0` at compile scope and `org.hibernate.orm:hibernate-core:7.4.5.Final`, `com.h2database:h2:2.4.240`, and JUnit Jupiter at test scope.
 
 - [ ] **Step 2: Configure the test persistence unit**
 
@@ -199,4 +199,4 @@ Expected: both modules build successfully with zero test failures or errors.
 
 - [ ] **Step 5: Review the final diff**
 
-Run `git diff --check`, `git status --short`, and `git diff --stat`. Confirm no Spring/JPA dependency entered `blob-helper-core` and no files outside the approved design and required documentation were changed.
+Run `git diff --check`, `git status --short`, and `git diff --stat`. Confirm no Spring/JPA dependency entered `dedup4j-core` and no files outside the approved design and required documentation were changed.

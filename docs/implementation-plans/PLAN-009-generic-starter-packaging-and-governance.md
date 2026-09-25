@@ -25,7 +25,7 @@
 - Modify: `blob-helper-spring-boot-starter/pom.xml` — make provider adapters compile dependencies.
 - Modify: `pom.xml` — add Enforcer version and dependency-convergence execution.
 - Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/GenericStarterDependencyTest.java` — prove one starter classpath contains all adapters and excludes observability.
-- Modify: `blob-helper-core/src/test/java/com/edem/blobhelper/core/ProviderDependencyBoundaryTest.java` — clarify that transitive adapter inclusion is allowed while direct SDK ownership remains isolated.
+- Modify: `dedup4j-core/src/test/java/com/edem/dedup4j/core/ProviderDependencyBoundaryTest.java` — clarify that transitive adapter inclusion is allowed while direct SDK ownership remains isolated.
 - Create: `.github/dependabot.yml` — weekly Maven and Actions update proposals.
 - Create: `.github/workflows/dependency-review.yml` — reject newly introduced high/critical vulnerable dependencies.
 - Modify after implementation: `docs/architecture.md`, `docs/implementation.md`, `docs/changelog.md`, `README.md`.
@@ -41,7 +41,7 @@
 ## Out of Scope (from Q5)
 
 - Provider implementation classes — this plan changes packaging, not storage behavior.
-- `blob-helper-core` production dependencies — core remains provider/framework neutral.
+- `dedup4j-core` production dependencies — core remains provider/framework neutral.
 - `blob-helper-spring-boot-management`, `blob-helper-spring-boot-dashboard`, `blob-helper-dashboard` — none become starter dependencies.
 - SDK version upgrades unrelated to achieving convergence.
 - Git commits, pushes, branches, or pull requests — Edem handles Git unless explicitly delegating it.
@@ -129,7 +129,7 @@ Do not declare `software.amazon.awssdk:*` or `com.azure:*` directly in the start
 Run:
 
 ```bash
-./mvnw -pl blob-helper-core,blob-helper-spring-boot-starter -am test -Dtest=ProviderDependencyBoundaryTest,GenericStarterDependencyTest
+./mvnw -pl dedup4j-core,blob-helper-spring-boot-starter -am test -Dtest=ProviderDependencyBoundaryTest,GenericStarterDependencyTest
 ```
 
 Expected: both tests pass; provider adapters are visible and SDK ownership remains provider-local.

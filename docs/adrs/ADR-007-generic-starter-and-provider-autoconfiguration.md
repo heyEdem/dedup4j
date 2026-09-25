@@ -35,7 +35,7 @@ For S3, provider and bucket are the only Blob Helper-required properties. Region
 | Local implementation | `blob-helper-storage-local` |
 | Convergence/security gates | root Maven build and `.github` workflows |
 
-**Explicitly excluded layers:** `blob-helper-core`, JPA entities, management/dashboard modules.
+**Explicitly excluded layers:** `dedup4j-core`, JPA entities, management/dashboard modules.
 
 ## Consequences
 

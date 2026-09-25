@@ -1,6 +1,6 @@
 package com.edem.blobhelper.facade;
 
-import com.edem.blobhelper.core.model.BlobReference;
+import com.edem.dedup4j.core.model.BlobReference;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;

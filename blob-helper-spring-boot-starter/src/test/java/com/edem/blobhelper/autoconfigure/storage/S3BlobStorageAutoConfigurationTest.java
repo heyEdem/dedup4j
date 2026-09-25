@@ -3,7 +3,7 @@ package com.edem.blobhelper.autoconfigure.storage;
 import com.edem.blobhelper.autoconfigure.BlobHelperAutoConfiguration;
 import com.edem.blobhelper.storage.s3.S3BlobStorage;
 import com.edem.blobhelper.storage.s3.S3BlobStorageProperties;
-import com.edem.blobhelper.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.blobhelper.storage.local.LocalBlobStorage;
 import com.edem.blobhelper.storage.local.LocalBlobStorageProperties;
 import org.junit.jupiter.api.Test;

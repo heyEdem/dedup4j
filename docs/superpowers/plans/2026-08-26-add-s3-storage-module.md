@@ -4,9 +4,9 @@
 
 **Goal:** Add an isolated `blob-helper-storage-s3` Maven module with AWS SDK v2 support and configurable S3 bucket, region, endpoint override, and path-style access properties.
 
-**Architecture:** Register a new provider module in the root reactor. Keep the AWS SDK BOM and `s3` dependency inside that module, with only `blob-helper-core` as its project dependency; defer all `BlobStorage` implementation behavior to task 5.2. Keep the properties class plain and provider-specific so the starter and core remain free of AWS types.
+**Architecture:** Register a new provider module in the root reactor. Keep the AWS SDK BOM and `s3` dependency inside that module, with only `dedup4j-core` as its project dependency; defer all `BlobStorage` implementation behavior to task 5.2. Keep the properties class plain and provider-specific so the starter and core remain free of AWS types.
 
-**Tech Stack:** Java 21, Maven, AWS SDK for Java 2.x, JUnit Jupiter, and `blob-helper-core`.
+**Tech Stack:** Java 21, Maven, AWS SDK for Java 2.x, JUnit Jupiter, and `dedup4j-core`.
 
 ---
 
@@ -48,7 +48,7 @@ Add `<module>blob-helper-storage-s3</module>` to the root module list.
 
 - [x] **Step 2: Add module-local AWS dependency management**
 
-Configure the module with an AWS SDK v2 BOM and the `software.amazon.awssdk:s3` dependency. Add `blob-helper-core` as the only project-module dependency and JUnit Jupiter as test scope. Do not add AWS dependencies to root dependency management or any existing module.
+Configure the module with an AWS SDK v2 BOM and the `software.amazon.awssdk:s3` dependency. Add `dedup4j-core` as the only project-module dependency and JUnit Jupiter as test scope. Do not add AWS dependencies to root dependency management or any existing module.
 
 - [x] **Step 3: Compile and run the module tests**
 
@@ -74,7 +74,7 @@ Expected: `BUILD SUCCESS`; existing core and starter boundary tests continue to 
 
 - [x] **Step 2: Check dependency isolation**
 
-Run: `./mvnw dependency:tree -pl blob-helper-core` and `./mvnw dependency:tree -pl blob-helper-spring-boot-starter`
+Run: `./mvnw dependency:tree -pl dedup4j-core` and `./mvnw dependency:tree -pl blob-helper-spring-boot-starter`
 
 Expected: neither output contains `software.amazon.awssdk`; the S3 module is the only module that resolves the AWS SDK.
 

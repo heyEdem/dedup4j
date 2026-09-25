@@ -10,16 +10,16 @@ Generate stable storage keys from content identity instead of user filenames.
 
 ## Files
 
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/key/ObjectKeyStrategy.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/key/HashObjectKeyStrategy.java`
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/key/HashObjectKeyStrategyTest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/key/ObjectKeyStrategy.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/key/HashObjectKeyStrategy.java`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/key/HashObjectKeyStrategyTest.java`
 
 ## Steps
 
 - [x] Write `HashObjectKeyStrategyTest.generatesDeterministicKey`.
 - [x] Implement key format `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
 - [x] Normalize algorithm names to lowercase path segments.
-- [x] Run `./mvnw -pl blob-helper-core -Dtest=HashObjectKeyStrategyTest test`.
+- [x] Run `./mvnw -pl dedup4j-core -Dtest=HashObjectKeyStrategyTest test`.
 
 ## Acceptance
 

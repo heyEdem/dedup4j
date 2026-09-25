@@ -3,7 +3,7 @@ package com.edem.blobhelper.autoconfigure.storage;
 import com.azure.storage.blob.BlobContainerClient;
 import com.edem.blobhelper.autoconfigure.BlobHelperAutoConfiguration;
 import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
-import com.edem.blobhelper.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.blobhelper.storage.azure.AzureBlobStorage;
 import com.edem.blobhelper.storage.azure.AzureBlobStorageProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

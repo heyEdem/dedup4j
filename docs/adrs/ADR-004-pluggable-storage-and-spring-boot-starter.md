@@ -17,7 +17,7 @@ Applications interact with `BlobDeduplicationService`, not provider-specific API
 ## Invariants (from Q2)
 
 - [ ] Public service APIs must remain storage-neutral.
-- [ ] Provider-specific settings must stay out of `blob-helper-core`.
+- [ ] Provider-specific settings must stay out of `dedup4j-core`.
 - [ ] The starter must wire exactly one configured provider.
 - [ ] Local storage must support deterministic tests without cloud credentials.
 - [ ] The starter must not expose REST controllers.
@@ -27,13 +27,13 @@ Applications interact with `BlobDeduplicationService`, not provider-specific API
 
 | Concern | Owner |
 |---------|-------|
-| Provider-neutral contracts | `blob-helper-core` |
+| Provider-neutral contracts | `dedup4j-core` |
 | Auto-configuration and properties | `blob-helper-spring-boot-starter` |
 | S3 SDK code | `blob-helper-storage-s3` |
 | Azure SDK code | `blob-helper-storage-azure` |
 | Local filesystem storage | `blob-helper-storage-local` |
 
-**Explicitly excluded layers:** `blob-helper-core` and the starter must not contain provider SDK implementation code.
+**Explicitly excluded layers:** `dedup4j-core` and the starter must not contain provider SDK implementation code.
 
 ## Consequences
 

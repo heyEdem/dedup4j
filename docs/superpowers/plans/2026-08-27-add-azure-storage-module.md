@@ -48,7 +48,7 @@ Expected: Maven reports that the requested project/module is not present in the 
 
 - [x] **Step 3: Add the reactor entry, isolated Azure BOM/dependency, properties bean, and test**
 
-Add `<module>blob-helper-storage-azure</module>` to the root `<modules>` list. The new module imports `com.azure:azure-sdk-bom` version `1.3.8`, declares `com.azure:azure-storage-blob` without a version, depends on `blob-helper-core`, and adds JUnit Jupiter in test scope.
+Add `<module>blob-helper-storage-azure</module>` to the root `<modules>` list. The new module imports `com.azure:azure-sdk-bom` version `1.3.8`, declares `com.azure:azure-storage-blob` without a version, depends on `dedup4j-core`, and adds JUnit Jupiter in test scope.
 
 Implement `AzureBlobStorageProperties` with nullable `String container`, `String connectionString`, `URI endpoint`, and `String accountName` fields plus conventional getters and setters. Keep the class free of Azure SDK imports so it can be used as provider configuration without changing core APIs.
 

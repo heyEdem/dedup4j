@@ -1,12 +1,12 @@
 package com.edem.blobhelper.storage.local;
 
-import com.edem.blobhelper.core.exception.BlobStorageException;
-import com.edem.blobhelper.core.exception.BlobValidationException;
-import com.edem.blobhelper.core.exception.ContentNotFoundException;
-import com.edem.blobhelper.core.storage.BlobResource;
-import com.edem.blobhelper.core.storage.BlobStorage;
-import com.edem.blobhelper.core.storage.PutBlobRequest;
-import com.edem.blobhelper.core.storage.StoredBlob;
+import com.edem.dedup4j.core.exception.BlobStorageException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
+import com.edem.dedup4j.core.exception.ContentNotFoundException;
+import com.edem.dedup4j.core.storage.BlobResource;
+import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.PutBlobRequest;
+import com.edem.dedup4j.core.storage.StoredBlob;
 
 import java.io.IOException;
 import java.io.InputStream;
