@@ -4,7 +4,7 @@
 
 Maven multi-module Java 21 library project for a Spring Boot-compatible blob deduplication helper.
 
-Current implementation state: root Maven reactor with `dedup4j-core`, `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, the optional `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, and dependency-only `dedup4j-spring-boot-observability` modules, plus the standalone `blob-helper-dashboard` application. The original Spring Boot shell class still exists under root `src/`, but the root project is now `pom` packaging and the shell source is not part of a reactor child module.
+Current implementation state: root Maven reactor with `dedup4j-core`, `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, the optional `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, and dependency-only `dedup4j-spring-boot-observability` modules, plus the standalone `dedup4j-dashboard` application. The original Spring Boot shell class still exists under root `src/`, but the root project is now `pom` packaging and the shell source is not part of a reactor child module.
 
 The local dashboard subsystem is implemented and covered by credential-free
 multi-instance end-to-end verification, as defined by
@@ -41,7 +41,7 @@ multi-instance end-to-end verification, as defined by
 ├── dedup4j-spring-boot-observability/
 │   ├── pom.xml
 │   └── src/
-├── blob-helper-dashboard/
+├── dedup4j-dashboard/
 │   ├── pom.xml
 │   └── src/
 ├── docs/
@@ -74,7 +74,7 @@ multi-instance end-to-end verification, as defined by
 | `dedup4j-spring-boot-management` | Optional instance-side management module. Owns local read-only information, health, metrics, and failure endpoints plus management properties; it does not own application assets, blob bytes, or provider credentials. |
 | `dedup4j-spring-boot-dashboard` | Optional embedded single-instance dashboard starter. Owns dashboard properties, current-process snapshots, read-only API routes, and packaged static UI; it does not own SQLite history or instance registration. |
 | `dedup4j-spring-boot-observability` | Optional empty-code aggregate JAR that depends on the management and embedded-dashboard modules so one consumer dependency supplies the embedded current-application UI/API; it does not include the standalone fleet dashboard. |
-| `blob-helper-dashboard` | Standalone local monitoring application. Owns multi-instance registration, pull polling, SQLite aggregate history, seven-day failure retention, read-only REST views, and the static light/dark UI. |
+| `dedup4j-dashboard` | Standalone local monitoring application. Owns multi-instance registration, pull polling, SQLite aggregate history, seven-day failure retention, read-only REST views, and the static light/dark UI. |
 | root `pom.xml` | Maven reactor parent with Java 21, JUnit and Spring Boot BOMs, compiler/Surefire plugin management, and Enforcer dependency-convergence validation for shared SDK infrastructure. |
 | root `src/main/java/com/edem/blobhelper` | Legacy Spring Boot shell application class from project creation. Not currently part of a reactor child module. |
 | `.github/workflows/ci.yml` | GitHub Actions CI workflow for Java 21 Maven verification. |
@@ -146,3 +146,5 @@ Blob Helper instance starts
 | Spring MVC | Embedded dashboard’s conditional read-only controller and resource handler; supplied by a consuming web application. |
 | Spring Web | `MultipartFile` input type used by the starter’s upload façade; the starter does not add controllers or HTTP response types. |
 | `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard` | Direct compile dependencies of the empty-code observability aggregate; their existing auto-configuration registrations and resources remain authoritative. |
+
+The standalone dashboard uses test-scope Spring Test for HTTP routing regression coverage through MockMvc.

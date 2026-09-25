@@ -40,7 +40,7 @@
         <module>dedup4j-spring-boot-management</module>
         <module>dedup4j-spring-boot-dashboard</module>
         <module>dedup4j-spring-boot-observability</module>
-        <module>blob-helper-dashboard</module>
+        <module>dedup4j-dashboard</module>
     </modules>
 
     <dependencyManagement>

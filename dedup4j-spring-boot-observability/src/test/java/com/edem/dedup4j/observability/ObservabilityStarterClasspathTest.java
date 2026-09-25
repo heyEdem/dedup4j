@@ -19,8 +19,8 @@ class ObservabilityStarterClasspathTest {
     @Test
     void excludesStandaloneDashboard() {
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.dashboard.BlobHelperDashboardApplication"));
+                () -> Class.forName("com.edem.dedup4j.dashboard.Dedup4jDashboardApplication"));
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.dashboard.persistence.MetricSnapshotRepository"));
+                () -> Class.forName("com.edem.dedup4j.dashboard.persistence.MetricSnapshotRepository"));
     }
 }

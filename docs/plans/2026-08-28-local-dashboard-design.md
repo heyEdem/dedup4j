@@ -13,7 +13,7 @@ application logical assets, or cloud-provider credentials.
 
 ## Decisions
 
-- The dashboard is a separate `blob-helper-dashboard` Spring Boot application.
+- The dashboard is a separate `dedup4j-dashboard` Spring Boot application.
 - A separate optional `dedup4j-spring-boot-management` module exposes the
   read-only management API and self-registration client for consuming apps.
 - Instances self-register with the local dashboard using `application.yaml`.
@@ -36,7 +36,7 @@ Blob Helper application A ─┐
 Blob Helper application B ─┼─ local management API
 Blob Helper application C ─┘          ▲
                                      │ pull
-                          blob-helper-dashboard
+                          dedup4j-dashboard
                           127.0.0.1:9090
                                      │
                                   SQLite

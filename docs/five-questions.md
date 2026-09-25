@@ -161,7 +161,7 @@ read-only console.
 - Local management endpoints and self-registration live in the optional
   `dedup4j-spring-boot-management` module.
 - Registration, polling, persistence, and dashboard APIs/UI live in
-  `blob-helper-dashboard`.
+  `dedup4j-dashboard`.
 - Blob bytes, logical assets, and provider credentials remain with the
   consuming application.
 

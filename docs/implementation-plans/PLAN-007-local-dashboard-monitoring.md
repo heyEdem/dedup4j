@@ -18,7 +18,7 @@ Add two optional Maven modules:
 
 - `dedup4j-spring-boot-management`: instance-side configuration,
   read-only management endpoints, and self-registration client.
-- `blob-helper-dashboard`: standalone Spring Boot app with registration,
+- `dedup4j-dashboard`: standalone Spring Boot app with registration,
   polling, SQLite persistence, REST view API, and static HTML/CSS/JavaScript UI.
 
 The management module must not own application logical assets, cloud-provider
@@ -142,7 +142,7 @@ Execution steps:
 Run:
 
 ```bash
-./mvnw -pl blob-helper-dashboard -Dtest=InstanceRegistrationTest test
+./mvnw -pl dedup4j-dashboard -Dtest=InstanceRegistrationTest test
 ```
 
 Execution steps:
@@ -179,7 +179,7 @@ Execution steps:
 Run:
 
 ```bash
-./mvnw -pl blob-helper-dashboard -Dtest='*RepositoryTest,*CalculatorTest' test
+./mvnw -pl dedup4j-dashboard -Dtest='*RepositoryTest,*CalculatorTest' test
 ```
 
 Execution steps:
@@ -213,7 +213,7 @@ Execution steps:
 Run:
 
 ```bash
-./mvnw -pl blob-helper-dashboard -Dtest=DashboardControllerTest test
+./mvnw -pl dedup4j-dashboard -Dtest=DashboardControllerTest test
 ```
 
 Execution steps:
@@ -248,7 +248,7 @@ Execution steps:
 Run the focused and full verification:
 
 ```bash
-./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test
+./mvnw -pl dedup4j-spring-boot-management,dedup4j-dashboard test
 ./mvnw --batch-mode --no-transfer-progress verify
 ```
 

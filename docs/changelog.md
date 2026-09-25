@@ -44,32 +44,32 @@
 ## 2026-09-01 — Add embedded dashboard starter
 
 - Added the optional `dedup4j-spring-boot-dashboard` module with default-on, read-only current-process API and packaged responsive UI at `/dedup4j/dashboard`.
-- Preserved the standalone `blob-helper-dashboard` application for multi-instance SQLite-backed fleet monitoring.
+- Preserved the standalone `dedup4j-dashboard` application for multi-instance SQLite-backed fleet monitoring.
 - Modules affected: root reactor, `dedup4j-spring-boot-dashboard`, and project documentation.
 
 ## 2026-08-31 — Verify local multi-instance monitoring
 
 - Added management response contract coverage and a two-instance in-process end-to-end test for registration, polling, aggregate savings, failure isolation, and seven-day retention cleanup.
 - Updated local-only startup, verification, and completion documentation for Epic 7.
-- Modules affected: `dedup4j-spring-boot-management`, `blob-helper-dashboard`, and project documentation.
+- Modules affected: `dedup4j-spring-boot-management`, `dedup4j-dashboard`, and project documentation.
 
 ## 2026-08-31 — Add dashboard API and static console
 
 - Added read-only overview, instance status, history, and seven-day failure endpoints.
 - Added responsive vanilla HTML/CSS/JavaScript console with light/dark themes, trend visualization, and explicit loading, empty, disconnected, and error states.
-- Modules affected: `blob-helper-dashboard` and Epic 7 planning/status documentation.
+- Modules affected: `dedup4j-dashboard` and Epic 7 planning/status documentation.
 
 ## 2026-08-31 — Persist dashboard polling history
 
 - Added SQLite-backed instance registrations, interval metric snapshots, persisted status, and failure events with indexed instance/time queries.
 - Added scheduled multi-instance polling with reset-safe cumulative counter deltas and seven-day failure-only retention cleanup.
-- Modules affected: `blob-helper-dashboard` and Epic 7 planning/status documentation.
+- Modules affected: `dedup4j-dashboard` and Epic 7 planning/status documentation.
 
 ## 2026-08-31 — Add self-registration and dashboard shell
 
-- Added the standalone executable `blob-helper-dashboard` module with loopback/9090 defaults and local registration endpoint.
+- Added the standalone executable `dedup4j-dashboard` module with loopback/9090 defaults and local registration endpoint.
 - Added asynchronous management-side self-registration with YAML configuration, stable generated instance IDs, and outage isolation.
-- Modules affected: `blob-helper-dashboard`, `dedup4j-spring-boot-management`, root Maven reactor, and Epic 7 planning/status documentation.
+- Modules affected: `dedup4j-dashboard`, `dedup4j-spring-boot-management`, root Maven reactor, and Epic 7 planning/status documentation.
 
 ## 2026-08-31 — Add local read-only management API
 
@@ -106,7 +106,7 @@
 - Added the approved design and ADR for a fully local, read-only, pull-based dashboard with YAML self-registration.
 - Added Epic 7 and PLAN-007 for the optional management module, standalone dashboard, SQLite aggregate history, light/dark UI, and seven-day failure retention.
 - Updated the specification, architecture, implementation index, five-question requirements, patterns, README, and testing guidance.
-- Modules affected: planned `dedup4j-spring-boot-management`, planned `blob-helper-dashboard`, and project documentation.
+- Modules affected: planned `dedup4j-spring-boot-management`, planned `dedup4j-dashboard`, and project documentation.
 
 ## 2026-08-27 — Add provider SDK boundary checks
 
@@ -283,36 +283,36 @@
 
 - Fixed dashboard polling compatibility with the demo management URL and explicit `since` parameter binding.
 - Restyled the read-only dashboard with the demo console's slate, amber, blue, and light/dark theme system.
-- Modules affected: `blob-helper-dashboard` and the demo registration configuration.
+- Modules affected: `dedup4j-dashboard` and the demo registration configuration.
 
 ## 2026-09-01 — Show current metrics on dashboard registration
 
 - The first successful poll now records an instance's existing cumulative metrics instead of displaying an empty baseline.
 - Updated delta-calculation and multi-instance integration coverage.
-- Modules affected: `blob-helper-dashboard`.
+- Modules affected: `dedup4j-dashboard`.
 
 ## 2026-09-01 — Fix dashboard refresh and metric layout
 
 - Fixed the overview refresh error caused by a stale duplicate-rate selector and made rendering resilient to optional UI elements.
 - Removed the duplicate avoided-bytes side card, aligned the fleet table columns, and styled the `LATEST EVENT` label with the dashboard blue accent.
-- Modules affected: `blob-helper-dashboard` static HTML, CSS, and JavaScript.
+- Modules affected: `dedup4j-dashboard` static HTML, CSS, and JavaScript.
 
 ## 2026-09-01 — Balance dashboard overview and settings alignment
 
 - Reduced the hero panel scale and widened the supporting metrics area for a more even first-view composition.
 - Restored the four-column desktop configuration row so “Polling interval / 30 seconds” aligns with the other settings; mobile remains two columns.
-- Modules affected: `blob-helper-dashboard` static CSS.
+- Modules affected: `dedup4j-dashboard` static CSS.
 
 ## 2026-09-01 — Fix first configuration cell inset
 
 - Restored the left padding on the first “Polling interval” settings cell so it aligns with the other configuration entries.
-- Modules affected: `blob-helper-dashboard` static CSS.
+- Modules affected: `dedup4j-dashboard` static CSS.
 
 ## 2026-09-06 — Upgrade to Spring Boot 4.1.1
 
 - Upgraded the root Spring Boot BOM from 3.5.10 to 4.1.1 and removed obsolete Boot 3 database auto-configuration exclusions from provider discovery coverage.
 - Migrated the standalone dashboard to Boot 4 MVC/Jackson starters and Jackson 3's `tools.jackson` API while preserving metrics polling behavior.
-- Modules affected: root Maven reactor, `dedup4j-spring-boot-starter`, `blob-helper-dashboard`, and project architecture/implementation/decision documentation.
+- Modules affected: root Maven reactor, `dedup4j-spring-boot-starter`, `dedup4j-dashboard`, and project architecture/implementation/decision documentation.
 
 ## 2026-09-03 — Aggregate provider adapters in the standard starter
 
@@ -365,3 +365,8 @@
 
 - Renamed the dependency-only aggregate artifact and test source paths, preserving component auto-configuration and exclusion of the standalone fleet dashboard.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename standalone dashboard to dedup4j
+
+- Renamed fleet dashboard artifact, packages, runtime settings and UI branding while leaving original SQLite files in place. Fixed explicit history-path binding with a regression test. Packaged UI, JS/CSS and all four read API routes returned HTTP 200 against temporary SQLite; smoke process stopped. Visual inspection unavailable because no browser is connected.
+- Clean verification passed across all ten modules (206 tests); no architectural decision changed.

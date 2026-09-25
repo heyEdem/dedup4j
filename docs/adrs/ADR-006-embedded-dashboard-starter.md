@@ -20,7 +20,7 @@ web application's classpath, it serves a read-only dashboard at
 `/dedup4j/dashboard/api/v1`. The embedded dashboard is enabled by default
 and can be disabled with `dedup4j.dashboard.enabled=false`.
 
-The standalone `blob-helper-dashboard` application remains a separate
+The standalone `dedup4j-dashboard` application remains a separate
 multi-instance fleet-monitoring application. It retains instance registration,
 pull polling, SQLite history, and seven-day failure retention. Embedded mode
 does not register with or persist data in the standalone dashboard.

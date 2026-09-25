@@ -179,7 +179,7 @@ Responsibilities:
 - self-register the application with a local Blob Helper dashboard
 - report provider-neutral operational data without exposing provider credentials
 
-### blob-helper-dashboard
+### dedup4j-dashboard
 
 Standalone local fleet administration dashboard.
 

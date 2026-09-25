@@ -42,7 +42,7 @@
 
 - Provider implementation classes — this plan changes packaging, not storage behavior.
 - `dedup4j-core` production dependencies — core remains provider/framework neutral.
-- `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, `blob-helper-dashboard` — none become starter dependencies.
+- `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, `dedup4j-dashboard` — none become starter dependencies.
 - SDK version upgrades unrelated to achieving convergence.
 - Git commits, pushes, branches, or pull requests — Edem handles Git unless explicitly delegating it.
 

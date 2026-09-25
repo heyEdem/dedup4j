@@ -11,7 +11,7 @@ history, and expose bounded failure retention without cloud services.
 
 ## Files
 
-- Create: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/MultiInstanceDashboardIntegrationTest.java`
+- Create: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/MultiInstanceDashboardIntegrationTest.java`
 - Create: `dedup4j-spring-boot-management/src/test/java/com/edem/dedup4j/management/ManagementDashboardContractTest.java`
 - Modify: `docs/provider-testing.md`
 - Modify: `docs/README.md`

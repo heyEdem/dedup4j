@@ -4,7 +4,7 @@
 
 **Goal:** Let a Spring Boot application serve the Blob Helper dashboard UI automatically when an optional dashboard dependency is added, without requiring a second dashboard process.
 
-**Architecture:** Add a new `dedup4j-spring-boot-dashboard` starter that auto-configures a same-application read-only dashboard at `/dedup4j/dashboard`. It will expose current-instance metrics through dashboard-shaped REST resources and serve the existing static console from the consuming application. The existing `blob-helper-dashboard` application remains available for multi-instance fleet monitoring and is not activated by the starter.
+**Architecture:** Add a new `dedup4j-spring-boot-dashboard` starter that auto-configures a same-application read-only dashboard at `/dedup4j/dashboard`. It will expose current-instance metrics through dashboard-shaped REST resources and serve the existing static console from the consuming application. The existing `dedup4j-dashboard` application remains available for multi-instance fleet monitoring and is not activated by the starter.
 
 **Tech Stack:** Java 21, Spring Boot 3.5.10, Spring MVC, Spring Boot auto-configuration, Micrometer, Jakarta Persistence, vanilla HTML/CSS/JavaScript, JUnit 5, Spring Boot test, AssertJ, Maven.
 
@@ -21,7 +21,7 @@
 - The standalone dashboard remains a separate executable for multi-instance monitoring.
 - Every implementation task must add or update focused tests before implementation code.
 - Run `./mvnw --batch-mode --no-transfer-progress verify` before claiming completion.
-- Do not publish `blob-helper-dashboard` as a library dependency; publish the new dashboard starter as an optional library artifact.
+- Do not publish `dedup4j-dashboard` as a library dependency; publish the new dashboard starter as an optional library artifact.
 
 ---
 
@@ -41,13 +41,13 @@
 - Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/js/dashboard.js`
 - Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfigurationTest.java`
 - Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardControllerTest.java`
-- Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/EmbeddedDashboardIntegrationTest.java`
+- Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/EmbeddedDashboardIntegrationTest.java`
 
 ### Existing project files
 
 - Modify: `pom.xml` to include the new module and manage its shared version.
 - Modify: `dedup4j-spring-boot-management/pom.xml` only if a shared snapshot service is extracted.
-- Modify: `blob-helper-dashboard/pom.xml` only if static resource ownership is moved to a shared resource module.
+- Modify: `dedup4j-dashboard/pom.xml` only if static resource ownership is moved to a shared resource module.
 - Modify: `docs/architecture.md` and `docs/implementation.md` for the new starter and changed dashboard roles.
 - Create: `docs/adrs/ADR-006-embedded-dashboard-starter.md` documenting the decision to make the embedded dashboard primary.
 - Modify: `docs/SPECIFICATION.md` to distinguish embedded single-instance UI from the standalone fleet dashboard.
@@ -318,7 +318,7 @@ git commit -m "feat: serve embedded dashboard API"
 - Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/css/states.css`
 - Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/js/dashboard.js`
 - Modify: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`
-- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/EmbeddedDashboardIntegrationTest.java`
+- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/EmbeddedDashboardIntegrationTest.java`
 
 **Interfaces:**
 
@@ -378,9 +378,9 @@ git commit -m "feat: embed dashboard UI in Spring Boot applications"
 
 **Files:**
 
-- Modify: `blob-helper-dashboard/src/main/resources/static/js/dashboard.js` only if the shared UI path change requires it.
-- Modify: `blob-helper-dashboard/pom.xml` only if the standalone app consumes a shared UI resource artifact.
-- Test: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/MultiInstanceDashboardIntegrationTest.java`
+- Modify: `dedup4j-dashboard/src/main/resources/static/js/dashboard.js` only if the shared UI path change requires it.
+- Modify: `dedup4j-dashboard/pom.xml` only if the standalone app consumes a shared UI resource artifact.
+- Test: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/MultiInstanceDashboardIntegrationTest.java`
 - Test: `dedup4j-spring-boot-management/src/test/java/com/edem/dedup4j/management/ManagementDashboardContractTest.java`
 
 **Interfaces:**
@@ -390,7 +390,7 @@ git commit -m "feat: embed dashboard UI in Spring Boot applications"
 
 - [ ] **Step 1: Run existing standalone and management tests before changes**
 
-Run: `./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test`
+Run: `./mvnw -pl dedup4j-spring-boot-management,dedup4j-dashboard test`
 
 Record the passing baseline in the task notes.
 
@@ -404,12 +404,12 @@ Do not merge SQLite polling, instance registration, or multi-instance persistenc
 
 - [ ] **Step 4: Run the regression suite**
 
-Run: `./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test`
+Run: `./mvnw -pl dedup4j-spring-boot-management,dedup4j-dashboard test`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add blob-helper-dashboard dedup4j-spring-boot-management
+git add dedup4j-dashboard dedup4j-spring-boot-management
 git commit -m "test: preserve standalone dashboard monitoring mode"
 ```
 

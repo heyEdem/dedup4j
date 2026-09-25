@@ -13,7 +13,7 @@ of consuming application databases and provider credentials.
 
 ## Decision
 
-Add a separate `blob-helper-dashboard` Spring Boot application and an optional
+Add a separate `dedup4j-dashboard` Spring Boot application and an optional
 `dedup4j-spring-boot-management` module. Blob Helper instances opt in with
 `application.yaml`, self-register with the local dashboard, and expose local
 read-only management endpoints. The dashboard polls those endpoints and stores
@@ -40,8 +40,8 @@ push collection, and repair controls are deferred features.
 |---------|-------|
 | Read-only instance management API | `dedup4j-spring-boot-management` |
 | Instance self-registration client | `dedup4j-spring-boot-management` |
-| Registration, polling, normalization, and SQLite persistence | `blob-helper-dashboard` |
-| Dashboard REST API and static UI | `blob-helper-dashboard` |
+| Registration, polling, normalization, and SQLite persistence | `dedup4j-dashboard` |
+| Dashboard REST API and static UI | `dedup4j-dashboard` |
 | Blob bytes and provider credentials | Consuming application/provider configuration |
 
 **Explicitly excluded layers:** `dedup4j-core`, storage adapters, and the

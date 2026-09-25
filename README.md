@@ -39,7 +39,7 @@ dedup4j-storage-azure
 dedup4j-spring-boot-management  (optional local management API)
 dedup4j-spring-boot-dashboard   (optional embedded read-only dashboard)
 dedup4j-spring-boot-observability (optional embedded management + dashboard)
-blob-helper-dashboard                (standalone local monitoring console)
+dedup4j-dashboard                (standalone local monitoring console)
 dedup4j-storage-local
 ```
 
@@ -179,7 +179,7 @@ blob-helper:
 ```
 
 `dedup4j-spring-boot-observability` is the embedded current-application
-UI/API. Use the separate `blob-helper-dashboard` application when you need
+UI/API. Use the separate `dedup4j-dashboard` application when you need
 multi-instance polling and SQLite history.
 
 ## High-Level Flow
