@@ -6,7 +6,7 @@
 
 ## Goal
 
-Allow local Blob Helper applications to register themselves and provide a
+Allow local dedup4j applications to register themselves and provide a
 standalone dashboard process bound to loopback.
 
 ## Files

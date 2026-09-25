@@ -6,7 +6,7 @@
 
 ## Context
 
-Blob Helper deduplicates byte-identical uploads across application-owned logical assets. The library must identify physical content consistently while remaining reusable across Spring Boot applications and object storage providers.
+dedup4j deduplicates byte-identical uploads across application-owned logical assets. The library must identify physical content consistently while remaining reusable across Spring Boot applications and object storage providers.
 
 ## Decision
 

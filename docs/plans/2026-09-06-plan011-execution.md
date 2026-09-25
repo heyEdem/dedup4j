@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use subagent-driven development. Luna writes implementation and tests; the coordinating assistant plans, reviews, and verifies.
 
-**Goal:** Execute PLAN-011 so consumers receive the complete Blob Helper service graph using their existing Spring database infrastructure.
+**Goal:** Execute PLAN-011 so consumers receive the complete dedup4j service graph using their existing Spring database infrastructure.
 
 **Architecture:** Preserve framework-neutral persistence; move duplicate recovery across Spring transactions. Install prefixed metadata migrations under guarded schema modes and expose individually replaceable defaults.
 
@@ -43,7 +43,7 @@ Each stage uses the exact file map and test instructions in PLAN-011. Run Maven 
 | 6 | Imports alone do not establish Boot initialization order. | Test discovery with actual DataSource/JPA auto-configuration and explicit before/after relationships. |
 | 1 → 5 | Exception identity getters are the retry interface. | Preserve the exact PLAN-011 names and types. |
 | 2 → 3 | Migration/table/constraint names must match mapping. | Use PLAN-011 names; test actual schema validation. |
-| 3 → 6 | Migration/validator must precede metadata use. | Prove startup ordering without consumer Blob Helper infrastructure beans. |
+| 3 → 6 | Migration/validator must precede metadata use. | Prove startup ordering without consumer dedup4j infrastructure beans. |
 | 4 → 5 | Only one public BlobDeduplicationService bean. | Construct raw delegate inside wrapper bean factory. |
 | 4 → 6 | Added JPA dependencies affect old provider-only fixtures. | Adapt fixtures narrowly where actual Boot discovery now requires persistence. |
 | 3 → consumer JPA | Boot uses nonempty EntityScanPackages instead of its default application packages. | Preserve consumer entity discovery when adding AssetContent, with regression coverage. |
@@ -64,7 +64,7 @@ Local adapter correction: reviewed and verified by Luna, including separate-inst
 
 ## Final Verification — 2026-09-07
 
-`./mvnw --batch-mode --no-transfer-progress clean verify` completed with `BUILD SUCCESS`: **168 tests, zero failures/errors/skips**, across all ten reactor modules. Test totals: core 15, JPA 17, local 15, S3 6, Azure 5, starter 79, management 5, embedded dashboard 10, standalone dashboard 16. Build finished at 01:14:10 UTC. Log: `/tmp/blob-helper-plan011-verified.log`.
+`./mvnw --batch-mode --no-transfer-progress clean verify` completed with `BUILD SUCCESS`: **168 tests, zero failures/errors/skips**, across all ten reactor modules. Test totals: core 15, JPA 17, local 15, S3 6, Azure 5, starter 79, management 5, embedded dashboard 10, standalone dashboard 16. Build finished at 01:14:10 UTC. Log: `/tmp/dedup4j-plan011-verified.log`.
 
 Main-agent review accepted specification compliance and code quality after Luna resolved the recorded findings. No production or test edits followed this successful build. All code and tests were written by GPT-5.6-luna workers; the coordinating assistant wrote this plan, reviewed implementation, ran final verification, and updated docs.
 

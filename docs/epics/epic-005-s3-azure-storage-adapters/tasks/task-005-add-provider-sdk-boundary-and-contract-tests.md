@@ -10,7 +10,7 @@ Prove provider SDKs stay out of core and starter modules.
 
 ## Files
 
-- Create: `src/test/java/com/edem/blobhelper/ProviderDependencyBoundaryTest.java`
+- Create: `src/test/java/com/edem/dedup4j/ProviderDependencyBoundaryTest.java`
 - Create: `docs/provider-testing.md`
 
 ## Steps

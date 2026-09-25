@@ -6,7 +6,7 @@
 
 ## Context
 
-The main value of Blob Helper is avoiding repeated physical writes for identical bytes while allowing each application to create its own logical asset records. Concurrent uploads of identical bytes are expected.
+The main value of dedup4j is avoiding repeated physical writes for identical bytes while allowing each application to create its own logical asset records. Concurrent uploads of identical bytes are expected.
 
 ## Decision
 

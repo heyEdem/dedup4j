@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Blob Helper already provides a local management API and a standalone dashboard
+dedup4j already provides a local management API and a standalone dashboard
 application for aggregating multiple registered applications. That mode is
 useful for fleet monitoring, but it requires a second process and SQLite
 storage even when a developer only wants to inspect one Spring Boot

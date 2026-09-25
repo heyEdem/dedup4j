@@ -11,7 +11,7 @@ Provide Spring Boot auto-configuration and a storage-neutral `BlobDeduplicationS
 
 ## Background
 
-Applications should add dependencies, configure a provider, and call services. They should not receive controllers or provider-specific APIs from Blob Helper.
+Applications should add dependencies, configure a provider, and call services. They should not receive controllers or provider-specific APIs from dedup4j.
 
 ## What to Build
 

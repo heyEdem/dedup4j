@@ -19,7 +19,7 @@ import java.time.Instant;
 public class LocalBlobStorage implements BlobStorage {
 
     public static final String PROVIDER = "local";
-    private static final String TEMPORARY_FILE_PREFIX = ".blob-helper-";
+    private static final String TEMPORARY_FILE_PREFIX = ".dedup4j-";
 
     private final LocalBlobStorageProperties properties;
 

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.edem</groupId>
-        <artifactId>blob-helper</artifactId>
+        <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>dedup4j-spring-boot-observability</artifactId>

@@ -7,7 +7,7 @@
 ## Goal
 
 Provide a lightweight, RabbitMQ-style local administration dashboard for
-monitoring multiple Blob Helper-enabled Spring Boot applications. The dashboard
+monitoring multiple dedup4j-enabled Spring Boot applications. The dashboard
 must show operational trends and recent failures without owning blob bytes,
 application logical assets, or cloud-provider credentials.
 
@@ -32,9 +32,9 @@ application logical assets, or cloud-provider credentials.
 ## Architecture
 
 ```text
-Blob Helper application A ─┐
-Blob Helper application B ─┼─ local management API
-Blob Helper application C ─┘          ▲
+dedup4j application A ─┐
+dedup4j application B ─┼─ local management API
+dedup4j application C ─┘          ▲
                                      │ pull
                           dedup4j-dashboard
                           127.0.0.1:9090
@@ -72,7 +72,7 @@ disconnected; instances do not need to send a separate heartbeat.
 An instance opts in to management and self-registration:
 
 ```yaml
-blob-helper:
+dedup4j:
   management:
     enabled: true
     base-path: /dedup4j/management
@@ -91,7 +91,7 @@ server:
   address: 127.0.0.1
   port: 9090
 
-blob-helper:
+dedup4j:
   dashboard:
     database-path: ./blob-helper-dashboard.sqlite
     polling-interval: 30s
@@ -137,7 +137,7 @@ default. The MVP is read-only and provides no deletion or repair controls.
 ## Success Criteria
 
 The MVP is successful when a developer can start the local dashboard, start
-multiple configured Blob Helper applications, see them self-register, view
+multiple configured dedup4j applications, see them self-register, view
 their current status, inspect historical aggregate traffic and deduplication
 savings, and review the last seven days of failure details without cloud
 credentials or additional infrastructure.

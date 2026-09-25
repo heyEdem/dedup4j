@@ -8,7 +8,7 @@
 ## Goal
 
 Build a lightweight, standalone, read-only dashboard that monitors multiple
-local Blob Helper instances through self-registration and pull-based management
+local dedup4j instances through self-registration and pull-based management
 endpoints, retaining aggregate history in SQLite and detailed failures for
 seven days.
 
@@ -53,7 +53,7 @@ instance database or object store.
 Instance configuration:
 
 ```yaml
-blob-helper:
+dedup4j:
   management:
     enabled: true
     base-path: /dedup4j/management
@@ -71,7 +71,7 @@ server:
   address: 127.0.0.1
   port: 9090
 
-blob-helper:
+dedup4j:
   dashboard:
     database-path: ./blob-helper-dashboard.sqlite
     polling-interval: 30s
@@ -129,7 +129,7 @@ Execution steps:
   client.
 - Set dashboard defaults to address `127.0.0.1` and port `9090`.
 - Make registration retryable without blocking the consuming application’s
-  startup; an unavailable dashboard must not prevent Blob Helper startup.
+  startup; an unavailable dashboard must not prevent dedup4j startup.
 
 **Tests first:**
 

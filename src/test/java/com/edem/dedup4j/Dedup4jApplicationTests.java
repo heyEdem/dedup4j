@@ -1,10 +1,10 @@
-package com.edem.blobhelper;
+package com.edem.dedup4j;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BlobHelperApplicationTests {
+class Dedup4jApplicationTests {
 
     @Test
     void contextLoads() {

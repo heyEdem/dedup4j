@@ -7,7 +7,7 @@
 
 ## Goal
 
-Add drift reporting, optional repair, metrics, and structured logs for Blob Helper operations.
+Add drift reporting, optional repair, metrics, and structured logs for dedup4j operations.
 
 ## Background
 

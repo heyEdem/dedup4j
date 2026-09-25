@@ -6,7 +6,7 @@
 
 ## Context
 
-Blob Helper needs an operational view for developers and operators. The view
+dedup4j needs an operational view for developers and operators. The view
 should resemble a lightweight management console, support multiple local
 instances, demonstrate deduplication savings over time, and remain independent
 of consuming application databases and provider credentials.
@@ -14,7 +14,7 @@ of consuming application databases and provider credentials.
 ## Decision
 
 Add a separate `dedup4j-dashboard` Spring Boot application and an optional
-`dedup4j-spring-boot-management` module. Blob Helper instances opt in with
+`dedup4j-spring-boot-management` module. dedup4j instances opt in with
 `application.yaml`, self-register with the local dashboard, and expose local
 read-only management endpoints. The dashboard polls those endpoints and stores
 instance registrations, aggregate metric snapshots, and seven days of failure

@@ -6,7 +6,7 @@
 
 ## Goal
 
-Define how consuming applications report logical reference counts to Blob Helper.
+Define how consuming applications report logical reference counts to dedup4j.
 
 ## Files
 

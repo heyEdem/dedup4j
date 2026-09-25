@@ -12,7 +12,7 @@ The current integration requires consumers to add the base starter and a provide
 
 `dedup4j-spring-boot-starter` is the single standard consumer dependency and transitively includes the local, S3, and Azure adapter modules. Provider implementation code remains inside those modules. The provider auto-configuration planned for PLAN-010 will create only the provider selected by `dedup4j.storage.provider`, reuse an application-provided provider client when available, and otherwise create the client from standard SDK configuration.
 
-For S3, provider and bucket are the only Blob Helper-required properties. Region, endpoint, and path style are optional overrides. Dashboard and management modules remain outside this starter.
+For S3, provider and bucket are the only dedup4j-required properties. Region, endpoint, and path style are optional overrides. Dashboard and management modules remain outside this starter.
 
 ## Invariants (from Q2)
 
@@ -20,7 +20,7 @@ For S3, provider and bucket are the only Blob Helper-required properties. Region
 - [ ] Exactly one configured `BlobStorage` is created.
 - [ ] Unselected providers do not initialize clients, discover credentials, or require properties.
 - [ ] An application-provided provider client takes precedence over the default.
-- [ ] Normal S3 setup requires only provider and bucket from Blob Helper.
+- [ ] Normal S3 setup requires only provider and bucket from dedup4j.
 - [ ] Dashboard and management are not transitive dependencies of the generic upload starter.
 - [ ] Dependency convergence, provider contracts, and vulnerability checks guard the bundled graph.
 
@@ -46,7 +46,7 @@ For S3, provider and bucket are the only Blob Helper-required properties. Region
 
 **Negative / Trade-offs:**
 - Every standard consumer carries unused provider SDK dependencies.
-- Blob Helper maintainers own a larger compatibility and vulnerability surface.
+- dedup4j maintainers own a larger compatibility and vulnerability surface.
 
 **Risks if violated:**
 - Unselected clients may trigger credential or startup failures.

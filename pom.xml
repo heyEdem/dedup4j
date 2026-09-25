@@ -3,11 +3,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.edem</groupId>
-    <artifactId>blob-helper</artifactId>
+    <artifactId>dedup4j</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>blob-helper</name>
-    <description>blob-helper</description>
+    <name>dedup4j</name>
+    <description>dedup4j</description>
     <url/>
     <licenses>
         <license/>

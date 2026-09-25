@@ -1,13 +1,13 @@
-package com.edem.blobhelper;
+package com.edem.dedup4j;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BlobHelperApplication {
+public class Dedup4jApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BlobHelperApplication.class, args);
+        SpringApplication.run(Dedup4jApplication.class, args);
     }
 
 }

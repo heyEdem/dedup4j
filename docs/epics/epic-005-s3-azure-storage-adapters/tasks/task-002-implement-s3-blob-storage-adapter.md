@@ -24,5 +24,5 @@ Implement `BlobStorage` with AWS S3 or S3-compatible object storage.
 ## Acceptance
 
 - [x] S3 round trip satisfies the `BlobStorage` contract.
-- [x] Provider exceptions are mapped to Blob Helper domain exceptions.
+- [x] Provider exceptions are mapped to dedup4j domain exceptions.
 - [x] Normal unit tests do not require real AWS credentials.

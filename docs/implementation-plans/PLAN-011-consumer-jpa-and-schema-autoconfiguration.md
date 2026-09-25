@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make Blob Helper reuse the consuming Spring Boot application's database and transaction infrastructure while conditionally installing its complete metadata service graph.
+**Goal:** Make dedup4j reuse the consuming Spring Boot application's database and transaction infrastructure while conditionally installing its complete metadata service graph.
 
-**Architecture:** The JPA module remains framework-neutral about transaction ownership. The Spring Boot starter scans the Blob Helper entity, builds default repositories and services, and wraps public operations in `REQUIRES_NEW` Spring transactions. A starter-owned Liquibase changelog manages only prefixed Blob Helper tables under the guarded `embedded`, `always`, and `never` modes.
+**Architecture:** The JPA module remains framework-neutral about transaction ownership. The Spring Boot starter scans the dedup4j entity, builds default repositories and services, and wraps public operations in `REQUIRES_NEW` Spring transactions. A starter-owned Liquibase changelog manages only prefixed dedup4j tables under the guarded `embedded`, `always`, and `never` modes.
 
 **Tech Stack:** Java 21, Spring Boot 3.5, Jakarta Persistence, Spring ORM/JDBC transactions, Liquibase, H2, JUnit 5, `ApplicationContextRunner`.
 
@@ -62,7 +62,7 @@ Initial read-only repository inspection preceded reading this plan's Git exclusi
 - [ ] **Dedup4jServiceAutoConfigurationTest.registersDefaults:** repository, mutation, reference-count, hasher, key strategy, metrics, and the public transactional deduplication service exist once.
 - [ ] **Dedup4jServiceAutoConfigurationTest.applicationBeansWin:** each application-provided collaborator backs off only its corresponding default.
 - [ ] **SpringTransactionalBlobDeduplicationServiceTest.retriesDuplicateInFreshTransaction:** a duplicate insert rolls back and retries once in a new transaction.
-- [ ] **Dedup4jContextStartTest.startsWithOnlyDataSourceJpaAndProperties:** the full upload context starts with no Blob Helper `@Bean` declarations.
+- [ ] **Dedup4jContextStartTest.startsWithOnlyDataSourceJpaAndProperties:** the full upload context starts with no dedup4j `@Bean` declarations.
 - [ ] **Dedup4jContextStartTest.concurrentDuplicateHasOneRowAndTwoReferences:** two successful identical calls converge on one metadata row with reference count two.
 
 ## Out of Scope (from Q5)
@@ -235,7 +235,7 @@ Bind from `dedup4j.persistence.initialize-schema` and test all three relaxed-bin
 
 - [ ] **Step 3: Implement schema initialization policy**
 
-Annotate `Dedup4jPersistenceAutoConfiguration` with `@AutoConfiguration` and `@EntityScan(basePackageClasses = AssetContent.class)`. Register a named `SpringLiquibase blobHelperLiquibase` and compute its `shouldRun` value as:
+Annotate `Dedup4jPersistenceAutoConfiguration` with `@AutoConfiguration` and `@EntityScan(basePackageClasses = AssetContent.class)`. Register a named `SpringLiquibase dedup4jLiquibase` and compute its `shouldRun` value as:
 
 ```java
 mode == SchemaInitialization.ALWAYS
@@ -266,7 +266,7 @@ from blob_helper_asset_content
 where 1 = 0
 ```
 
-Convert `DataAccessException` into an `IllegalStateException` that names the missing table, the active mode, and `classpath:db/blob-helper/db.changelog-master.yaml`. The validator must depend on `blobHelperLiquibase` when that bean exists.
+Convert `DataAccessException` into an `IllegalStateException` that names the missing table, the active mode, and `classpath:db/blob-helper/db.changelog-master.yaml`. The validator must depend on `dedup4jLiquibase` when that bean exists.
 
 - [ ] **Step 5: Test all schema modes**
 
@@ -433,7 +433,7 @@ dedup4j.storage.provider=local
 dedup4j.storage.local.root-directory=<JUnit temp directory>
 ```
 
-It must not declare a Blob Helper repository, hasher, key strategy, service, transaction wrapper, entity scan, or schema bean.
+It must not declare a dedup4j repository, hasher, key strategy, service, transaction wrapper, entity scan, or schema bean.
 
 - [ ] **Step 3: Prove startup and concurrent deduplication**
 
@@ -461,8 +461,8 @@ Do not run Git commands. Provide the path list and test results for Edem's Git w
 
 ## Definition of Done
 
-- [ ] A normal application declares no Blob Helper infrastructure beans.
-- [ ] Blob Helper uses the application's managed JPA and transaction infrastructure.
+- [ ] A normal application declares no dedup4j infrastructure beans.
+- [ ] dedup4j uses the application's managed JPA and transaction infrastructure.
 - [ ] No production-like database is mutated unless `initialize-schema=always`.
 - [ ] Missing schema errors identify the exact packaged migration.
 - [ ] Concurrent identical successful calls produce one row and correct references.

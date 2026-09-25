@@ -24,5 +24,5 @@ Implement `BlobStorage` with Azure Blob Storage.
 ## Acceptance
 
 - [ ] Azure round trip satisfies the `BlobStorage` contract.
-- [ ] Provider exceptions are mapped to Blob Helper domain exceptions.
+- [ ] Provider exceptions are mapped to dedup4j domain exceptions.
 - [ ] Normal unit tests do not require real Azure credentials.

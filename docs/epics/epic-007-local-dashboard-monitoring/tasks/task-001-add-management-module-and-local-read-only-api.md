@@ -6,7 +6,7 @@
 
 ## Goal
 
-Expose provider-neutral operational information from a Blob Helper instance
+Expose provider-neutral operational information from a dedup4j instance
 without adding business controllers to the starter or exposing provider
 credentials.
 

@@ -1,6 +1,8 @@
-# Blob Helper
+# dedup4j
 
-Blob Helper is a reusable Spring Boot library for deduplicated object uploads.
+Rename status and consumer changes: [dedup4j migration guide](docs/dedup4j-migration.md). Persistence identifiers and local data defaults remain unchanged pending the compatibility decision.
+
+dedup4j is a reusable Spring Boot library for deduplicated object uploads.
 It stores identical file bytes once, while allowing each application to keep its
 own logical asset records.
 
@@ -21,10 +23,10 @@ Applications often upload the same file many times:
 Without deduplication, each upload becomes a new object-store write and a new
 stored object, even when the bytes are identical.
 
-Blob Helper solves this by separating:
+dedup4j solves this by separating:
 
 - logical assets owned by the consuming application
-- physical blob content owned by Blob Helper
+- physical blob content owned by dedup4j
 
 Many logical assets can point to one physical content record.
 
@@ -69,7 +71,7 @@ pieces, add:
 <dependency>
   <groupId>com.edem</groupId>
   <artifactId>dedup4j-spring-boot-observability</artifactId>
-  <version>${blob-helper.version}</version>
+  <version>${dedup4j.version}</version>
 </dependency>
 ```
 
@@ -78,7 +80,7 @@ available. Management remains an explicit choice and is not exposed until the
 consumer enables it:
 
 ```yaml
-blob-helper:
+dedup4j:
   management:
     enabled: true
 ```
@@ -86,7 +88,7 @@ blob-helper:
 Select the storage provider in application configuration. For local storage:
 
 ```yaml
-blob-helper:
+dedup4j:
   storage:
     provider: local
     local:
@@ -99,7 +101,7 @@ apply; `storage.s3.region`, `storage.s3.endpoint`, and
 `storage.s3.path-style` are optional overrides for AWS or S3-compatible stores.
 For Azure, set `storage.provider=azure`, `storage.azure.container`, and
 `storage.azure.connection-string` or `storage.azure.endpoint` under
-`blob-helper`.
+`dedup4j`.
 
 The starter reuses an application `S3Client` or `BlobContainerClient` bean
 before creating a default client. An application `BlobStorage` bean replaces
@@ -110,7 +112,7 @@ verify cloud access.
 
 The starter uses the application's `DataSource`, JPA entity manager, and Spring
 transaction manager, and automatically supplies `BlobDeduplicationService`
-and its internal collaborators. No Blob Helper configuration class is needed.
+and its internal collaborators. No dedup4j configuration class is needed.
 Each collaborator can be replaced with an application bean of the same type.
 The consumer supplies its database driver and connection configuration; H2 is
 not a runtime dependency of the starter.
@@ -122,7 +124,7 @@ migration:
 |---|---|
 | `embedded` (default) | Initialize supported embedded databases; validate existing schema on external databases. |
 | `always` | Explicitly authorize initialization on the consumer database. |
-| `never` | Validate existing schema without running Blob Helper migrations. |
+| `never` | Validate existing schema without running dedup4j migrations. |
 
 The migration is packaged at
 `classpath:db/blob-helper/db.changelog-master.yaml`. It creates
@@ -143,14 +145,14 @@ For common Spring upload flows, inject the auto-configured `Dedup4j` facade:
 
 ```java
 public String uploadImage(MultipartFile file) {
-    BlobReference stored = blobHelper.store(file);
+    BlobReference stored = dedup4j.store(file);
     BlobLocation location = stored.location();
     uploadRepository.save(new Upload(location.objectKey(), stored.assetContentId()));
     return publicUrlMapper.toUrl(location);
 }
 ```
 
-`blobHelper.store` is the only physical upload call; the application must not
+`dedup4j.store` is the only physical upload call; the application must not
 call `S3Client.putObject` or another provider SDK afterward. The application
 creates its logical row for every successful call, including duplicates, and
 may return its own URL, DTO, ID, `BlobReference`, or empty response. A stable
@@ -173,7 +175,7 @@ application UI/API; open `http://localhost:8080/dedup4j/dashboard`.
 Embedded dashboard mode is enabled by default and can be disabled with:
 
 ```yaml
-blob-helper:
+dedup4j:
   dashboard:
     enabled: false
 ```

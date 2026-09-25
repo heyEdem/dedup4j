@@ -48,7 +48,7 @@ The library must support cloud storage providers without leaking provider SDK de
 
 - Prefer emulator/container tests where practical.
 - Mark external provider tests with Maven profiles or tags.
-- Keep provider exceptions mapped to Blob Helper domain exceptions at the adapter boundary.
+- Keep provider exceptions mapped to dedup4j domain exceptions at the adapter boundary.
 
 ## Definition of Done
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let a Spring Boot application serve the Blob Helper dashboard UI automatically when an optional dashboard dependency is added, without requiring a second dashboard process.
+**Goal:** Let a Spring Boot application serve the dedup4j dashboard UI automatically when an optional dashboard dependency is added, without requiring a second dashboard process.
 
 **Architecture:** Add a new `dedup4j-spring-boot-dashboard` starter that auto-configures a same-application read-only dashboard at `/dedup4j/dashboard`. It will expose current-instance metrics through dashboard-shaped REST resources and serve the existing static console from the consuming application. The existing `dedup4j-dashboard` application remains available for multi-instance fleet monitoring and is not activated by the starter.
 
@@ -417,8 +417,8 @@ git commit -m "test: preserve standalone dashboard monitoring mode"
 
 **Files:**
 
-- Create or modify in `/Users/Edem/Documents/IdeaProjects/blob-helper-docs/docs/`: `getting-started/installation.md`, `getting-started/quick-start.md`, `guides/embedded-dashboard.md`, and `releases.md`.
-- Modify: `/Users/Edem/Documents/blob-helper-maven-central-roadmap.md` if the artifact list changes.
+- Create or modify in `/Users/Edem/Documents/IdeaProjects/dedup4j-docs/docs/`: `getting-started/installation.md`, `getting-started/quick-start.md`, `guides/embedded-dashboard.md`, and `releases.md`.
+- Modify: `/Users/Edem/Documents/dedup4j-maven-central-roadmap.md` if the artifact list changes.
 - Modify: `README.md` in the Java repository with the embedded dashboard dependency and route.
 - Modify: `docs/architecture.md`, `docs/implementation.md`, and `docs/changelog.md`.
 
@@ -441,7 +441,7 @@ open http://localhost:8080/dedup4j/dashboard
 Explain the default-on behavior and opt-out:
 
 ```yaml
-blob-helper:
+dedup4j:
   dashboard:
     enabled: false
 ```
@@ -533,7 +533,7 @@ Confirm that ADR-006 records the reversal from standalone-only user experience t
 
 ```bash
 git add .
-git commit -m "feat: add embedded Blob Helper dashboard starter"
+git commit -m "feat: add embedded dedup4j dashboard starter"
 ```
 
 ## Acceptance criteria

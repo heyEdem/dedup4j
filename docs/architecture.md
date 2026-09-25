@@ -67,7 +67,7 @@ multi-instance end-to-end verification, as defined by
 |---|---|
 | `dedup4j-core` | Provider-neutral core module. Owns streaming content hashing, deterministic hash-derived object key generation, stable `BlobLocation`/reference models, the storage SPI, command/result models, domain exceptions, and dependency-boundary enforcement, including the reactor-level provider SDK ownership test. |
 | `dedup4j-jpa` | Framework-independent relational metadata module. Owns the `AssetContent` JPA mapping, content-identity uniqueness, physical object metadata, timestamps, optimistic-lock state, transaction-scoped repository lookups/locks, create-or-retain duplicate-key retry, lock-aware reference mutation, and final-reference delete delegation; uses provider-neutral contracts and exceptions from `dedup4j-core`. |
-| `dedup4j-spring-boot-starter` | Standard Spring Boot upload dependency. Owns `blob-helper.*` configuration binding, selected-provider client/storage auto-configuration, consumer JPA entity discovery and conditional service assembly, guarded Liquibase schema lifecycle, per-operation Spring transactions, the provider-neutral `Dedup4j` upload façade and ordered batch outcomes, final provider validation, and optional Micrometer metrics; it transitively includes the local, S3, and Azure adapter modules but declares no provider SDK coordinates or REST controllers. |
+| `dedup4j-spring-boot-starter` | Standard Spring Boot upload dependency. Owns `dedup4j.*` configuration binding, selected-provider client/storage auto-configuration, consumer JPA entity discovery and conditional service assembly, guarded Liquibase schema lifecycle, per-operation Spring transactions, the provider-neutral `Dedup4j` upload façade and ordered batch outcomes, final provider validation, and optional Micrometer metrics; it transitively includes the local, S3, and Azure adapter modules but declares no provider SDK coordinates or REST controllers. |
 | `dedup4j-storage-local` | Local filesystem storage adapter module. Owns local provider configuration (`LocalBlobStorageProperties` with configurable root directory) and the `LocalBlobStorage` adapter implementing put, get, idempotent delete, and exists with normalized key resolution that rejects path traversal outside the root; depends only on `dedup4j-core` with no cloud SDKs. |
 | `dedup4j-storage-s3` | AWS S3 provider module. Owns the module-local AWS SDK v2 dependency management, S3 connection properties, and `S3BlobStorage` adapter implementing the provider-neutral `BlobStorage` contract with streaming access and domain exception mapping. |
 | `dedup4j-storage-azure` | Azure Blob Storage provider module. Owns the module-local Azure SDK BOM and Blob SDK dependency, Azure connection properties, and `AzureBlobStorage`, which implements streaming put/get, idempotent delete, existence checks, and provider-to-core exception mapping without exposing Azure types through core. |
@@ -76,7 +76,7 @@ multi-instance end-to-end verification, as defined by
 | `dedup4j-spring-boot-observability` | Optional empty-code aggregate JAR that depends on the management and embedded-dashboard modules so one consumer dependency supplies the embedded current-application UI/API; it does not include the standalone fleet dashboard. |
 | `dedup4j-dashboard` | Standalone local monitoring application. Owns multi-instance registration, pull polling, SQLite aggregate history, seven-day failure retention, read-only REST views, and the static light/dark UI. |
 | root `pom.xml` | Maven reactor parent with Java 21, JUnit and Spring Boot BOMs, compiler/Surefire plugin management, and Enforcer dependency-convergence validation for shared SDK infrastructure. |
-| root `src/main/java/com/edem/blobhelper` | Legacy Spring Boot shell application class from project creation. Not currently part of a reactor child module. |
+| root `src/main/java/com/edem/dedup4j` | Legacy Spring Boot shell application class from project creation. Not currently part of a reactor child module. |
 | `.github/workflows/ci.yml` | GitHub Actions CI workflow for Java 21 Maven verification. |
 | `.github/dependabot.yml` | Weekly update proposals for Maven and GitHub Actions dependencies. |
 | `.github/workflows/dependency-review.yml` | Pull-request gate that rejects newly introduced high/critical vulnerable dependencies. |
@@ -102,7 +102,7 @@ Planned delete flow:
 
 ```text
 Application deletes logical asset
-  -> Blob Helper release(assetContentId)
+  -> dedup4j release(assetContentId)
   -> lock AssetContent
   -> decrement ref_count
   -> if final reference: delete physical object through BlobStorage
@@ -111,7 +111,7 @@ Application deletes logical asset
 Planned monitoring flow:
 
 ```text
-Blob Helper instance starts
+dedup4j instance starts
   -> optional management module self-registers with local dashboard
   -> dashboard polls read-only management endpoints
   -> dashboard stores aggregate snapshots and recent failures in SQLite
@@ -133,8 +133,8 @@ Blob Helper instance starts
 | H2 2.4 | Test-scope in-memory database for JPA mapping tests. |
 | Spring Boot 4.1.1 | `dedup4j-spring-boot-starter` auto-configuration, properties binding, and configuration metadata generation. |
 | Spring Data JPA / Spring ORM / Spring JDBC | Starter runtime integration with the consumer's DataSource, shared entity manager, transaction manager, and schema validation. The consumer supplies its database driver. |
-| Spring Boot Liquibase starter | Boot 4 Liquibase auto-configuration APIs used alongside Blob Helper's dedicated migration bean for consumer changelog coexistence. |
-| Liquibase Core | Starter-owned, versioned migrations for `blob_helper_asset_content`, with separate Blob Helper changelog/lock tables and `embedded`, `always`, and `never` policies. |
+| Spring Boot Liquibase starter | Boot 4 Liquibase auto-configuration APIs used alongside dedup4j's dedicated migration bean for consumer changelog coexistence. |
+| Liquibase Core | Starter-owned, versioned migrations for `blob_helper_asset_content`, with separate dedup4j changelog/lock tables and `embedded`, `always`, and `never` policies. |
 | Jackson 3 | Embedded and standalone dashboard JSON handling through the Boot 4 Jackson starter; standalone polling uses the Jackson 3 mapper API. |
 | Micrometer Core | Optional starter-module metrics registry API for upload, deduplication, latency, cleanup-failure, and repair instrumentation. |
 | spring-boot-test / AssertJ | Test-scope only in the starter module: `ApplicationContextRunner` context tests and fluent failure assertions. |
@@ -147,4 +147,4 @@ Blob Helper instance starts
 | Spring Web | `MultipartFile` input type used by the starter’s upload façade; the starter does not add controllers or HTTP response types. |
 | `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard` | Direct compile dependencies of the empty-code observability aggregate; their existing auto-configuration registrations and resources remain authoritative. |
 
-The standalone dashboard uses test-scope Spring Test for HTTP routing regression coverage through MockMvc.
+The standalone dashboard uses test-scope Spring Test for HTTP routing regression coverage through MockMvc. The original fleet database and backup remain in the former module directory; Maven does not build that directory. Persistence naming/defaults await the PLAN-014 compatibility decision.

@@ -15,10 +15,10 @@
 - `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java`: verifies new-row creation, ordinary duplicate retention, and a coordinated concurrent insert race that reloads the winner and increments its count once.
 - `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/ConcurrentUploadIntegrationTest.java`: verifies two parallel create-or-retain workers converge on one identity row and the final reference count equals the worker count.
 - `dedup4j-spring-boot-starter/pom.xml`: standard starter build file. It depends at compile scope on the local, S3, and Azure adapter modules so one consumer dependency supplies every supported provider; provider SDK coordinates remain owned by those adapter POMs. It also carries Spring Boot auto-configuration, the Boot 4 Liquibase starter, Micrometer Core, and configuration-processor dependencies.
-- `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java`: binds storage, deduplication, and cleanup settings under the `blob-helper` prefix, including upload-size parsing and reconciliation defaults.
+- `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java`: binds storage, deduplication, and cleanup settings under the `dedup4j` prefix, including upload-size parsing and reconciliation defaults.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jAutoConfiguration.java`: enables `Dedup4jProperties` and installs a final startup validator requiring a supported explicit provider and exactly one `BlobStorage`, independent of bean names or `@Primary`.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/storage/`: local, S3, and Azure auto-configurations translate nested starter settings into adapter properties and conditionally create the selected provider's client/storage beans. Application storage suppresses the entire default graph; application provider clients take precedence over default clients.
-- `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/`: additive entity discovery, guarded `blobHelperLiquibase` initialization, schema validation before entity-manager-factory initialization, and consumer migration coexistence. `SchemaInitialization` binds `EMBEDDED`, `ALWAYS`, and `NEVER`.
+- `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/`: additive entity discovery, guarded `dedup4jLiquibase` initialization, schema validation before entity-manager-factory initialization, and consumer migration coexistence. `SchemaInitialization` binds `EMBEDDED`, `ALWAYS`, and `NEVER`.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfiguration.java`: independently replaceable repository, mutation, reference-count, hasher, key-strategy, metrics, and public service defaults. Activates after persistence/provider configurations; the raw delegate is constructed inside the transactional service factory and is not a bean. Reuses an application EntityManager or creates an internal shared proxy from the managed factory, including when Spring Data repositories are disabled.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/SpringTransactionalBlobDeduplicationService.java`: wraps every public operation in `REQUIRES_NEW`. A duplicate identity failure rolls back before a second transaction reloads and retains the winner; the original stream and storage write are not replayed.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/BlobReferences.java`: package-private mapping shared by the raw service and transactional recovery.
@@ -33,7 +33,7 @@
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/facade/BlobStoreFailure.java`: validated failed batch outcome containing the original runtime failure.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/facade/BatchStoreResult.java`: immutable ordered batch aggregate with typed success/failure views and an all-succeeded check.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/observability/Dedup4jMetrics.java`: optional Micrometer facade with counters for uploads, duplicate outcomes, accepted/avoided bytes, delete failures, and repairs, plus timers for hashing and physical storage writes; a null registry provides a no-op path.
-- `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/LogicalReferenceCountSource.java`: functional application callback contract that supplies logical reference counts keyed by Blob Helper `AssetContent` IDs without assuming the consuming application's schema.
+- `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/LogicalReferenceCountSource.java`: functional application callback contract that supplies logical reference counts keyed by dedup4j `AssetContent` IDs without assuming the consuming application's schema.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationMismatch.java`: immutable validated value for one expected-versus-actual reference-count difference.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationReport.java`: immutable validated aggregate of checked content count and mismatches; report creation is separate from repair commands.
 - `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationService.java`: reconciliation service that compares every stored `AssetContent.ref_count` with application-provided counts, treats omitted content IDs as zero expected references, and exposes a separately invoked repair operation that is disabled by default, adjusts counts only through `ReferenceCountService`, and records each applied repair.
@@ -96,7 +96,7 @@
 - `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/DashboardRegistrationProperties.java`: binds opt-in dashboard URL, instance identity, advertised management URL, and optional explicit stable ID.
 - `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/InstanceRegistrationClient.java`: asynchronously self-registers after application readiness, derives a stable name-based UUID when needed, and isolates dashboard outages from application startup.
 - `dedup4j-spring-boot-dashboard/pom.xml`: optional embedded dashboard starter with Spring Boot auto-configuration, MVC APIs, and packaged static resources.
-- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardProperties.java`: binds enabled state, normalized base path, and failure lookback under `blob-helper.dashboard`.
+- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardProperties.java`: binds enabled state, normalized base path, and failure lookback under `dedup4j.dashboard`.
 - `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfiguration.java`: conditionally registers the embedded dashboard in servlet web applications when enabled.
 - `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardSnapshotService.java`: creates zero-safe current-process metric snapshots from optional Micrometer/JPA collaborators.
 - `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`: exposes GET-only overview, status, empty history, and failure routes and maps the packaged UI for custom base paths.
@@ -125,7 +125,7 @@
 - `.github/workflows/ci.yml`: GitHub Actions workflow that runs Maven verify on pushes, pull requests, and manual dispatch.
 - `.github/dependabot.yml`: weekly Maven and GitHub Actions dependency update proposals.
 - `.github/workflows/dependency-review.yml`: pull-request vulnerability gate configured to fail on high severity or above.
-- `src/main/java/com/edem/blobhelper/BlobHelperApplication.java`: original Spring Boot application class. Current root packaging means this is not part of a normal Spring Boot app module.
+- `src/main/java/com/edem/dedup4j/Dedup4jApplication.java`: original Spring Boot application class. Current root packaging means this is not part of a normal Spring Boot app module.
 - `docs/provider-testing.md`: documents credential-free provider contract coverage and the opt-in path for future external provider tests.
 
 ## Per-Module Breakdown
@@ -141,42 +141,42 @@
 
 - **Entry point:** `dedup4j-core/pom.xml`
 - **Key classes/functions:** `Sha256ContentHasher.hash(InputStream)` computes lowercase SHA-256 while reading a stream; `HashObjectKeyStrategy.generateKey(ContentHash)` generates deterministic hash-derived relative keys; `BlobStorage` defines provider-neutral storage operations; `PutBlobRequest`, `StoredBlob`, `BlobResource`, `StoreBlobCommand`, and `BlobReference` define the immutable streaming API boundary; `CoreModuleBoundaryTest` inspects classpath directories and JARs for forbidden package roots.
-- **Initialization:** Built as Maven child of root `blob-helper`.
+- **Initialization:** Built as Maven child of root `dedup4j`.
 - **Non-obvious logic:** Object keys are derived from content identity, not user filenames. Empty key prefixes omit the leading prefix segment and still produce relative keys. Core request/result records reject invalid required fields and defensively copy metadata. `BlobResource` implements `AutoCloseable` and delegates closure to its stream. Storage adapters translate provider failures into unchecked `Dedup4jException` subtypes. Maven Enforcer also rejects forbidden direct and transitive dependency coordinates before tests run.
 
 ### dedup4j-jpa
 
 - **Entry point:** `dedup4j-jpa/pom.xml`
 - **Key classes/functions:** `AssetContent` maps `blob_helper_asset_content`; its public constructor validates required physical metadata, initializes new content with `refCount = 1`, and JPA lifecycle callbacks maintain creation/update timestamps. `AssetContentRepository.findByIdentity` queries the complete identity tuple, while `findByIdForUpdate` uses `LockModeType.PESSIMISTIC_WRITE`; `AssetContentMutationService.createOrRetain` returns an existing locked row or flushes a new insert and converts SQL state `23505` into `DuplicateContentIdentityException` for recovery after caller-owned rollback. `ReferenceCountService.retain` and `release` mutate the locked managed entity exactly once, reject missing or underflowed rows, and invoke the injected idempotent `BlobStorage.delete` collaborator only for the final reference. `ConcurrentUploadIntegrationTest` owns its resource-local rollback/retry and verifies one row with one reference per worker. Production code has no Hibernate or Spring imports; Hibernate and H2 are test-only dependencies.
-- **Initialization:** Built as a Maven child of root `blob-helper`; consuming persistence environments discover the annotated entity, while tests bootstrap the `dedup4j-jpa-test` persistence unit directly.
+- **Initialization:** Built as a Maven child of root `dedup4j`; consuming persistence environments discover the annotated entity, while tests bootstrap the `dedup4j-jpa-test` persistence unit directly.
 - **Non-obvious logic:** Content identity is enforced by the database tuple `hash_algorithm + content_hash + size_bytes`. UUID generation and optimistic locking use standard Jakarta Persistence annotations. Repository lookups return `Optional` for missing rows, and locked lookups require the caller's active transaction to retain the database row lock. Reference-count mutation is package-private on the entity and exposed through the service, which throws core `ContentNotFoundException` and `ReferenceCountUnderflowException` before invalid state is persisted. Production code has no Hibernate or Spring imports; Hibernate and H2 are test-only dependencies.
 
 ### dedup4j-spring-boot-starter
 
 - **Entry point:** `dedup4j-spring-boot-starter/pom.xml`
 - **Key classes/functions:** `Dedup4jAutoConfiguration` registers `Dedup4jProperties` and a `BlobStorageProviderValidator` (`SmartInitializingSingleton`) that requires an explicit supported provider and exactly one storage bean by type. `LocalBlobStorageAutoConfiguration`, `S3BlobStorageAutoConfiguration`, and `AzureBlobStorageAutoConfiguration` bind provider settings and create the selected adapter, reusing application clients before constructing defaults. `Dedup4jProperties` binds `dedup4j.storage.provider`, `storage.key-prefix`, nested local/S3/Azure settings, deduplication hash and upload validation settings, and cleanup settings. `BlobDeduplicationService` exposes storage-neutral `store`, `retain`, `release`, and `get` operations using core models. `DefaultBlobDeduplicationService` buffers upload bytes, hashes them with `ContentHasher`, checks the complete identity tuple, retains existing rows through the lock-aware `ReferenceCountService`, and for new content generates a deterministic key through `ObjectKeyStrategy`, writes through `BlobStorage`, and persists `AssetContent` through `AssetContentMutationService`. `deduplication.max-upload-size` uses Spring Boot `DataSize` binding, so values such as `25MB` are accepted.
-- **Initialization:** Built as a Maven child of root `blob-helper`; production code depends on the provider-neutral core/JPA modules and transitively aggregates the local, S3, and Azure adapter modules. Starter-owned provider configurations are registered through `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`, enable property binding independently, and run before the final validator. They construct clients without performing storage IO.
+- **Initialization:** Built as a Maven child of root `dedup4j`; production code depends on the provider-neutral core/JPA modules and transitively aggregates the local, S3, and Azure adapter modules. Starter-owned provider configurations are registered through `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`, enable property binding independently, and run before the final validator. They construct clients without performing storage IO.
 - **Non-obvious logic:** Reconciliation is disabled by default, physical deletion on zero references is enabled by default, and the starter has no REST controllers or direct provider SDK declarations. The auto-configured public service owns `REQUIRES_NEW` metadata transactions; callers constructing the raw delegate remain responsible for its transactions. Provider validation runs after singleton creation; supported selections are `local`, `s3`, and `azure`, including when supplying custom storage. A custom `BlobStorage` suppresses all default provider beans, so unused clients do not demand cloud settings. Spring manages S3 client shutdown and disables inferred destruction on its storage wrapper. Upload streams are buffered once so hashing and storage can consume equivalent byte sequences; duplicate matches reuse the persisted object key and content ID. `GenericStarterDependencyTest` proves all adapter classes are available from the starter test classpath while management/dashboard classes remain absent, and `ProviderDependencyBoundaryTest` proves SDK declarations stay in adapter POMs.
 
 ### dedup4j-storage-local
 
 - **Entry point:** `dedup4j-storage-local/pom.xml`
 - **Key classes/functions:** `LocalBlobStorageProperties` carries the local provider root directory; it defaults to `blob-helper-storage`, accepts any custom `Path`, and rejects null assignment. `LocalBlobStorage` implements the core `BlobStorage` SPI against that root: `put` streams into a same-directory temporary file, then publishes to `{root}/{objectKey}` through atomic replacement (falling back to ordinary replacement only when atomic moves are unsupported). This preserves existing content when an input stream fails and supports concurrent publication from separate adapter instances. Temporary names use a short prefix to support maximum-length target filenames. `get` returns a closeable `BlobResource` or throws core `ContentNotFoundException` when absent; `delete` is idempotent through `Files.deleteIfExists`; `exists` delegates to filesystem checks.
-- **Initialization:** Built as a Maven child of root `blob-helper`; it depends only on the provider-neutral core module with no Spring or cloud SDK dependencies.
+- **Initialization:** Built as a Maven child of root `dedup4j`; it depends only on the provider-neutral core module with no Spring or cloud SDK dependencies.
 - **Non-obvious logic:** Keys resolve against an absolute normalized root; resolution then normalizes again and rejects results outside or equal to the root using component-based `startsWith` comparison, which defeats `..`, absolute-path, and prefix-collision escapes before any file IO. Storage failures translate to unchecked core `BlobStorageException`; missing reads use `ContentNotFoundException`. Content type and metadata are not persisted by the local adapter.
 
 ### dedup4j-storage-s3
 
 - **Entry point:** `dedup4j-storage-s3/pom.xml`
 - **Key classes/functions:** `S3BlobStorageProperties` carries the S3 bucket, region, optional endpoint override, and path-style access flag. `S3BlobStorage` implements streaming put/get, idempotent delete, `headObject`-based exists, client construction, and provider exception translation.
-- **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `dedup4j-core` and imports the AWS SDK v2 BOM locally so AWS dependencies remain isolated to this provider module.
+- **Initialization:** Built as a Maven child of root `dedup4j`; it depends on `dedup4j-core` and imports the AWS SDK v2 BOM locally so AWS dependencies remain isolated to this provider module.
 - **Non-obvious logic:** The optional endpoint override and path-style access setting support S3-compatible targets such as emulators without affecting core or starter APIs. Reads return the SDK response stream directly and therefore require callers to close `BlobResource`; provider 404 responses become `ContentNotFoundException` for reads and `false` for existence checks.
 
 ### dedup4j-storage-azure
 
 - **Entry point:** `dedup4j-storage-azure/pom.xml`
 - **Key classes/functions:** `AzureBlobStorageProperties` carries the Azure container, connection string, optional endpoint, and account name. `AzureBlobStorage` implements the core `BlobStorage` SPI using an injected or builder-created `BlobContainerClient`; its public static `createClient` factory shares client construction with starter auto-configuration. `put` streams content with Azure HTTP headers and metadata, `get` reads blob properties before returning an owner-managed stream, `delete` uses `deleteIfExists`, and `exists` delegates to the provider.
-- **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `dedup4j-core`, imports the Azure SDK BOM version `1.3.8` locally, and declares `azure-storage-blob` without a version so Azure dependencies remain isolated to this provider module.
+- **Initialization:** Built as a Maven child of root `dedup4j`; it depends on `dedup4j-core`, imports the Azure SDK BOM version `1.3.8` locally, and declares `azure-storage-blob` without a version so Azure dependencies remain isolated to this provider module.
 - **Non-obvious logic:** Azure 404 responses map to core `ContentNotFoundException` for reads and `false` for existence checks; other Azure provider failures become core `BlobStorageException`. The contract test uses the real Azure SDK against an in-process JDK HTTP server, so normal verification needs no Azure credentials or external service.
 
 ### dedup4j-spring-boot-management
@@ -223,7 +223,7 @@
 
 | Variable / Property | Default | Purpose |
 |---|---|---|
-| `spring.application.name` | `blob-helper` | Present in root `src/main/resources/application.yaml`. |
+| `spring.application.name` | `dedup4j` | Present in root `src/main/resources/application.yaml`. |
 | `java.version` | `21` | Maven compiler release target. |
 | `junit.version` | `6.1.3` | JUnit BOM version. |
 | `spring-boot.version` | `4.1.1` | Spring Boot BOM version used by the starter module. |
@@ -234,7 +234,7 @@ Implemented starter properties:
 | Property | Default | Purpose |
 |---|---|---|
 | `dedup4j.storage.provider` | None (required) | Selects `s3`, `azure`, or `local`; required even for application-provided storage. |
-| `dedup4j.persistence.initialize-schema` | `embedded` | Initialize embedded databases only; `always` explicitly allows external initialization; `never` validates pre-existing schema without Blob Helper DDL. |
+| `dedup4j.persistence.initialize-schema` | `embedded` | Initialize embedded databases only; `always` explicitly allows external initialization; `never` validates pre-existing schema without dedup4j DDL. |
 | `dedup4j.storage.key-prefix` | Empty | Prefix for generated object keys. |
 | `dedup4j.storage.local.root-directory` | `blob-helper-storage` | Filesystem root for auto-configured local storage. |
 | `dedup4j.storage.s3.bucket` | None | Required for default S3 storage. |
@@ -254,7 +254,7 @@ Implemented starter properties:
 | `dedup4j.management.base-path` | `/dedup4j/management` | Base path for local management endpoints. |
 | `dedup4j.dashboard-registration.enabled` | `false` | Enables asynchronous self-registration with the local dashboard. |
 | `dedup4j.dashboard-registration.dashboard-url` | None | Local dashboard registration URL. |
-| `dedup4j.dashboard-registration.instance-name` | `blob-helper` | Display name shown in the dashboard. |
+| `dedup4j.dashboard-registration.instance-name` | `dedup4j` | Display name shown in the dashboard. |
 | `dedup4j.dashboard-registration.advertised-url` | None | Management URL the dashboard polls. |
 | `dedup4j.dashboard-registration.instance-id` | Generated | Optional UUID; otherwise derived stably from instance name and advertised URL. |
 

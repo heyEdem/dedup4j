@@ -72,15 +72,15 @@ Run focused existing tests while editing, then the full checkpoint once. Stop on
 
 **Interface:** Produce `com.edem:dedup4j:0.0.1-SNAPSHOT` and ten `dedup4j-*` children; Java APIs and runtime settings are changed in later stages.
 
-- [ ] Rename each module directory with its suffix preserved, updating root `<modules>`, every child parent artifact, inter-module dependencies, and POM display metadata in the same change.
-- [ ] Update tests that inspect POM names/module paths and documentation references to physical module locations. Do not move local database files merely because their containing module moves.
-- [ ] Run boundary tests and the shared checkpoint; confirm all ten modules appear in the reactor summary.
+- [x] Rename each module directory with its suffix preserved, updating root `<modules>`, every child parent artifact, inter-module dependencies, and POM display metadata in the same change.
+- [x] Update tests that inspect POM names/module paths and documentation references to physical module locations. Do not move local database files merely because their containing module moves.
+- [x] Run boundary tests and the shared checkpoint; confirm all ten modules appear in the reactor summary.
 
 ```sh
 ./mvnw --batch-mode --no-transfer-progress -Dtest=ProviderDependencyBoundaryTest,GenericStarterDependencyTest verify
 ```
 
-- [ ] Commit: `refactor: rename Maven modules and artifacts to dedup4j`.
+- [x] Delivered through per-module commits instead of the originally proposed stage commit: `refactor: rename Maven modules and artifacts to dedup4j`.
 
 ## Stage 2 — Java packages, classes, and framework discovery
 
@@ -88,15 +88,15 @@ Run focused existing tests while editing, then the full checkpoint once. Stop on
 
 **Interface:** Produce package `com.edem.dedup4j`, facade `Dedup4j`, implementation `DefaultDedup4j`, exception `Dedup4jException`, and corresponding renamed auto-configuration/application classes.
 
-- [ ] Move `com/edem/blobhelper` directories to `com/edem/dedup4j`; update imports, package declarations, fully qualified strings, class filenames, constructors, references, bean names, and matching tests.
-- [ ] Update Spring import resources, entity scanning, classpath assertions, resource reflection, and JPA persistence-unit references consistently. Keep runtime property/SQL changes for their owning stages.
-- [ ] Run automatic-discovery/context tests and the shared checkpoint. Inspect the root legacy application and its test separately: the parent POM does not compile those sources.
+- [x] Move `com/edem/blobhelper` directories to `com/edem/dedup4j`; update imports, package declarations, fully qualified strings, class filenames, constructors, references, bean names, and matching tests.
+- [x] Update Spring import resources, entity scanning, classpath assertions, resource reflection, and JPA persistence-unit references consistently. Keep runtime property/SQL changes for their owning stages.
+- [x] Run automatic-discovery/context tests and the shared checkpoint. Inspect the root legacy application and its test separately: the parent POM does not compile those sources.
 
 ```sh
 ./mvnw --batch-mode --no-transfer-progress -Dtest=ProviderAutoConfigurationDiscoveryTest,Dedup4jContextStartTest,ObservabilityStarterClasspathTest,ObservabilityStarterContextTest verify
 ```
 
-- [ ] Commit: `refactor: rename Java API and packages to dedup4j`.
+- [x] Delivered through per-module commits instead of the originally proposed stage commit: `refactor: rename Java API and packages to dedup4j`.
 
 ## Stage 3 — Properties, routes, metrics, and dashboard branding
 
@@ -104,12 +104,12 @@ Run focused existing tests while editing, then the full checkpoint once. Stop on
 
 **Interface:** Produce `dedup4j.*` settings/meters, `/dedup4j/management` and `/dedup4j/dashboard` defaults, and packaged `static/dedup4j/dashboard` resources.
 
-- [ ] Change property annotations, conditions, placeholders, sample YAML, error guidance, meter producers/readers, thread names, application display names, UI copy, and browser-storage keys together. Handle data-path defaults in stage 4.
-- [ ] Move embedded static resources and update handler locations and classpath tests in the same change.
-- [ ] Update route assertions and registration fixtures; retain custom-base-path behavior and explicit instance IDs. Verify management stays opt-in and both dashboards remain read-only.
-- [ ] Run existing management, embedded dashboard, metrics, and multi-instance integration suites; the shared checkpoint must pass.
-- [ ] Start the packaged standalone dashboard against a temporary SQLite path and unused loopback port; request `/`, its JS/CSS, and API routes discovered in `DashboardController`. Stop the process afterward. Use existing integration coverage for embedded default/custom routes and registration/polling.
-- [ ] Commit: `refactor: rename runtime configuration and dashboards to dedup4j`.
+- [x] Change property annotations, conditions, placeholders, sample YAML, error guidance, meter producers/readers, thread names, application display names, UI copy, and browser-storage keys together. Handle data-path defaults in stage 4.
+- [x] Move embedded static resources and update handler locations and classpath tests in the same change.
+- [x] Update route assertions and registration fixtures; retain custom-base-path behavior and explicit instance IDs. Verify management stays opt-in and both dashboards remain read-only.
+- [x] Run existing management, embedded dashboard, metrics, and multi-instance integration suites; the shared checkpoint must pass.
+- [x] Start the packaged standalone dashboard against a temporary SQLite path and unused loopback port; request `/`, its JS/CSS, and API routes discovered in `DashboardController`. Stop the process afterward. Use existing integration coverage for embedded default/custom routes and registration/polling.
+- [x] Delivered through per-module commits instead of the originally proposed stage commit: `refactor: rename runtime configuration and dashboards to dedup4j`.
 
 ## Stage 4 — Persistence identifiers and data locations
 
@@ -157,7 +157,7 @@ rg --files --hidden -g '!.git/**' -g '!**/target/**' | rg -i 'blob[ ._-]*helper|
 
 ## Planning status
 
-This is a planning deliverable. No application rename, data migration, repository rename, or implementation commit has been performed.
+Execution is in progress. All ten modules have separate verified commits. Parent/source/documentation cleanup is underway. The persistence compatibility choice remains pending; schema identifiers, changelog identity, and data defaults are deliberately unchanged. Edem still owns repository/checkout renames. Browser inspection could not run because no browser is connected.
 
 ## Module-by-module execution — September 25
 
@@ -172,5 +172,20 @@ Per Edem’s execution instruction, implement and verify one module per commit, 
 - [x] Management module — clean reactor verify: 189 tests, zero failures/errors.
 - [x] Embedded dashboard module — clean reactor verify: 189 tests, zero failures/errors.
 - [x] Observability aggregate — clean reactor verify: 189 tests, zero failures/errors.
-- [x] Standalone dashboard — clean reactor verify: 206 tests, zero failures/errors.
-- [ ] Parent, documentation, persistence, and residue audit
+- [x] Standalone dashboard — clean reactor verify: 190 tests, zero failures/errors.
+- [x] Parent and independent documentation cleanup — clean reactor verification passed (190 tests); all local Markdown links resolve; packaged HTTP smoke checks passed.
+- [ ] Persistence policy, migration implementation, and final residue cleanup
+
+### Verification notes
+
+- Every module checkpoint ran `clean verify`; the first nine had 189 tests. The standalone dashboard added an HTTP history-routing regression test, bringing the current reactor to 190. Count only current reactor module reports; the former dashboard directory retains generated reports alongside preserved runtime data.
+- Packaged standalone smoke checks passed for `/`, both CSS files, JavaScript, overview, instance status, failures, and instance history. Temporary SQLite and an unused loopback port were used; the process was stopped.
+- Root legacy application/test names were inspected separately; the parent POM does not compile them.
+- Browser discovery returned no available browsers; rendered UI verification remains pending.
+- Fresh-release versus supported schema upgrade remains an unanswered decision. Do not change applied changelog author/path/checksum or data defaults before that choice.
+
+### Remaining-name audit
+
+Remaining authored matches are current schema identifiers/changelog paths, current data-location defaults and their tests/docs, narrow data-file ignore rules, and deliberate plan/migration mappings. No old branding remains in Java packages/classes, module artifacts, runtime settings/routes/meters, or static UI. Three remaining resource filenames are under the current schema-resource folder, pending stage 4. Ignored IntelliJ metadata still names old module locations; refresh Maven import during handoff instead of editing generated IDE files. Existing runtime databases remain untouched.
+
+Final independent-work checkpoint: `clean verify` passed in 24.417 seconds, 190 tests with zero failures/errors/skips. Packaged HTTP smoke repeated successfully after final branding cleanup. Rendered UI inspection and repository/checkout handoff remain pending.

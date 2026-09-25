@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>com.edem</groupId>
-        <artifactId>blob-helper</artifactId>
+        <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 

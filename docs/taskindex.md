@@ -1,4 +1,4 @@
-# Blob Helper Task Index
+# dedup4j Task Index
 
 **Last Updated:** 2026-09-01
 **Completed:** 43/43 (100%)
@@ -147,7 +147,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | 2026-08-25 | Completed task 3.4 with pre-write content identity lookup, lock-aware duplicate reference retention, and no-op physical storage for duplicate uploads. |
 | 2026-08-24 | Completed task 3.3 with buffered upload hashing, deterministic object-key generation, one physical storage write, and `AssetContent` creation through the JPA create-or-retain service. |
 | 2026-08-22 | Completed task 3.2 with the provider-neutral `BlobDeduplicationService` contract, default retain/release/get facade, and missing-content coverage. |
-| 2026-08-21 | Completed task 3.1 with the Spring Boot starter module, `blob-helper.*` properties binding, upload-size parsing, and disabled-by-default reconciliation. |
+| 2026-08-21 | Completed task 3.1 with the Spring Boot starter module, `dedup4j.*` properties binding, upload-size parsing, and disabled-by-default reconciliation. |
  | 2026-08-21 | Completed task 2.6 with a coordinated two-transaction duplicate upload integration test that verifies one identity row and one retained reference per worker. |
 | 2026-08-20 | Completed task 2.5 with create-or-retain duplicate-key retry, locked winner reload, exact reference increment, and coordinated JPA race coverage. |
 | 2026-08-20 | Completed task 2.4 with final-reference physical delete delegation, non-final release protection, and idempotent storage-delete coverage. |

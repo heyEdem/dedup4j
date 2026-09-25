@@ -142,7 +142,7 @@ Reference count drift, failed deletes, and operational savings are detectable an
 
 **Q1 - What outcome are we protecting?**
 Developers and operators can see the health, traffic contribution, deduplication
-savings, and recent failures of multiple local Blob Helper instances from one
+savings, and recent failures of multiple local dedup4j instances from one
 read-only console.
 
 **Q2 - What must never break?**

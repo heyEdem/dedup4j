@@ -47,7 +47,7 @@ Sections may be omitted only when their subject genuinely does not apply. The wr
 3. Validate the skill with `quick_validate.py`.
 4. Copy it to Claude and verify directory parity.
 5. Run fresh forward tests with the skill and compare them with the baseline.
-6. Use the skill to refresh the open Blob Helper PR as a live integration test.
+6. Use the skill to refresh the open dedup4j PR as a live integration test.
 
 ## Repository Enforcement
 

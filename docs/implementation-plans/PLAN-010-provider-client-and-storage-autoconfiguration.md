@@ -214,7 +214,7 @@ public class S3BlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(S3Client.class)
-    S3Client blobHelperS3Client(S3BlobStorageProperties properties) {
+    S3Client dedup4jS3Client(S3BlobStorageProperties properties) {
         S3ClientBuilder builder = S3Client.builder()
                 .forcePathStyle(properties.isPathStyleAccess());
         if (properties.getRegion() != null && !properties.getRegion().isBlank()) {
@@ -283,7 +283,7 @@ public class AzureBlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(BlobContainerClient.class)
-    BlobContainerClient blobHelperAzureContainerClient(AzureBlobStorageProperties properties) {
+    BlobContainerClient dedup4jAzureContainerClient(AzureBlobStorageProperties properties) {
         return AzureBlobStorage.createClient(properties);
     }
 
@@ -356,7 +356,7 @@ Do not run Git commands. Provide the path list and test results for Edem's Git w
 - [x] All acceptance criteria pass.
 - [x] Each provider is activated only by its matching property value (case-insensitive Spring comparison; no whitespace trimming).
 - [x] Application provider clients override defaults.
-- [x] S3 requires no Blob Helper credential properties.
+- [x] S3 requires no dedup4j credential properties.
 - [x] Auto-configuration performs no physical storage call during startup.
 - [x] No Git mutation was performed; read-only inspection followed repository instructions.
 

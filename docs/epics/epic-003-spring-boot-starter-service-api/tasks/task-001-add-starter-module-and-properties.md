@@ -6,7 +6,7 @@
 
 ## Goal
 
-Create the Spring Boot starter module and bind `blob-helper.*` configuration.
+Create the Spring Boot starter module and bind `dedup4j.*` configuration.
 
 ## Files
 
@@ -24,6 +24,6 @@ Create the Spring Boot starter module and bind `blob-helper.*` configuration.
 
 ## Acceptance
 
-- [x] Properties bind from `blob-helper.*`.
+- [x] Properties bind from `dedup4j.*`.
 - [x] Reconciliation is disabled by default.
 - [x] No REST controllers are added.

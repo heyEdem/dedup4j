@@ -3,7 +3,7 @@
 ## Naming Conventions
 
 - Files: Java source files use PascalCase class names matching filenames.
-- Classes/types: PascalCase, e.g. `BlobHelperApplication`, `CoreModuleSmokeTest`.
+- Classes/types: PascalCase, e.g. `Dedup4jApplication`, `CoreModuleSmokeTest`.
 - Functions/methods: lowerCamelCase, e.g. `main`, `contextLoads`, `coreModuleTestsRunInExpectedPackage`.
 - Variables: lowerCamelCase where present.
 - Docs: ADR files use `ADR-###-kebab-case-title.md`; implementation plans use `PLAN-###-kebab-case-title.md`; epic tasks use `task-###-kebab-case-title.md`.
@@ -30,7 +30,7 @@
 - JPA entities: use field access, a protected no-argument constructor, explicit snake_case column names, constructor validation for required metadata, portable lifecycle callbacks for timestamps, and standard `@Version` optimistic locking.
 - JPA repositories: wrap a caller-owned `EntityManager`, return `Optional` for lookup methods, and apply `LockModeType.PESSIMISTIC_WRITE` for mutation workflows that must hold a row lock through the caller's transaction.
 - JPA create-or-retain mutation: flush a new identity insert inside the operation and classify SQL state `23505` as `DuplicateContentIdentityException`. The transaction owner rolls back before reloading and retaining the winner; JPA production code never restarts transactions or clears the persistence context.
-- Metadata schema naming: Blob Helper uses `blob_helper_asset_content`, with `uk_blob_helper_asset_content_identity` and `idx_blob_helper_asset_content_*` constraint/index names.
+- Metadata schema naming: dedup4j uses `blob_helper_asset_content`, with `uk_blob_helper_asset_content_identity` and `idx_blob_helper_asset_content_*` constraint/index names.
 - Service facade boundaries: application-facing starter services return only core models, delegate transaction-scoped metadata mutations to JPA services, and leave logical asset ownership with consuming applications.
 - Friendly upload facade: adapt common Spring/file-system/byte-array/stream inputs into one validated `StoreBlobCommand` path; enforce the configured size limit before advanced-service delegation and leave URLs, logical records, and provider SDK access to the application.
 - Ordered partial-success batches: process `MultipartFile[]` sequentially through the single-item facade, preserve every source index, represent runtime failures as sealed outcomes, and expose typed immutable success/failure views without claiming atomicity.

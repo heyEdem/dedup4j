@@ -271,7 +271,7 @@
 
 ## 2026-07-04 — Initial index
 
-- First codebase-indexer scan of Blob Helper.
+- First codebase-indexer scan of dedup4j.
 - Generated `docs/architecture.md`, `docs/implementation.md`, `docs/patterns.md`, `docs/decisions.md`, and `docs/changelog.md`.
 - Detected Java 21 Maven reactor with current `dedup4j-core` module and planning docs for JPA, Spring Boot starter, local storage, S3/Azure adapters, and reconciliation.
 ## 2026-08-30 — Add Micrometer metrics
@@ -369,4 +369,12 @@
 ## 2026-09-25 — Rename standalone dashboard to dedup4j
 
 - Renamed fleet dashboard artifact, packages, runtime settings and UI branding while leaving original SQLite files in place. Fixed explicit history-path binding with a regression test. Packaged UI, JS/CSS and all four read API routes returned HTTP 200 against temporary SQLite; smoke process stopped. Visual inspection unavailable because no browser is connected.
-- Clean verification passed across all ten modules (206 tests); no architectural decision changed.
+- Clean verification passed across all ten modules (190 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename parent and finish independent documentation cleanup
+
+- Renamed the parent coordinates and legacy root application sources; updated authored docs, examples, package paths, and remaining UI label.
+- Added migration mappings and preserved-data inventory; persistence changes remain gated on the compatibility decision.
+- Added narrow ignores for fleet SQLite data, sidecars, and backups. Reviewed original runtime files read-only; both passed integrity checks.
+- Counted 190 tests from the current reactor only; former-module generated reports are excluded from totals.
+- Final clean reactor verification passed (190 tests); packaged HTTP smoke checks passed and all relative Markdown links resolve.

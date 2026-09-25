@@ -10,11 +10,11 @@ The current JPA module expects callers to create repositories, services, entity 
 
 ## Decision
 
-Blob Helper reuses the consuming application's `DataSource`, JPA `EntityManager`, and `PlatformTransactionManager`. The starter auto-discovers Blob Helper entities and conditionally registers repository, mutation, reference-count, metrics, transaction, and deduplication beans.
+dedup4j reuses the consuming application's `DataSource`, JPA `EntityManager`, and `PlatformTransactionManager`. The starter auto-discovers dedup4j entities and conditionally registers repository, mutation, reference-count, metrics, transaction, and deduplication beans.
 
-Public Blob Helper operations own Spring-managed metadata transactions. Each batch item uses an independent metadata transaction so one failure does not hide completed outcomes. Duplicate-key retry occurs across transaction boundaries and never manipulates `EntityTransaction` directly.
+Public dedup4j operations own Spring-managed metadata transactions. Each batch item uses an independent metadata transaction so one failure does not hide completed outcomes. Duplicate-key retry occurs across transaction boundaries and never manipulates `EntityTransaction` directly.
 
-Blob Helper stores metadata in clearly prefixed tables and ships versioned schema resources. `dedup4j.persistence.initialize-schema` supports `embedded` (default), `always`, and `never`. External databases are mutated only by `always`. SQLite is deferred as an optional single-instance adapter.
+dedup4j stores metadata in clearly prefixed tables and ships versioned schema resources. `dedup4j.persistence.initialize-schema` supports `embedded` (default), `always`, and `never`. External databases are mutated only by `always`. SQLite is deferred as an optional single-instance adapter.
 
 ## Invariants (from Q2)
 
@@ -41,7 +41,7 @@ Blob Helper stores metadata in clearly prefixed tables and ships versioned schem
 ## Consequences
 
 **Positive:**
-- Consumers need no Blob Helper configuration class.
+- Consumers need no dedup4j configuration class.
 - Metadata uses the application's established database operations and security.
 - Schema mutation is easy in development and explicit in production.
 

@@ -7,7 +7,7 @@
 ## Goal
 
 Provide a lightweight, read-only RabbitMQ-style dashboard that discovers and
-monitors multiple local Blob Helper instances, retains aggregate history, and
+monitors multiple local dedup4j instances, retains aggregate history, and
 shows recent failures.
 
 ## Tasks
@@ -20,7 +20,7 @@ shows recent failures.
 
 ## Done When
 
-Multiple local Blob Helper applications can self-register, appear in one
+Multiple local dedup4j applications can self-register, appear in one
 read-only dashboard, report current and historical traffic contribution, show
 deduplication savings, and retain individual failures for seven days without
 cloud billing integration or additional database infrastructure.

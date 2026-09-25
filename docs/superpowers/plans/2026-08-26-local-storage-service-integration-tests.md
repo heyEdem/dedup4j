@@ -32,7 +32,7 @@ Expected: `BUILD SUCCESS` and compilation of the starter test sources.
 
 - [x] **Step 1: Define the end-to-end test**
 
-Create a JUnit test using the existing `blob-helper-starter-test` persistence unit and a JUnit `@TempDir`. Construct `LocalBlobStorageProperties` with the temporary directory, then wire `LocalBlobStorage`, `AssetContentRepository`, `ReferenceCountService`, `AssetContentMutationService`, `Sha256ContentHasher`, and `HashObjectKeyStrategy` into `DefaultBlobDeduplicationService`.
+Create a JUnit test using the existing `dedup4j-starter-test` persistence unit and a JUnit `@TempDir`. Construct `LocalBlobStorageProperties` with the temporary directory, then wire `LocalBlobStorage`, `AssetContentRepository`, `ReferenceCountService`, `AssetContentMutationService`, `Sha256ContentHasher`, and `HashObjectKeyStrategy` into `DefaultBlobDeduplicationService`.
 
 The test should:
 
