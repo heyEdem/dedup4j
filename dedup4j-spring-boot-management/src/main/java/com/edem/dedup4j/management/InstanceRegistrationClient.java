@@ -1,4 +1,4 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,15 +49,15 @@ public class InstanceRegistrationClient {
             return httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
                     .thenAccept(response -> {
                         if (response.statusCode() >= 300) {
-                            log.warn("Blob Helper dashboard registration returned status {}", response.statusCode());
+                            log.warn("dedup4j dashboard registration returned status {}", response.statusCode());
                         }
                     })
                     .exceptionally(failure -> {
-                        log.warn("Blob Helper dashboard registration unavailable: {}", failure.getMessage());
+                        log.warn("dedup4j dashboard registration unavailable: {}", failure.getMessage());
                         return null;
                     });
         } catch (RuntimeException failure) {
-            log.warn("Blob Helper dashboard registration could not be started: {}", failure.getMessage());
+            log.warn("dedup4j dashboard registration could not be started: {}", failure.getMessage());
             return CompletableFuture.completedFuture(null);
         }
     }

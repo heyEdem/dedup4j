@@ -4,8 +4,8 @@ import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardController;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardSnapshotService;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardView;
-import com.edem.blobhelper.management.BlobHelperManagementProperties;
-import com.edem.blobhelper.management.BlobHelperManagementSnapshot;
+import com.edem.dedup4j.management.Dedup4jManagementProperties;
+import com.edem.dedup4j.management.Dedup4jManagementSnapshot;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -21,14 +21,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass({RestController.class, WebMvcConfigurer.class})
 @ConditionalOnProperty(prefix = "blob-helper.dashboard", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({BlobHelperDashboardProperties.class, BlobHelperManagementProperties.class})
+@EnableConfigurationProperties({BlobHelperDashboardProperties.class, Dedup4jManagementProperties.class})
 public class BlobHelperDashboardAutoConfiguration {
     @Bean
     EmbeddedDashboardSnapshotService embeddedDashboardSnapshotService(
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
             Dedup4jProperties dedup4jProperties,
-            BlobHelperManagementProperties managementProperties) {
+            Dedup4jManagementProperties managementProperties) {
         return new EmbeddedDashboardSnapshotService(meterRegistry, contentRepository, dedup4jProperties, managementProperties);
     }
 
@@ -36,7 +36,7 @@ public class BlobHelperDashboardAutoConfiguration {
     EmbeddedDashboardController embeddedDashboardController(
             EmbeddedDashboardSnapshotService snapshots,
             BlobHelperDashboardProperties properties,
-            ObjectProvider<BlobHelperManagementSnapshot.FailureSource> failureSource) {
+            ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource) {
         return new EmbeddedDashboardController(snapshots, properties, failureSource.getIfAvailable(() -> since -> java.util.List.of()));
     }
 

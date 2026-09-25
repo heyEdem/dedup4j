@@ -12,7 +12,7 @@
     <name>blob-helper-dashboard</name>
     <description>Standalone local dashboard for Blob Helper.</description>
     <dependencies>
-        <dependency><groupId>com.edem</groupId><artifactId>blob-helper-spring-boot-management</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+        <dependency><groupId>com.edem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jackson</artifactId></dependency>

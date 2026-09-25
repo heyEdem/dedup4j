@@ -1,16 +1,16 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.UUID;
 
-@ConfigurationProperties(prefix = "blob-helper.management")
-public class BlobHelperManagementProperties {
+@ConfigurationProperties(prefix = "dedup4j.management")
+public class Dedup4jManagementProperties {
 
     private boolean enabled;
-    private String basePath = "/blob-helper/management";
+    private String basePath = "/dedup4j/management";
     private String instanceId = UUID.randomUUID().toString();
-    private String instanceName = "blob-helper";
+    private String instanceName = "dedup4j";
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }

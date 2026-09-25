@@ -1,4 +1,4 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,15 +11,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ManagementDashboardContractTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(BlobHelperManagementAutoConfiguration.class))
-            .withPropertyValues("blob-helper.management.enabled=true", "dedup4j.storage.provider=local",
-                    "blob-helper.management.instance-id=11111111-1111-1111-1111-111111111111",
-                    "blob-helper.management.instance-name=orders");
+            .withConfiguration(AutoConfigurations.of(Dedup4jManagementAutoConfiguration.class))
+            .withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local",
+                    "dedup4j.management.instance-id=11111111-1111-1111-1111-111111111111",
+                    "dedup4j.management.instance-name=orders");
 
     @Test
     void exposesAllProviderNeutralDashboardResponseShapes() {
         contextRunner.run(context -> {
-            var controller = context.getBean(BlobHelperManagementController.class);
+            var controller = context.getBean(Dedup4jManagementController.class);
             var info = controller.info();
             var health = controller.health();
             var metrics = controller.metrics();
@@ -29,9 +29,9 @@ class ManagementDashboardContractTest {
             assertThat(info.provider()).isEqualTo("local");
             assertThat(health.status()).isEqualTo("UP");
             assertThat(health.observedAt()).isNotNull();
-            assertThat(metrics).extracting(BlobHelperManagementSnapshot.Metrics::uploads,
-                    BlobHelperManagementSnapshot.Metrics::acceptedBytes,
-                    BlobHelperManagementSnapshot.Metrics::contentCount)
+            assertThat(metrics).extracting(Dedup4jManagementSnapshot.Metrics::uploads,
+                    Dedup4jManagementSnapshot.Metrics::acceptedBytes,
+                    Dedup4jManagementSnapshot.Metrics::contentCount)
                     .containsExactly(0L, 0L, 0L);
             assertThat(failures).isEqualTo(List.of());
         });

@@ -46,7 +46,7 @@
 ### Existing project files
 
 - Modify: `pom.xml` to include the new module and manage its shared version.
-- Modify: `blob-helper-spring-boot-management/pom.xml` only if a shared snapshot service is extracted.
+- Modify: `dedup4j-spring-boot-management/pom.xml` only if a shared snapshot service is extracted.
 - Modify: `blob-helper-dashboard/pom.xml` only if static resource ownership is moved to a shared resource module.
 - Modify: `docs/architecture.md` and `docs/implementation.md` for the new starter and changed dashboard roles.
 - Create: `docs/adrs/ADR-006-embedded-dashboard-starter.md` documenting the decision to make the embedded dashboard primary.
@@ -381,7 +381,7 @@ git commit -m "feat: embed dashboard UI in Spring Boot applications"
 - Modify: `blob-helper-dashboard/src/main/resources/static/js/dashboard.js` only if the shared UI path change requires it.
 - Modify: `blob-helper-dashboard/pom.xml` only if the standalone app consumes a shared UI resource artifact.
 - Test: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/MultiInstanceDashboardIntegrationTest.java`
-- Test: `blob-helper-spring-boot-management/src/test/java/com/edem/blobhelper/management/ManagementDashboardContractTest.java`
+- Test: `dedup4j-spring-boot-management/src/test/java/com/edem/dedup4j/management/ManagementDashboardContractTest.java`
 
 **Interfaces:**
 
@@ -390,7 +390,7 @@ git commit -m "feat: embed dashboard UI in Spring Boot applications"
 
 - [ ] **Step 1: Run existing standalone and management tests before changes**
 
-Run: `./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test`
+Run: `./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test`
 
 Record the passing baseline in the task notes.
 
@@ -404,12 +404,12 @@ Do not merge SQLite polling, instance registration, or multi-instance persistenc
 
 - [ ] **Step 4: Run the regression suite**
 
-Run: `./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test`
+Run: `./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add blob-helper-dashboard blob-helper-spring-boot-management
+git add blob-helper-dashboard dedup4j-spring-boot-management
 git commit -m "test: preserve standalone dashboard monitoring mode"
 ```
 

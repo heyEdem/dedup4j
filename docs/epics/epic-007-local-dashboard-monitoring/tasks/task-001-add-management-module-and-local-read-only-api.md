@@ -13,18 +13,18 @@ credentials.
 ## Files
 
 - Modify: `pom.xml`
-- Create: `blob-helper-spring-boot-management/pom.xml`
-- Create: `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementProperties.java`
-- Create: `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementSnapshot.java`
-- Create: `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementController.java`
-- Create: `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-management/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-- Create: `blob-helper-spring-boot-management/src/test/java/com/edem/blobhelper/management/BlobHelperManagementControllerTest.java`
+- Create: `dedup4j-spring-boot-management/pom.xml`
+- Create: `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementProperties.java`
+- Create: `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementSnapshot.java`
+- Create: `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementController.java`
+- Create: `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-management/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- Create: `dedup4j-spring-boot-management/src/test/java/com/edem/dedup4j/management/Dedup4jManagementControllerTest.java`
 
 ## Acceptance
 
 - [x] Management is disabled unless explicitly enabled.
-- [x] `GET /blob-helper/management/v1/info`, `/health`, `/metrics`, and
+- [x] `GET /dedup4j/management/v1/info`, `/health`, `/metrics`, and
       `/failures` are read-only and return provider-neutral JSON.
 - [x] Responses include instance ID/name, provider, cumulative operation and
       byte counters, current content totals, and recent failure details.

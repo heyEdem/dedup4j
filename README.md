@@ -36,7 +36,7 @@ dedup4j-jpa
 dedup4j-spring-boot-starter
 dedup4j-storage-s3
 dedup4j-storage-azure
-blob-helper-spring-boot-management  (optional local management API)
+dedup4j-spring-boot-management  (optional local management API)
 blob-helper-spring-boot-dashboard   (optional embedded read-only dashboard)
 blob-helper-spring-boot-observability (optional embedded management + dashboard)
 blob-helper-dashboard                (standalone local monitoring console)

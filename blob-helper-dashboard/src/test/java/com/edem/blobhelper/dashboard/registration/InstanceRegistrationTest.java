@@ -1,8 +1,8 @@
 package com.edem.blobhelper.dashboard.registration;
 
 import com.edem.blobhelper.dashboard.BlobHelperDashboardApplication;
-import com.edem.blobhelper.management.DashboardRegistrationProperties;
-import com.edem.blobhelper.management.InstanceRegistrationClient;
+import com.edem.dedup4j.management.DashboardRegistrationProperties;
+import com.edem.dedup4j.management.InstanceRegistrationClient;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;

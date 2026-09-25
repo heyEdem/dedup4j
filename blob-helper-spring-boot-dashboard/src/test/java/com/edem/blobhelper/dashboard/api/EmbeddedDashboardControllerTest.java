@@ -2,7 +2,7 @@ package com.edem.blobhelper.dashboard.api;
 
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardProperties;
-import com.edem.blobhelper.management.BlobHelperManagementProperties;
+import com.edem.dedup4j.management.Dedup4jManagementProperties;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EmbeddedDashboardControllerTest {
     @Test
     void servesReadOnlyDashboardViews() throws Exception {
-        var management = new BlobHelperManagementProperties();
+        var management = new Dedup4jManagementProperties();
         var props = new BlobHelperDashboardProperties();
         var service = new EmbeddedDashboardSnapshotService(empty(MeterRegistry.class), empty(AssetContentRepository.class), new Dedup4jProperties(), management);
         var controller = new EmbeddedDashboardController(service, props, since -> List.of());

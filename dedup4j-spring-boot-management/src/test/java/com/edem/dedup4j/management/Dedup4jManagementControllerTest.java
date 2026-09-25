@@ -1,4 +1,4 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -11,26 +11,26 @@ import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BlobHelperManagementControllerTest {
+class Dedup4jManagementControllerTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(BlobHelperManagementAutoConfiguration.class));
+            .withConfiguration(AutoConfigurations.of(Dedup4jManagementAutoConfiguration.class));
 
     @Test
     void managementIsDisabledByDefault() {
-        contextRunner.run(context -> assertThat(context).doesNotHaveBean(BlobHelperManagementController.class));
+        contextRunner.run(context -> assertThat(context).doesNotHaveBean(Dedup4jManagementController.class));
     }
 
     @Test
     void managementIsCreatedWhenExplicitlyEnabled() {
         contextRunner.withPropertyValues(
-                        "blob-helper.management.enabled=true",
+                        "dedup4j.management.enabled=true",
                         "dedup4j.storage.provider=local")
-                .run(context -> assertThat(context).hasSingleBean(BlobHelperManagementController.class));
+                .run(context -> assertThat(context).hasSingleBean(Dedup4jManagementController.class));
     }
 
     @Test
     void metricsResponseContainsProviderNeutralCounters() {
-        BlobHelperManagementSnapshot.Metrics metrics = new BlobHelperManagementSnapshot.Metrics(4, 2, 2, 100, 50, 3, 75);
+        Dedup4jManagementSnapshot.Metrics metrics = new Dedup4jManagementSnapshot.Metrics(4, 2, 2, 100, 50, 3, 75);
         assertThat(metrics.uploads()).isEqualTo(4);
         assertThat(metrics.acceptedBytes()).isEqualTo(100);
         assertThat(metrics.avoidedBytes()).isEqualTo(50);
@@ -40,7 +40,7 @@ class BlobHelperManagementControllerTest {
 
     @Test
     void managementEndpointsAreReadOnly() {
-        assertThat(Arrays.stream(BlobHelperManagementController.class.getDeclaredMethods())
+        assertThat(Arrays.stream(Dedup4jManagementController.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(RequestMapping.class))
                 .map(method -> method.getAnnotation(RequestMapping.class))
                 .flatMap(mapping -> Arrays.stream(mapping.method())))

@@ -1,13 +1,13 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "blob-helper.dashboard-registration")
+@ConfigurationProperties(prefix = "dedup4j.dashboard-registration")
 public class DashboardRegistrationProperties {
 
     private boolean enabled;
     private String dashboardUrl;
-    private String instanceName = "blob-helper";
+    private String instanceName = "dedup4j";
     private String advertisedUrl;
     private String instanceId;
 

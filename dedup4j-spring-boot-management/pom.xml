@@ -8,9 +8,9 @@
         <artifactId>blob-helper</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>blob-helper-spring-boot-management</artifactId>
-    <name>blob-helper-spring-boot-management</name>
-    <description>Optional local read-only management API for Blob Helper.</description>
+    <artifactId>dedup4j-spring-boot-management</artifactId>
+    <name>dedup4j-spring-boot-management</name>
+    <description>Optional local read-only management API for dedup4j.</description>
     <dependencies>
         <dependency><groupId>com.edem</groupId><artifactId>dedup4j-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId></dependency>

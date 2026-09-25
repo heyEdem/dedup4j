@@ -45,5 +45,5 @@ application databases.
 Run the local monitoring verification with:
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test
+./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test
 ```

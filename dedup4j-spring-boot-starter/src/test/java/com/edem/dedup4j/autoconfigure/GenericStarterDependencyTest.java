@@ -20,7 +20,7 @@ class GenericStarterDependencyTest {
     @Test
     void excludesObservabilityModules() {
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration"));
+                () -> Class.forName("com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration"));
         assertThrows(ClassNotFoundException.class,
                 () -> Class.forName("com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration"));
         assertThrows(ClassNotFoundException.class,

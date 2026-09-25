@@ -44,7 +44,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | Local storage tests | `./mvnw -pl dedup4j-storage-local test` |
 | Azure module tests | `./mvnw -pl dedup4j-storage-azure test` |
 | Dependency boundary checks | `./mvnw test -Dtest='*BoundaryTest'` |
-| Dashboard module tests | `./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test` |
+| Dashboard module tests | `./mvnw -pl dedup4j-spring-boot-management,blob-helper-dashboard test` |
 | Inspect tracked planning docs | `git status --short docs` |
 
 ## Epic 1 — Core Library

@@ -1,7 +1,7 @@
 package com.edem.blobhelper.dashboard.api;
 
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
-import com.edem.blobhelper.management.BlobHelperManagementProperties;
+import com.edem.dedup4j.management.Dedup4jManagementProperties;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class EmbeddedDashboardSnapshotServiceTest {
     }
 
     private static Dedup4jProperties properties() { return new Dedup4jProperties(); }
-    private static BlobHelperManagementProperties management() { return new BlobHelperManagementProperties(); }
+    private static Dedup4jManagementProperties management() { return new Dedup4jManagementProperties(); }
     private static <T> org.springframework.beans.factory.ObjectProvider<T> single(Class<T> type, T value) {
         var factory = new DefaultListableBeanFactory();
         factory.registerSingleton("value", value);

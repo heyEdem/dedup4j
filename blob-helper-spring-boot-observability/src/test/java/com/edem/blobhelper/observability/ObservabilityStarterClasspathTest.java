@@ -1,7 +1,7 @@
 package com.edem.dedup4j.observability;
 
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration;
-import com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration;
+import com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -11,7 +11,7 @@ class ObservabilityStarterClasspathTest {
 
     @Test
     void includesManagementAndEmbeddedDashboard() {
-        assertNotNull(BlobHelperManagementAutoConfiguration.class);
+        assertNotNull(Dedup4jManagementAutoConfiguration.class);
         assertNotNull(BlobHelperDashboardAutoConfiguration.class);
         assertNotNull(getClass().getResource("/static/blob-helper/dashboard/index.html"));
     }

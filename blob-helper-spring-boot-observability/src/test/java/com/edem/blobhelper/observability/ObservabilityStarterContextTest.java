@@ -3,8 +3,8 @@ package com.edem.dedup4j.observability;
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardController;
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration;
-import com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration;
-import com.edem.blobhelper.management.BlobHelperManagementController;
+import com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration;
+import com.edem.dedup4j.management.Dedup4jManagementController;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
@@ -23,14 +23,14 @@ class ObservabilityStarterContextTest {
     private final WebApplicationContextRunner servletContext = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     WebMvcAutoConfiguration.class,
-                    BlobHelperManagementAutoConfiguration.class,
+                    Dedup4jManagementAutoConfiguration.class,
                     BlobHelperDashboardAutoConfiguration.class))
             .withUserConfiguration(RequiredProperties.class);
 
     private final WebApplicationContextRunner managementEnabledServletContext = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     WebMvcAutoConfiguration.class,
-                    BlobHelperManagementAutoConfiguration.class,
+                    Dedup4jManagementAutoConfiguration.class,
                     BlobHelperDashboardAutoConfiguration.class));
 
     @Test
@@ -42,30 +42,30 @@ class ObservabilityStarterContextTest {
     @Test
     void managementRemainsDisabledByDefault() {
         servletContext.run(context -> assertThat(context)
-                .doesNotHaveBean(BlobHelperManagementController.class));
+                .doesNotHaveBean(Dedup4jManagementController.class));
     }
 
     @Test
     void enablesManagementExplicitly() {
-        managementEnabledServletContext.withPropertyValues("blob-helper.management.enabled=true")
+        managementEnabledServletContext.withPropertyValues("dedup4j.management.enabled=true")
                 .run(context -> assertThat(context)
                         .hasSingleBean(EmbeddedDashboardController.class)
-                        .hasSingleBean(BlobHelperManagementController.class));
+                        .hasSingleBean(Dedup4jManagementController.class));
     }
 
     @Test
     void canDisableBoth() {
         servletContext.withPropertyValues(
                         "blob-helper.dashboard.enabled=false",
-                        "blob-helper.management.enabled=false")
+                        "dedup4j.management.enabled=false")
                 .run(context -> assertThat(context)
                         .doesNotHaveBean(EmbeddedDashboardController.class)
-                        .doesNotHaveBean(BlobHelperManagementController.class));
+                        .doesNotHaveBean(Dedup4jManagementController.class));
     }
 
     @Test
     void routesAreReadOnly() {
-        managementEnabledServletContext.withPropertyValues("blob-helper.management.enabled=true")
+        managementEnabledServletContext.withPropertyValues("dedup4j.management.enabled=true")
                 .run(context -> {
                     var mapping = context.getBean(RequestMappingHandlerMapping.class);
                     var observabilityHandlers = mapping.getHandlerMethods().entrySet().stream()
@@ -92,7 +92,7 @@ class ObservabilityStarterContextTest {
     private static boolean isObservabilityController(HandlerMethod handlerMethod) {
         Class<?> beanType = handlerMethod.getBeanType();
         return beanType == EmbeddedDashboardController.class
-                || beanType == BlobHelperManagementController.class;
+                || beanType == Dedup4jManagementController.class;
     }
 
     @Configuration(proxyBeanMethods = false)

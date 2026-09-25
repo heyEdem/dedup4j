@@ -3,7 +3,7 @@ package com.edem.blobhelper.dashboard.api;
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
-import com.edem.blobhelper.management.BlobHelperManagementProperties;
+import com.edem.dedup4j.management.Dedup4jManagementProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 
@@ -13,13 +13,13 @@ public class EmbeddedDashboardSnapshotService {
     private final MeterRegistry meterRegistry;
     private final AssetContentRepository contentRepository;
     private final Dedup4jProperties dedup4jProperties;
-    private final BlobHelperManagementProperties managementProperties;
+    private final Dedup4jManagementProperties managementProperties;
 
     public EmbeddedDashboardSnapshotService(
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<AssetContentRepository> contentRepository,
             Dedup4jProperties dedup4jProperties,
-            BlobHelperManagementProperties managementProperties) {
+            Dedup4jManagementProperties managementProperties) {
         this.meterRegistry = meterRegistry.getIfAvailable();
         this.contentRepository = contentRepository.getIfAvailable();
         this.dedup4jProperties = dedup4jProperties;

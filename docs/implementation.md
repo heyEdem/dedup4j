@@ -88,13 +88,13 @@
 - `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java`: Azure `BlobStorage` adapter with properties-based or injected-client construction, streaming uploads with content headers and metadata, property-backed reads, idempotent deletion, existence checks, and Azure-to-core exception mapping.
 - `dedup4j-storage-azure/src/test/java/com/edem/dedup4j/storage/azure/AzureBlobStoragePropertiesTest.java`: verifies all Azure connection settings can be assigned and read without credentials or network calls.
 - `dedup4j-storage-azure/src/test/java/com/edem/dedup4j/storage/azure/AzureBlobStorageContractTest.java`: verifies the Azure adapter round trip, request headers and metadata, missing-object behavior, idempotent deletion, and provider exception mapping against an in-process HTTP fake.
-- `blob-helper-spring-boot-management/pom.xml`: optional instance management module build file; it depends on the starter, Spring Web, and Micrometer without cloud-provider SDKs.
-- `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementProperties.java`: binds disabled-by-default management enablement, base path, instance ID, and instance name.
-- `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementSnapshot.java`: provider-neutral info, health, metrics, and failure response records plus the failure-source extension point.
-- `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementController.java`: exposes GET-only `/v1/info`, `/health`, `/metrics`, and `/failures` endpoints under the configurable management base path.
-- `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/BlobHelperManagementAutoConfiguration.java`: conditionally registers the management controller only when `blob-helper.management.enabled=true`.
-- `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/DashboardRegistrationProperties.java`: binds opt-in dashboard URL, instance identity, advertised management URL, and optional explicit stable ID.
-- `blob-helper-spring-boot-management/src/main/java/com/edem/blobhelper/management/InstanceRegistrationClient.java`: asynchronously self-registers after application readiness, derives a stable name-based UUID when needed, and isolates dashboard outages from application startup.
+- `dedup4j-spring-boot-management/pom.xml`: optional instance management module build file; it depends on the starter, Spring Web, and Micrometer without cloud-provider SDKs.
+- `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementProperties.java`: binds disabled-by-default management enablement, base path, instance ID, and instance name.
+- `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementSnapshot.java`: provider-neutral info, health, metrics, and failure response records plus the failure-source extension point.
+- `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementController.java`: exposes GET-only `/v1/info`, `/health`, `/metrics`, and `/failures` endpoints under the configurable management base path.
+- `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementAutoConfiguration.java`: conditionally registers the management controller only when `dedup4j.management.enabled=true`.
+- `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/DashboardRegistrationProperties.java`: binds opt-in dashboard URL, instance identity, advertised management URL, and optional explicit stable ID.
+- `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/InstanceRegistrationClient.java`: asynchronously self-registers after application readiness, derives a stable name-based UUID when needed, and isolates dashboard outages from application startup.
 - `blob-helper-spring-boot-dashboard/pom.xml`: optional embedded dashboard starter with Spring Boot auto-configuration, MVC APIs, and packaged static resources.
 - `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardProperties.java`: binds enabled state, normalized base path, and failure lookback under `blob-helper.dashboard`.
 - `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardAutoConfiguration.java`: conditionally registers the embedded dashboard in servlet web applications when enabled.
@@ -179,10 +179,10 @@
 - **Initialization:** Built as a Maven child of root `blob-helper`; it depends on `dedup4j-core`, imports the Azure SDK BOM version `1.3.8` locally, and declares `azure-storage-blob` without a version so Azure dependencies remain isolated to this provider module.
 - **Non-obvious logic:** Azure 404 responses map to core `ContentNotFoundException` for reads and `false` for existence checks; other Azure provider failures become core `BlobStorageException`. The contract test uses the real Azure SDK against an in-process JDK HTTP server, so normal verification needs no Azure credentials or external service.
 
-### blob-helper-spring-boot-management
+### dedup4j-spring-boot-management
 
-- **Entry point:** `blob-helper-spring-boot-management/pom.xml`
-- **Key classes/functions:** `BlobHelperManagementProperties` controls opt-in management identity and base path; `BlobHelperManagementController` exposes `/blob-helper/management/v1/info`, `/health`, `/metrics`, and `/failures` as read-only provider-neutral JSON.
+- **Entry point:** `dedup4j-spring-boot-management/pom.xml`
+- **Key classes/functions:** `Dedup4jManagementProperties` controls opt-in management identity and base path; `Dedup4jManagementController` exposes `/dedup4j/management/v1/info`, `/health`, `/metrics`, and `/failures` as read-only provider-neutral JSON.
 - **Initialization:** Optional Spring Boot auto-configuration is registered through `AutoConfiguration.imports`; management is disabled unless explicitly enabled.
 - **Non-obvious logic:** Missing Micrometer meters and metadata repositories produce safe zero totals, and failure details are supplied through an optional provider-neutral source. The module does not receive S3/Azure credentials.
 
@@ -196,7 +196,7 @@
 ### blob-helper-spring-boot-observability
 
 - **Entry point:** `blob-helper-spring-boot-observability/pom.xml`
-- **Key behavior:** Empty-code aggregate JAR with direct compile dependencies on `blob-helper-spring-boot-management` and `blob-helper-spring-boot-dashboard`; Spring Boot discovers the existing component auto-configurations and static resources from those dependency JARs.
+- **Key behavior:** Empty-code aggregate JAR with direct compile dependencies on `dedup4j-spring-boot-management` and `blob-helper-spring-boot-dashboard`; Spring Boot discovers the existing component auto-configurations and static resources from those dependency JARs.
 - **Boundary:** The aggregate deliberately excludes the standalone `blob-helper-dashboard` executable and its SQLite persistence. The generic upload starter also remains free of management, embedded-dashboard, aggregate, and standalone-dashboard artifacts, as verified by `GenericStarterDependencyTest`.
 
 ### Provider Testing
@@ -250,13 +250,13 @@ Implemented starter properties:
 | `dedup4j.deduplication.strict-content-type-validation` | `false` | Rejects unsupported content types when enabled. |
 | `dedup4j.cleanup.delete-physical-on-zero-references` | `true` | Controls physical deletion after the final reference is released. |
 | `dedup4j.cleanup.reconciliation-enabled` | `false` | Controls reconciliation scheduling; disabled by default. |
-| `blob-helper.management.enabled` | `false` | Enables the local read-only management API in a consuming application. |
-| `blob-helper.management.base-path` | `/blob-helper/management` | Base path for local management endpoints. |
-| `blob-helper.dashboard-registration.enabled` | `false` | Enables asynchronous self-registration with the local dashboard. |
-| `blob-helper.dashboard-registration.dashboard-url` | None | Local dashboard registration URL. |
-| `blob-helper.dashboard-registration.instance-name` | `blob-helper` | Display name shown in the dashboard. |
-| `blob-helper.dashboard-registration.advertised-url` | None | Management URL the dashboard polls. |
-| `blob-helper.dashboard-registration.instance-id` | Generated | Optional UUID; otherwise derived stably from instance name and advertised URL. |
+| `dedup4j.management.enabled` | `false` | Enables the local read-only management API in a consuming application. |
+| `dedup4j.management.base-path` | `/dedup4j/management` | Base path for local management endpoints. |
+| `dedup4j.dashboard-registration.enabled` | `false` | Enables asynchronous self-registration with the local dashboard. |
+| `dedup4j.dashboard-registration.dashboard-url` | None | Local dashboard registration URL. |
+| `dedup4j.dashboard-registration.instance-name` | `blob-helper` | Display name shown in the dashboard. |
+| `dedup4j.dashboard-registration.advertised-url` | None | Management URL the dashboard polls. |
+| `dedup4j.dashboard-registration.instance-id` | Generated | Optional UUID; otherwise derived stably from instance name and advertised URL. |
 
 Dashboard settings:
 

@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.edem</groupId>
-            <artifactId>blob-helper-spring-boot-management</artifactId>
+            <artifactId>dedup4j-spring-boot-management</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

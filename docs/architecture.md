@@ -4,7 +4,7 @@
 
 Maven multi-module Java 21 library project for a Spring Boot-compatible blob deduplication helper.
 
-Current implementation state: root Maven reactor with `dedup4j-core`, `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, the optional `blob-helper-spring-boot-management`, `blob-helper-spring-boot-dashboard`, and dependency-only `blob-helper-spring-boot-observability` modules, plus the standalone `blob-helper-dashboard` application. The original Spring Boot shell class still exists under root `src/`, but the root project is now `pom` packaging and the shell source is not part of a reactor child module.
+Current implementation state: root Maven reactor with `dedup4j-core`, `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, the optional `dedup4j-spring-boot-management`, `blob-helper-spring-boot-dashboard`, and dependency-only `blob-helper-spring-boot-observability` modules, plus the standalone `blob-helper-dashboard` application. The original Spring Boot shell class still exists under root `src/`, but the root project is now `pom` packaging and the shell source is not part of a reactor child module.
 
 The local dashboard subsystem is implemented and covered by credential-free
 multi-instance end-to-end verification, as defined by
@@ -32,7 +32,7 @@ multi-instance end-to-end verification, as defined by
 ├── dedup4j-storage-azure/
 │   ├── pom.xml
 │   └── src/
-├── blob-helper-spring-boot-management/
+├── dedup4j-spring-boot-management/
 │   ├── pom.xml
 │   └── src/
 ├── blob-helper-spring-boot-dashboard/
@@ -71,7 +71,7 @@ multi-instance end-to-end verification, as defined by
 | `dedup4j-storage-local` | Local filesystem storage adapter module. Owns local provider configuration (`LocalBlobStorageProperties` with configurable root directory) and the `LocalBlobStorage` adapter implementing put, get, idempotent delete, and exists with normalized key resolution that rejects path traversal outside the root; depends only on `dedup4j-core` with no cloud SDKs. |
 | `dedup4j-storage-s3` | AWS S3 provider module. Owns the module-local AWS SDK v2 dependency management, S3 connection properties, and `S3BlobStorage` adapter implementing the provider-neutral `BlobStorage` contract with streaming access and domain exception mapping. |
 | `dedup4j-storage-azure` | Azure Blob Storage provider module. Owns the module-local Azure SDK BOM and Blob SDK dependency, Azure connection properties, and `AzureBlobStorage`, which implements streaming put/get, idempotent delete, existence checks, and provider-to-core exception mapping without exposing Azure types through core. |
-| `blob-helper-spring-boot-management` | Optional instance-side management module. Owns local read-only information, health, metrics, and failure endpoints plus management properties; it does not own application assets, blob bytes, or provider credentials. |
+| `dedup4j-spring-boot-management` | Optional instance-side management module. Owns local read-only information, health, metrics, and failure endpoints plus management properties; it does not own application assets, blob bytes, or provider credentials. |
 | `blob-helper-spring-boot-dashboard` | Optional embedded single-instance dashboard starter. Owns dashboard properties, current-process snapshots, read-only API routes, and packaged static UI; it does not own SQLite history or instance registration. |
 | `blob-helper-spring-boot-observability` | Optional empty-code aggregate JAR that depends on the management and embedded-dashboard modules so one consumer dependency supplies the embedded current-application UI/API; it does not include the standalone fleet dashboard. |
 | `blob-helper-dashboard` | Standalone local monitoring application. Owns multi-instance registration, pull polling, SQLite aggregate history, seven-day failure retention, read-only REST views, and the static light/dark UI. |
@@ -145,4 +145,4 @@ Blob Helper instance starts
 | SQLite JDBC / Spring JDBC | Dashboard-only persistence for local instance registrations, interval metric snapshots, and seven-day failure details. |
 | Spring MVC | Embedded dashboard’s conditional read-only controller and resource handler; supplied by a consuming web application. |
 | Spring Web | `MultipartFile` input type used by the starter’s upload façade; the starter does not add controllers or HTTP response types. |
-| `blob-helper-spring-boot-management`, `blob-helper-spring-boot-dashboard` | Direct compile dependencies of the empty-code observability aggregate; their existing auto-configuration registrations and resources remain authoritative. |
+| `dedup4j-spring-boot-management`, `blob-helper-spring-boot-dashboard` | Direct compile dependencies of the empty-code observability aggregate; their existing auto-configuration registrations and resources remain authoritative. |

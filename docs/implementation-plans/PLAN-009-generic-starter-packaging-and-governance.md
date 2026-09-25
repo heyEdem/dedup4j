@@ -42,7 +42,7 @@
 
 - Provider implementation classes — this plan changes packaging, not storage behavior.
 - `dedup4j-core` production dependencies — core remains provider/framework neutral.
-- `blob-helper-spring-boot-management`, `blob-helper-spring-boot-dashboard`, `blob-helper-dashboard` — none become starter dependencies.
+- `dedup4j-spring-boot-management`, `blob-helper-spring-boot-dashboard`, `blob-helper-dashboard` — none become starter dependencies.
 - SDK version upgrades unrelated to achieving convergence.
 - Git commits, pushes, branches, or pull requests — Edem handles Git unless explicitly delegating it.
 
@@ -79,7 +79,7 @@ class GenericStarterDependencyTest {
     @Test
     void excludesObservabilityModules() {
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration"));
+                () -> Class.forName("com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration"));
         assertThrows(ClassNotFoundException.class,
                 () -> Class.forName("com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration"));
     }

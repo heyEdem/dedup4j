@@ -1,7 +1,7 @@
 package com.edem.blobhelper.dashboard.api;
 
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardProperties;
-import com.edem.blobhelper.management.BlobHelperManagementSnapshot;
+import com.edem.dedup4j.management.Dedup4jManagementSnapshot;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,11 +20,11 @@ import java.util.UUID;
 public class EmbeddedDashboardController {
     private final EmbeddedDashboardSnapshotService snapshots;
     private final BlobHelperDashboardProperties properties;
-    private final BlobHelperManagementSnapshot.FailureSource failureSource;
+    private final Dedup4jManagementSnapshot.FailureSource failureSource;
 
     public EmbeddedDashboardController(EmbeddedDashboardSnapshotService snapshots,
                                         BlobHelperDashboardProperties properties,
-                                        BlobHelperManagementSnapshot.FailureSource failureSource) {
+                                        Dedup4jManagementSnapshot.FailureSource failureSource) {
         this.snapshots = snapshots;
         this.properties = properties;
         this.failureSource = failureSource;
@@ -53,7 +53,7 @@ public class EmbeddedDashboardController {
     }
 
     @GetMapping("/failures")
-    public List<BlobHelperManagementSnapshot.Failure> failures(
+    public List<Dedup4jManagementSnapshot.Failure> failures(
             @RequestParam(name = "since", required = false) Instant since) {
         Instant boundary = since == null ? Instant.now().minus(properties.getFailureLookback()) : since;
         return failureSource.recentFailures(boundary);

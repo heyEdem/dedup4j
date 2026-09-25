@@ -11,7 +11,7 @@
 
 - Added the dependency-only `blob-helper-spring-boot-observability` aggregate for the embedded management and current-application dashboard modules.
 - Added classpath, activation, disablement, servlet, and read-only route coverage while keeping the generic upload starter and standalone fleet dashboard separate.
-- Documented the one-dependency embedded setup and the explicit `blob-helper.management.enabled=true` choice.
+- Documented the one-dependency embedded setup and the explicit `dedup4j.management.enabled=true` choice.
 - Modules affected: root Maven reactor, `blob-helper-spring-boot-observability`, `README.md`, and project documentation.
 
 ## 2026-09-07 — Add friendly upload facade, stable locations, and ordered batches
@@ -51,7 +51,7 @@
 
 - Added management response contract coverage and a two-instance in-process end-to-end test for registration, polling, aggregate savings, failure isolation, and seven-day retention cleanup.
 - Updated local-only startup, verification, and completion documentation for Epic 7.
-- Modules affected: `blob-helper-spring-boot-management`, `blob-helper-dashboard`, and project documentation.
+- Modules affected: `dedup4j-spring-boot-management`, `blob-helper-dashboard`, and project documentation.
 
 ## 2026-08-31 — Add dashboard API and static console
 
@@ -69,13 +69,13 @@
 
 - Added the standalone executable `blob-helper-dashboard` module with loopback/9090 defaults and local registration endpoint.
 - Added asynchronous management-side self-registration with YAML configuration, stable generated instance IDs, and outage isolation.
-- Modules affected: `blob-helper-dashboard`, `blob-helper-spring-boot-management`, root Maven reactor, and Epic 7 planning/status documentation.
+- Modules affected: `blob-helper-dashboard`, `dedup4j-spring-boot-management`, root Maven reactor, and Epic 7 planning/status documentation.
 
 ## 2026-08-31 — Add local read-only management API
 
-- Added the optional `blob-helper-spring-boot-management` module with disabled-by-default Spring Boot auto-configuration.
+- Added the optional `dedup4j-spring-boot-management` module with disabled-by-default Spring Boot auto-configuration.
 - Added provider-neutral info, health, metrics, and recent-failure response contracts with GET-only endpoints.
-- Modules affected: `blob-helper-spring-boot-management`, root Maven reactor, and Epic 7 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-management`, root Maven reactor, and Epic 7 planning/status documentation.
 
 ## 2026-08-30 — Add structured operational logging
 
@@ -106,7 +106,7 @@
 - Added the approved design and ADR for a fully local, read-only, pull-based dashboard with YAML self-registration.
 - Added Epic 7 and PLAN-007 for the optional management module, standalone dashboard, SQLite aggregate history, light/dark UI, and seven-day failure retention.
 - Updated the specification, architecture, implementation index, five-question requirements, patterns, README, and testing guidance.
-- Modules affected: planned `blob-helper-spring-boot-management`, planned `blob-helper-dashboard`, and project documentation.
+- Modules affected: planned `dedup4j-spring-boot-management`, planned `blob-helper-dashboard`, and project documentation.
 
 ## 2026-08-27 — Add provider SDK boundary checks
 
@@ -349,4 +349,9 @@
 ## 2026-09-25 — Rename spring boot starter to dedup4j
 
 - Renamed the starter artifact, API facade, packages, Spring discovery registrations and bean names; updated configuration binding and metric producers/readers together. Corrected stale Binder test prefixes; full verification passed.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename management module to dedup4j
+
+- Renamed management packages/artifact, discovery classes, opt-in properties, registration settings, thread names and default routes; synchronized downstream contract fixtures and documentation.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.

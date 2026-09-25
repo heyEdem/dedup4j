@@ -169,7 +169,7 @@ Responsibilities:
 - store files under a configured directory
 - support deterministic integration tests without cloud credentials
 
-### blob-helper-spring-boot-management
+### dedup4j-spring-boot-management
 
 Optional Spring Boot management module for consuming applications.
 

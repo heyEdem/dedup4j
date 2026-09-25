@@ -1,4 +1,4 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.jpa.AssetContent;
@@ -15,21 +15,21 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("${blob-helper.management.base-path:/blob-helper/management}/v1")
-public class BlobHelperManagementController {
+@RequestMapping("${dedup4j.management.base-path:/dedup4j/management}/v1")
+public class Dedup4jManagementController {
 
-    private final BlobHelperManagementProperties managementProperties;
+    private final Dedup4jManagementProperties managementProperties;
     private final Dedup4jProperties dedup4jProperties;
     private final MeterRegistry meterRegistry;
     private final AssetContentRepository contentRepository;
-    private final BlobHelperManagementSnapshot.FailureSource failureSource;
+    private final Dedup4jManagementSnapshot.FailureSource failureSource;
 
-    public BlobHelperManagementController(
-            BlobHelperManagementProperties managementProperties,
+    public Dedup4jManagementController(
+            Dedup4jManagementProperties managementProperties,
             Dedup4jProperties dedup4jProperties,
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<AssetContentRepository> contentRepository,
-            ObjectProvider<BlobHelperManagementSnapshot.FailureSource> failureSource
+            ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource
     ) {
         this.managementProperties = managementProperties;
         this.dedup4jProperties = dedup4jProperties;
@@ -39,22 +39,22 @@ public class BlobHelperManagementController {
     }
 
     @GetMapping("/info")
-    public BlobHelperManagementSnapshot.Info info() {
-        return new BlobHelperManagementSnapshot.Info(
+    public Dedup4jManagementSnapshot.Info info() {
+        return new Dedup4jManagementSnapshot.Info(
                 managementProperties.getInstanceId(),
                 managementProperties.getInstanceName(),
                 provider());
     }
 
     @GetMapping("/health")
-    public BlobHelperManagementSnapshot.Health health() {
-        return new BlobHelperManagementSnapshot.Health("UP", Instant.now());
+    public Dedup4jManagementSnapshot.Health health() {
+        return new Dedup4jManagementSnapshot.Health("UP", Instant.now());
     }
 
     @GetMapping("/metrics")
-    public BlobHelperManagementSnapshot.Metrics metrics() {
+    public Dedup4jManagementSnapshot.Metrics metrics() {
         List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll();
-        return new BlobHelperManagementSnapshot.Metrics(
+        return new Dedup4jManagementSnapshot.Metrics(
                 counter("dedup4j.uploads"),
                 counter("dedup4j.duplicates"),
                 counter("dedup4j.skipped.physical.writes"),
@@ -65,7 +65,7 @@ public class BlobHelperManagementController {
     }
 
     @GetMapping("/failures")
-    public List<BlobHelperManagementSnapshot.Failure> failures(
+    public List<Dedup4jManagementSnapshot.Failure> failures(
             @RequestParam(name = "since", required = false) Instant since
     ) {
         return failureSource.recentFailures(since);

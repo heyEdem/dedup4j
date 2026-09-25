@@ -14,7 +14,7 @@ application logical assets, or cloud-provider credentials.
 ## Decisions
 
 - The dashboard is a separate `blob-helper-dashboard` Spring Boot application.
-- A separate optional `blob-helper-spring-boot-management` module exposes the
+- A separate optional `dedup4j-spring-boot-management` module exposes the
   read-only management API and self-registration client for consuming apps.
 - Instances self-register with the local dashboard using `application.yaml`.
 - The dashboard pulls health, counters, current content totals, and recent
@@ -53,13 +53,13 @@ the static web UI.
 The management module exposes local, read-only endpoints below its configured
 base path:
 
-- `GET /blob-helper/management/v1/info`: instance identity, display name,
+- `GET /dedup4j/management/v1/info`: instance identity, display name,
   provider, and management API version.
-- `GET /blob-helper/management/v1/health`: current availability and storage
+- `GET /dedup4j/management/v1/health`: current availability and storage
   provider status.
-- `GET /blob-helper/management/v1/metrics`: cumulative operation counters,
+- `GET /dedup4j/management/v1/metrics`: cumulative operation counters,
   byte counters, latency summaries, and current content totals.
-- `GET /blob-helper/management/v1/failures?since=<timestamp>`: recent failure
+- `GET /dedup4j/management/v1/failures?since=<timestamp>`: recent failure
   details for dashboard collection.
 
 The dashboard registration endpoint accepts an instance ID, name, advertised
@@ -75,12 +75,12 @@ An instance opts in to management and self-registration:
 blob-helper:
   management:
     enabled: true
-    base-path: /blob-helper/management
+    base-path: /dedup4j/management
   dashboard-registration:
     enabled: true
     dashboard-url: http://127.0.0.1:9090
     instance-name: orders-service
-    advertised-url: http://127.0.0.1:8081/blob-helper/management
+    advertised-url: http://127.0.0.1:8081/dedup4j/management
 ```
 
 The dashboard uses normal Spring Boot server settings and dashboard-specific

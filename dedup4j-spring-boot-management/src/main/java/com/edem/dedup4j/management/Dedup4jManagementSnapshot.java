@@ -1,16 +1,16 @@
-package com.edem.blobhelper.management;
+package com.edem.dedup4j.management;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record BlobHelperManagementSnapshot(
+public record Dedup4jManagementSnapshot(
         Info info,
         Health health,
         Metrics metrics,
         List<Failure> failures
 ) {
-    public BlobHelperManagementSnapshot {
+    public Dedup4jManagementSnapshot {
         failures = List.copyOf(failures);
     }
 
