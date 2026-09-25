@@ -14,11 +14,11 @@ application.
 
 ## Decision
 
-Add an optional `blob-helper-spring-boot-dashboard` starter. When present on a
+Add an optional `dedup4j-spring-boot-dashboard` starter. When present on a
 web application's classpath, it serves a read-only dashboard at
-`/blob-helper/dashboard` and exposes current-process metrics under
-`/blob-helper/dashboard/api/v1`. The embedded dashboard is enabled by default
-and can be disabled with `blob-helper.dashboard.enabled=false`.
+`/dedup4j/dashboard` and exposes current-process metrics under
+`/dedup4j/dashboard/api/v1`. The embedded dashboard is enabled by default
+and can be disabled with `dedup4j.dashboard.enabled=false`.
 
 The standalone `blob-helper-dashboard` application remains a separate
 multi-instance fleet-monitoring application. It retains instance registration,

@@ -191,16 +191,16 @@ Responsibilities:
 - retain detailed failures for seven days
 - present a read-only light/dark web dashboard
 
-### blob-helper-spring-boot-dashboard
+### dedup4j-spring-boot-dashboard
 
 Optional embedded dashboard starter for a single consuming Spring Boot
 application.
 
 Responsibilities:
 
-- serve the read-only UI at `/blob-helper/dashboard` by default
+- serve the read-only UI at `/dedup4j/dashboard` by default
 - expose current-process overview, status, history, and failure views
-- remain disabled only when `blob-helper.dashboard.enabled=false`
+- remain disabled only when `dedup4j.dashboard.enabled=false`
 - avoid SQLite persistence, instance registration, and blob mutation
 
 ## 6. Storage Abstraction

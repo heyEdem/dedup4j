@@ -39,13 +39,13 @@
 ## 2026-09-01 — Fix embedded dashboard root asset paths
 
 - Redirected the no-trailing-slash dashboard URL to its slash form so relative CSS and JavaScript assets resolve correctly.
-- Modules affected: `blob-helper-spring-boot-dashboard`.
+- Modules affected: `dedup4j-spring-boot-dashboard`.
 
 ## 2026-09-01 — Add embedded dashboard starter
 
-- Added the optional `blob-helper-spring-boot-dashboard` module with default-on, read-only current-process API and packaged responsive UI at `/blob-helper/dashboard`.
+- Added the optional `dedup4j-spring-boot-dashboard` module with default-on, read-only current-process API and packaged responsive UI at `/dedup4j/dashboard`.
 - Preserved the standalone `blob-helper-dashboard` application for multi-instance SQLite-backed fleet monitoring.
-- Modules affected: root reactor, `blob-helper-spring-boot-dashboard`, and project documentation.
+- Modules affected: root reactor, `dedup4j-spring-boot-dashboard`, and project documentation.
 
 ## 2026-08-31 — Verify local multi-instance monitoring
 
@@ -354,4 +354,9 @@
 ## 2026-09-25 — Rename management module to dedup4j
 
 - Renamed management packages/artifact, discovery classes, opt-in properties, registration settings, thread names and default routes; synchronized downstream contract fixtures and documentation.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename embedded dashboard module to dedup4j
+
+- Renamed embedded dashboard packages, properties, default route, resource handler and static resources together; updated branding and browser-storage keys. Default/custom route integration and downstream classpath tests passed.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.

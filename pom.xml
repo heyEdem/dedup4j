@@ -38,7 +38,7 @@
         <module>dedup4j-storage-s3</module>
         <module>dedup4j-storage-azure</module>
         <module>dedup4j-spring-boot-management</module>
-        <module>blob-helper-spring-boot-dashboard</module>
+        <module>dedup4j-spring-boot-dashboard</module>
         <module>blob-helper-spring-boot-observability</module>
         <module>blob-helper-dashboard</module>
     </modules>

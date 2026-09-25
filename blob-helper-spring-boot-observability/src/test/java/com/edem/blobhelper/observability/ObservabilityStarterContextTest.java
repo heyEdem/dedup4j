@@ -1,8 +1,8 @@
 package com.edem.dedup4j.observability;
 
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
-import com.edem.blobhelper.dashboard.api.EmbeddedDashboardController;
-import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration;
+import com.edem.dedup4j.dashboard.api.EmbeddedDashboardController;
+import com.edem.dedup4j.dashboard.autoconfigure.Dedup4jDashboardAutoConfiguration;
 import com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration;
 import com.edem.dedup4j.management.Dedup4jManagementController;
 import org.junit.jupiter.api.Test;
@@ -24,14 +24,14 @@ class ObservabilityStarterContextTest {
             .withConfiguration(AutoConfigurations.of(
                     WebMvcAutoConfiguration.class,
                     Dedup4jManagementAutoConfiguration.class,
-                    BlobHelperDashboardAutoConfiguration.class))
+                    Dedup4jDashboardAutoConfiguration.class))
             .withUserConfiguration(RequiredProperties.class);
 
     private final WebApplicationContextRunner managementEnabledServletContext = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     WebMvcAutoConfiguration.class,
                     Dedup4jManagementAutoConfiguration.class,
-                    BlobHelperDashboardAutoConfiguration.class));
+                    Dedup4jDashboardAutoConfiguration.class));
 
     @Test
     void dashboardIsEnabledByDefault() {
@@ -56,7 +56,7 @@ class ObservabilityStarterContextTest {
     @Test
     void canDisableBoth() {
         servletContext.withPropertyValues(
-                        "blob-helper.dashboard.enabled=false",
+                        "dedup4j.dashboard.enabled=false",
                         "dedup4j.management.enabled=false")
                 .run(context -> assertThat(context)
                         .doesNotHaveBean(EmbeddedDashboardController.class)
@@ -83,7 +83,7 @@ class ObservabilityStarterContextTest {
     @Test
     void dashboardIsNotCreatedOutsideServletApplicationContext() {
         new ApplicationContextRunner()
-                .withConfiguration(AutoConfigurations.of(BlobHelperDashboardAutoConfiguration.class))
+                .withConfiguration(AutoConfigurations.of(Dedup4jDashboardAutoConfiguration.class))
                 .withUserConfiguration(RequiredProperties.class)
                 .run(context -> assertThat(context)
                         .doesNotHaveBean(EmbeddedDashboardController.class));

@@ -22,7 +22,7 @@ class GenericStarterDependencyTest {
         assertThrows(ClassNotFoundException.class,
                 () -> Class.forName("com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration"));
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration"));
+                () -> Class.forName("com.edem.dedup4j.dashboard.autoconfigure.Dedup4jDashboardAutoConfiguration"));
         assertThrows(ClassNotFoundException.class,
                 () -> Class.forName("com.edem.blobhelper.dashboard.BlobHelperDashboardApplication"));
     }

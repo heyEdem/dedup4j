@@ -10,5 +10,5 @@ blob-helper:
 
 spring:
   datasource:
-    url: jdbc:sqlite:${blob-helper.dashboard.database-path:./blob-helper-dashboard.sqlite}
+    url: jdbc:sqlite:${dedup4j.dashboard.database-path:./blob-helper-dashboard.sqlite}
     driver-class-name: org.sqlite.JDBC

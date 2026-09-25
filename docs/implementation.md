@@ -95,13 +95,13 @@
 - `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/Dedup4jManagementAutoConfiguration.java`: conditionally registers the management controller only when `dedup4j.management.enabled=true`.
 - `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/DashboardRegistrationProperties.java`: binds opt-in dashboard URL, instance identity, advertised management URL, and optional explicit stable ID.
 - `dedup4j-spring-boot-management/src/main/java/com/edem/dedup4j/management/InstanceRegistrationClient.java`: asynchronously self-registers after application readiness, derives a stable name-based UUID when needed, and isolates dashboard outages from application startup.
-- `blob-helper-spring-boot-dashboard/pom.xml`: optional embedded dashboard starter with Spring Boot auto-configuration, MVC APIs, and packaged static resources.
-- `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardProperties.java`: binds enabled state, normalized base path, and failure lookback under `blob-helper.dashboard`.
-- `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardAutoConfiguration.java`: conditionally registers the embedded dashboard in servlet web applications when enabled.
-- `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardSnapshotService.java`: creates zero-safe current-process metric snapshots from optional Micrometer/JPA collaborators.
-- `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardController.java`: exposes GET-only overview, status, empty history, and failure routes and maps the packaged UI for custom base paths.
-- `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardView.java`: dashboard-shaped immutable JSON view records matching the standalone console’s field meanings.
-- `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard`: embedded light/dark responsive UI with relative API requests.
+- `dedup4j-spring-boot-dashboard/pom.xml`: optional embedded dashboard starter with Spring Boot auto-configuration, MVC APIs, and packaged static resources.
+- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardProperties.java`: binds enabled state, normalized base path, and failure lookback under `blob-helper.dashboard`.
+- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfiguration.java`: conditionally registers the embedded dashboard in servlet web applications when enabled.
+- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardSnapshotService.java`: creates zero-safe current-process metric snapshots from optional Micrometer/JPA collaborators.
+- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`: exposes GET-only overview, status, empty history, and failure routes and maps the packaged UI for custom base paths.
+- `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardView.java`: dashboard-shaped immutable JSON view records matching the standalone console’s field meanings.
+- `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard`: embedded light/dark responsive UI with relative API requests.
 - `blob-helper-spring-boot-observability/pom.xml`: dependency-only aggregate JAR that directly depends on the management and embedded-dashboard modules; it publishes no production Java source or `AutoConfiguration.imports` file.
 - `blob-helper-spring-boot-observability/src/test/java/com/edem/dedup4j/observability/ObservabilityStarterClasspathTest.java`: verifies management and embedded-dashboard classes/resources are transitively available while standalone fleet application and persistence classes remain absent.
 - `blob-helper-spring-boot-observability/src/test/java/com/edem/dedup4j/observability/ObservabilityStarterContextTest.java`: verifies default dashboard activation, explicit management activation, independent disablement, servlet-only dashboard creation, and GET/HEAD-only controller mappings.
@@ -196,7 +196,7 @@
 ### blob-helper-spring-boot-observability
 
 - **Entry point:** `blob-helper-spring-boot-observability/pom.xml`
-- **Key behavior:** Empty-code aggregate JAR with direct compile dependencies on `dedup4j-spring-boot-management` and `blob-helper-spring-boot-dashboard`; Spring Boot discovers the existing component auto-configurations and static resources from those dependency JARs.
+- **Key behavior:** Empty-code aggregate JAR with direct compile dependencies on `dedup4j-spring-boot-management` and `dedup4j-spring-boot-dashboard`; Spring Boot discovers the existing component auto-configurations and static resources from those dependency JARs.
 - **Boundary:** The aggregate deliberately excludes the standalone `blob-helper-dashboard` executable and its SQLite persistence. The generic upload starter also remains free of management, embedded-dashboard, aggregate, and standalone-dashboard artifacts, as verified by `GenericStarterDependencyTest`.
 
 ### Provider Testing
@@ -264,6 +264,6 @@ Dashboard settings:
 |---|---|---|
 | `server.address` | `127.0.0.1` | Local-only dashboard bind address. |
 | `server.port` | `9090` | Dedicated dashboard port. |
-| `blob-helper.dashboard.database-path` | `./blob-helper-dashboard.sqlite` | SQLite file location. |
-| `blob-helper.dashboard.polling-interval` | `30s` | Fixed delay between instance polls. |
-| `blob-helper.dashboard.failure-retention` | `7d` | Detailed failure retention period; aggregate snapshots are retained. |
+| `dedup4j.dashboard.database-path` | `./blob-helper-dashboard.sqlite` | SQLite file location. |
+| `dedup4j.dashboard.polling-interval` | `30s` | Fixed delay between instance polls. |
+| `dedup4j.dashboard.failure-retention` | `7d` | Detailed failure retention period; aggregate snapshots are retained. |

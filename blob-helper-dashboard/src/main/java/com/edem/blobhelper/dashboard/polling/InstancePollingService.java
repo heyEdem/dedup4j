@@ -32,7 +32,7 @@ public class InstancePollingService {
         this.instances = instances; this.snapshots = snapshots; this.failures = failures; this.properties = properties;
     }
 
-    @Scheduled(fixedDelayString = "${blob-helper.dashboard.polling-interval:30s}")
+    @Scheduled(fixedDelayString = "${dedup4j.dashboard.polling-interval:30s}")
     public void pollAll() {
         for (InstanceRepository.Instance instance : instances.findAll()) poll(instance);
         failures.deleteOlderThan(Instant.now().minus(properties.failureRetention()));

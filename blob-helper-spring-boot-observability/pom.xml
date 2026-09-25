@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>com.edem</groupId>
-            <artifactId>blob-helper-spring-boot-dashboard</artifactId>
+            <artifactId>dedup4j-spring-boot-dashboard</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
