@@ -102,9 +102,9 @@
 - `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`: exposes GET-only overview, status, empty history, and failure routes and maps the packaged UI for custom base paths.
 - `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardView.java`: dashboard-shaped immutable JSON view records matching the standalone console’s field meanings.
 - `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard`: embedded light/dark responsive UI with relative API requests.
-- `blob-helper-spring-boot-observability/pom.xml`: dependency-only aggregate JAR that directly depends on the management and embedded-dashboard modules; it publishes no production Java source or `AutoConfiguration.imports` file.
-- `blob-helper-spring-boot-observability/src/test/java/com/edem/dedup4j/observability/ObservabilityStarterClasspathTest.java`: verifies management and embedded-dashboard classes/resources are transitively available while standalone fleet application and persistence classes remain absent.
-- `blob-helper-spring-boot-observability/src/test/java/com/edem/dedup4j/observability/ObservabilityStarterContextTest.java`: verifies default dashboard activation, explicit management activation, independent disablement, servlet-only dashboard creation, and GET/HEAD-only controller mappings.
+- `dedup4j-spring-boot-observability/pom.xml`: dependency-only aggregate JAR that directly depends on the management and embedded-dashboard modules; it publishes no production Java source or `AutoConfiguration.imports` file.
+- `dedup4j-spring-boot-observability/src/test/java/com/edem/dedup4j/observability/ObservabilityStarterClasspathTest.java`: verifies management and embedded-dashboard classes/resources are transitively available while standalone fleet application and persistence classes remain absent.
+- `dedup4j-spring-boot-observability/src/test/java/com/edem/dedup4j/observability/ObservabilityStarterContextTest.java`: verifies default dashboard activation, explicit management activation, independent disablement, servlet-only dashboard creation, and GET/HEAD-only controller mappings.
 - `blob-helper-dashboard/pom.xml`: standalone executable dashboard with Spring Web, Spring JDBC, SQLite JDBC, and Spring Boot repackaging.
 - `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/BlobHelperDashboardApplication.java`: standalone dashboard entry point with loopback/9090 defaults.
 - `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/registration/InstanceRegistration.java`: validated provider-neutral registration record.
@@ -193,9 +193,9 @@
 - **Initialization:** Standalone Spring Boot application defaults to `127.0.0.1:9090`; it stores its own registry and history in a configurable SQLite file.
 - **Non-obvious logic:** Poll failures are isolated per instance; counter resets after an instance restart never produce negative deltas; detailed failures expire after seven days while aggregate snapshots remain. `MultiInstanceDashboardIntegrationTest` validates the complete local flow with two in-process management endpoints and temporary SQLite storage.
 
-### blob-helper-spring-boot-observability
+### dedup4j-spring-boot-observability
 
-- **Entry point:** `blob-helper-spring-boot-observability/pom.xml`
+- **Entry point:** `dedup4j-spring-boot-observability/pom.xml`
 - **Key behavior:** Empty-code aggregate JAR with direct compile dependencies on `dedup4j-spring-boot-management` and `dedup4j-spring-boot-dashboard`; Spring Boot discovers the existing component auto-configurations and static resources from those dependency JARs.
 - **Boundary:** The aggregate deliberately excludes the standalone `blob-helper-dashboard` executable and its SQLite persistence. The generic upload starter also remains free of management, embedded-dashboard, aggregate, and standalone-dashboard artifacts, as verified by `GenericStarterDependencyTest`.
 

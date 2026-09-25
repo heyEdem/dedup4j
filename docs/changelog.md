@@ -9,10 +9,10 @@
 
 ## 2026-09-07 — Add combined observability starter
 
-- Added the dependency-only `blob-helper-spring-boot-observability` aggregate for the embedded management and current-application dashboard modules.
+- Added the dependency-only `dedup4j-spring-boot-observability` aggregate for the embedded management and current-application dashboard modules.
 - Added classpath, activation, disablement, servlet, and read-only route coverage while keeping the generic upload starter and standalone fleet dashboard separate.
 - Documented the one-dependency embedded setup and the explicit `dedup4j.management.enabled=true` choice.
-- Modules affected: root Maven reactor, `blob-helper-spring-boot-observability`, `README.md`, and project documentation.
+- Modules affected: root Maven reactor, `dedup4j-spring-boot-observability`, `README.md`, and project documentation.
 
 ## 2026-09-07 — Add friendly upload facade, stable locations, and ordered batches
 
@@ -359,4 +359,9 @@
 ## 2026-09-25 — Rename embedded dashboard module to dedup4j
 
 - Renamed embedded dashboard packages, properties, default route, resource handler and static resources together; updated branding and browser-storage keys. Default/custom route integration and downstream classpath tests passed.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename observability aggregate to dedup4j
+
+- Renamed the dependency-only aggregate artifact and test source paths, preserving component auto-configuration and exclusion of the standalone fleet dashboard.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.

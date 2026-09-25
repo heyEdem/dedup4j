@@ -8,9 +8,9 @@
         <artifactId>blob-helper</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>blob-helper-spring-boot-observability</artifactId>
-    <name>blob-helper-spring-boot-observability</name>
-    <description>Optional aggregate starter for Blob Helper management and embedded dashboard.</description>
+    <artifactId>dedup4j-spring-boot-observability</artifactId>
+    <name>dedup4j-spring-boot-observability</name>
+    <description>Optional aggregate starter for dedup4j management and embedded dashboard.</description>
     <dependencies>
         <dependency>
             <groupId>com.edem</groupId>
