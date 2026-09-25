@@ -14,7 +14,7 @@
 
 - Keep the dashboard read-only; it must not add blob mutation or repair endpoints.
 - Keep provider SDKs isolated in `dedup4j-storage-s3` and `dedup4j-storage-azure`.
-- Keep the existing `blob-helper-spring-boot-starter` free of dashboard controllers and UI resources.
+- Keep the existing `dedup4j-spring-boot-starter` free of dashboard controllers and UI resources.
 - The dashboard must be disabled explicitly with `blob-helper.dashboard.enabled=false`.
 - The embedded UI default route is `/blob-helper/dashboard`.
 - Embedded dashboard API routes are under `/blob-helper/dashboard/api/v1`.
@@ -135,7 +135,7 @@ git commit -m "docs: decide embedded dashboard starter architecture"
 
 **Interfaces:**
 
-- Consumes: `dedup4j-core`, `dedup4j-jpa`, and `blob-helper-spring-boot-starter`.
+- Consumes: `dedup4j-core`, `dedup4j-jpa`, and `dedup4j-spring-boot-starter`.
 - Produces: `com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardProperties` with `enabled`, `basePath`, and `failureLookback` properties.
 
 The default property values must be:
@@ -197,18 +197,18 @@ git commit -m "feat: add embedded dashboard starter module"
 
 **Interfaces:**
 
-- Consumes: `MeterRegistry`, optional `AssetContentRepository`, `BlobHelperProperties`, and the existing management `FailureSource` contract where available.
+- Consumes: `MeterRegistry`, optional `AssetContentRepository`, `Dedup4jProperties`, and the existing management `FailureSource` contract where available.
 - Produces: immutable current-instance values used by `EmbeddedDashboardController`.
 
 The snapshot service must calculate the same metric meanings as the existing
 management API:
 
 ```text
-uploads                  = blob.helper.uploads counter
-duplicates               = blob.helper.duplicates counter
-physicalUploads          = blob.helper.skipped.physical.writes counter
-logicalBytes             = blob.helper.bytes.accepted counter
-avoidedBytes             = blob.helper.bytes.avoided counter
+uploads                  = dedup4j.uploads counter
+duplicates               = dedup4j.duplicates counter
+physicalUploads          = dedup4j.skipped.physical.writes counter
+logicalBytes             = dedup4j.bytes.accepted counter
+avoidedBytes             = dedup4j.bytes.avoided counter
 contentCount             = number of AssetContent rows, or 0 when unavailable
 physicalBytes            = sum of AssetContent.sizeBytes, or 0 when unavailable
 newUploads               = uploads - duplicates, never below 0
@@ -503,7 +503,7 @@ Build a temporary Spring Boot consumer that declares only:
 ```xml
 <dependency>
     <groupId>io.github.heyEdem</groupId>
-    <artifactId>blob-helper-spring-boot-starter</artifactId>
+    <artifactId>dedup4j-spring-boot-starter</artifactId>
     <version>...</version>
 </dependency>
 <dependency>

@@ -37,33 +37,33 @@ Initial read-only repository inspection preceded reading this plan's Git exclusi
 - Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/DuplicateContentIdentityException.java`.
 - Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java`.
 - Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java`.
-- Modify: `blob-helper-spring-boot-starter/pom.xml` — add Spring Data JPA, JDBC, and Liquibase integration dependencies.
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperProperties.java` — add persistence schema mode.
+- Modify: `dedup4j-spring-boot-starter/pom.xml` — add Spring Data JPA, JDBC, and Liquibase integration dependencies.
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java` — add persistence schema mode.
 - Create: `.../autoconfigure/persistence/SchemaInitialization.java`.
-- Create: `.../autoconfigure/persistence/BlobHelperPersistenceAutoConfiguration.java`.
-- Create: `.../autoconfigure/persistence/BlobHelperSchemaValidator.java`.
-- Create: `.../autoconfigure/service/BlobHelperServiceAutoConfiguration.java`.
+- Create: `.../autoconfigure/persistence/Dedup4jPersistenceAutoConfiguration.java`.
+- Create: `.../autoconfigure/persistence/Dedup4jSchemaValidator.java`.
+- Create: `.../autoconfigure/service/Dedup4jServiceAutoConfiguration.java`.
 - Create: `.../service/SpringTransactionalBlobDeduplicationService.java`.
 - Create: `.../service/BlobReferences.java` — centralize metadata-to-reference mapping.
 - Create: `.../resources/db/blob-helper/db.changelog-master.yaml`.
 - Create: `.../resources/db/blob-helper/changes/001-create-asset-content.yaml`.
 - Modify: `.../resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
-- Create: `.../test/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperPersistenceAutoConfigurationTest.java`.
-- Create: `.../test/java/com/edem/blobhelper/autoconfigure/service/BlobHelperServiceAutoConfigurationTest.java`.
-- Create: `.../test/java/com/edem/blobhelper/service/SpringTransactionalBlobDeduplicationServiceTest.java`.
-- Create: `.../test/java/com/edem/blobhelper/autoconfigure/BlobHelperContextStartTest.java`.
+- Create: `.../test/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jPersistenceAutoConfigurationTest.java`.
+- Create: `.../test/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfigurationTest.java`.
+- Create: `.../test/java/com/edem/dedup4j/service/SpringTransactionalBlobDeduplicationServiceTest.java`.
+- Create: `.../test/java/com/edem/dedup4j/autoconfigure/Dedup4jContextStartTest.java`.
 
 ## Acceptance Criteria (from Q4)
 
 - [ ] **AssetContentMutationServiceTest.duplicateInsertEscapesForSpringRetry:** a SQL-state `23505` becomes `DuplicateContentIdentityException` without calling `EntityManager.getTransaction()`.
-- [ ] **BlobHelperPersistenceAutoConfigurationTest.embeddedInitializesSchema:** default mode creates `blob_helper_asset_content` in H2.
-- [ ] **BlobHelperPersistenceAutoConfigurationTest.neverDoesNotMutateSchema:** `never` leaves the database unchanged and reports the packaged migration path.
-- [ ] **BlobHelperPersistenceAutoConfigurationTest.alwaysInitializesExternalDataSource:** explicit `always` runs the changelog even when the data source is not classified as embedded.
-- [ ] **BlobHelperServiceAutoConfigurationTest.registersDefaults:** repository, mutation, reference-count, hasher, key strategy, metrics, and the public transactional deduplication service exist once.
-- [ ] **BlobHelperServiceAutoConfigurationTest.applicationBeansWin:** each application-provided collaborator backs off only its corresponding default.
+- [ ] **Dedup4jPersistenceAutoConfigurationTest.embeddedInitializesSchema:** default mode creates `blob_helper_asset_content` in H2.
+- [ ] **Dedup4jPersistenceAutoConfigurationTest.neverDoesNotMutateSchema:** `never` leaves the database unchanged and reports the packaged migration path.
+- [ ] **Dedup4jPersistenceAutoConfigurationTest.alwaysInitializesExternalDataSource:** explicit `always` runs the changelog even when the data source is not classified as embedded.
+- [ ] **Dedup4jServiceAutoConfigurationTest.registersDefaults:** repository, mutation, reference-count, hasher, key strategy, metrics, and the public transactional deduplication service exist once.
+- [ ] **Dedup4jServiceAutoConfigurationTest.applicationBeansWin:** each application-provided collaborator backs off only its corresponding default.
 - [ ] **SpringTransactionalBlobDeduplicationServiceTest.retriesDuplicateInFreshTransaction:** a duplicate insert rolls back and retries once in a new transaction.
-- [ ] **BlobHelperContextStartTest.startsWithOnlyDataSourceJpaAndProperties:** the full upload context starts with no Blob Helper `@Bean` declarations.
-- [ ] **BlobHelperContextStartTest.concurrentDuplicateHasOneRowAndTwoReferences:** two successful identical calls converge on one metadata row with reference count two.
+- [ ] **Dedup4jContextStartTest.startsWithOnlyDataSourceJpaAndProperties:** the full upload context starts with no Blob Helper `@Bean` declarations.
+- [ ] **Dedup4jContextStartTest.concurrentDuplicateHasOneRowAndTwoReferences:** two successful identical calls converge on one metadata row with reference count two.
 
 ## Out of Scope (from Q5)
 
@@ -158,8 +158,8 @@ Expected: ordinary insert/retain tests and the transaction-neutral duplicate sig
 
 - Modify: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java`
 - Modify: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java`
-- Create: `blob-helper-spring-boot-starter/src/main/resources/db/blob-helper/db.changelog-master.yaml`
-- Create: `blob-helper-spring-boot-starter/src/main/resources/db/blob-helper/changes/001-create-asset-content.yaml`
+- Create: `dedup4j-spring-boot-starter/src/main/resources/db/blob-helper/db.changelog-master.yaml`
+- Create: `dedup4j-spring-boot-starter/src/main/resources/db/blob-helper/changes/001-create-asset-content.yaml`
 
 - [ ] **Step 1: Change and test the table name**
 
@@ -195,7 +195,7 @@ The `001` changeset must create `blob_helper_asset_content` with columns matchin
 Extend `AssetContentMappingTest` to assert the exact table/constraint/index names. Add a test that runs the changelog against H2, boots Hibernate with `hibernate.hbm2ddl.auto=validate`, and obtains an `EntityManagerFactory` successfully.
 
 ```bash
-./mvnw -pl dedup4j-jpa,blob-helper-spring-boot-starter -am test -Dtest=AssetContentMappingTest,BlobHelperPersistenceAutoConfigurationTest
+./mvnw -pl dedup4j-jpa,dedup4j-spring-boot-starter -am test -Dtest=AssetContentMappingTest,Dedup4jPersistenceAutoConfigurationTest
 ```
 
 Expected: entity mapping and packaged schema agree.
@@ -204,12 +204,12 @@ Expected: entity mapping and packaged schema agree.
 
 **Files:**
 
-- Modify: `blob-helper-spring-boot-starter/pom.xml`
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/persistence/SchemaInitialization.java`
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperProperties.java`
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperSchemaValidator.java`
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperPersistenceAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperPersistenceAutoConfigurationTest.java`
+- Modify: `dedup4j-spring-boot-starter/pom.xml`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/SchemaInitialization.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jSchemaValidator.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jPersistenceAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jPersistenceAutoConfigurationTest.java`
 
 - [ ] **Step 1: Add Spring persistence dependencies**
 
@@ -225,17 +225,17 @@ public enum SchemaInitialization {
 }
 ```
 
-Add `Persistence` to `BlobHelperProperties` with:
+Add `Persistence` to `Dedup4jProperties` with:
 
 ```java
 private SchemaInitialization initializeSchema = SchemaInitialization.EMBEDDED;
 ```
 
-Bind from `blob-helper.persistence.initialize-schema` and test all three relaxed-binding values.
+Bind from `dedup4j.persistence.initialize-schema` and test all three relaxed-binding values.
 
 - [ ] **Step 3: Implement schema initialization policy**
 
-Annotate `BlobHelperPersistenceAutoConfiguration` with `@AutoConfiguration` and `@EntityScan(basePackageClasses = AssetContent.class)`. Register a named `SpringLiquibase blobHelperLiquibase` and compute its `shouldRun` value as:
+Annotate `Dedup4jPersistenceAutoConfiguration` with `@AutoConfiguration` and `@EntityScan(basePackageClasses = AssetContent.class)`. Register a named `SpringLiquibase blobHelperLiquibase` and compute its `shouldRun` value as:
 
 ```java
 mode == SchemaInitialization.ALWAYS
@@ -257,7 +257,7 @@ liquibase.setShouldRun(shouldInitialize);
 
 - [ ] **Step 4: Validate the schema after optional initialization**
 
-`BlobHelperSchemaValidator` receives a `JdbcTemplate` and calls:
+`Dedup4jSchemaValidator` receives a `JdbcTemplate` and calls:
 
 ```sql
 select hash_algorithm, content_hash, size_bytes, storage_provider,
@@ -281,15 +281,15 @@ Use H2 for `EMBEDDED`; wrap an H2 `DataSource` so Spring does not classify it as
 Run:
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=BlobHelperPersistenceAutoConfigurationTest,BlobHelperPropertiesTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=Dedup4jPersistenceAutoConfigurationTest,Dedup4jPropertiesTest
 ```
 
 ### Task 4: Auto-register the default persistence and domain collaborators
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/service/BlobHelperServiceAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/service/BlobHelperServiceAutoConfigurationTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfigurationTest.java`
 
 - [ ] **Step 1: Write an application-context bean inventory test**
 
@@ -301,7 +301,7 @@ AssetContentMutationService
 ReferenceCountService
 ContentHasher
 ObjectKeyStrategy
-BlobHelperMetrics
+Dedup4jMetrics
 BlobDeduplicationService
 ```
 
@@ -317,7 +317,7 @@ new AssetContentMutationService(entityManager, repository)
 new ReferenceCountService(repository, blobStorage)
 new Sha256ContentHasher()
 new HashObjectKeyStrategy(properties.getStorage().getKeyPrefix())
-new BlobHelperMetrics(meterRegistryProvider.getIfAvailable())
+new Dedup4jMetrics(meterRegistryProvider.getIfAvailable())
 ```
 
 Do not register `DefaultBlobDeduplicationService` separately. Task 5 constructs it as an internal delegate and exposes only its transactional decorator, preventing two `BlobDeduplicationService` candidates.
@@ -325,7 +325,7 @@ Do not register `DefaultBlobDeduplicationService` separately. Task 5 constructs 
 - [ ] **Step 3: Run the bean graph test**
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=BlobHelperServiceAutoConfigurationTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=Dedup4jServiceAutoConfigurationTest
 ```
 
 Expected: defaults assemble once and granular application overrides win.
@@ -334,9 +334,9 @@ Expected: defaults assemble once and granular application overrides win.
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/SpringTransactionalBlobDeduplicationService.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/SpringTransactionalBlobDeduplicationServiceTest.java`
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/service/BlobHelperServiceAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/SpringTransactionalBlobDeduplicationService.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/SpringTransactionalBlobDeduplicationServiceTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfiguration.java`
 
 - [ ] **Step 1: Test transaction boundaries before implementation**
 
@@ -401,15 +401,15 @@ Expose one bean with `@ConditionalOnMissingBean(BlobDeduplicationService.class)`
 - [ ] **Step 4: Run service transaction tests**
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=SpringTransactionalBlobDeduplicationServiceTest,BlobHelperServiceAutoConfigurationTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=SpringTransactionalBlobDeduplicationServiceTest,Dedup4jServiceAutoConfigurationTest
 ```
 
 ### Task 6: Register ordering and prove zero-boilerplate startup
 
 **Files:**
 
-- Modify: `blob-helper-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/BlobHelperContextStartTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/Dedup4jContextStartTest.java`
 
 - [ ] **Step 1: Register persistence and service configurations**
 
@@ -417,9 +417,9 @@ Use this effective order:
 
 ```text
 provider storage auto-configurations
-BlobHelperPersistenceAutoConfiguration
-BlobHelperServiceAutoConfiguration
-BlobHelperAutoConfiguration
+Dedup4jPersistenceAutoConfiguration
+Dedup4jServiceAutoConfiguration
+Dedup4jAutoConfiguration
 ```
 
 Use `before`/`after` attributes on the auto-configurations as well as import order so ordering is explicit.
@@ -429,8 +429,8 @@ Use `before`/`after` attributes on the auto-configurations as well as import ord
 The fixture supplies only a Boot-managed H2 data source/JPA setup plus:
 
 ```text
-blob-helper.storage.provider=local
-blob-helper.storage.local.root-directory=<JUnit temp directory>
+dedup4j.storage.provider=local
+dedup4j.storage.local.root-directory=<JUnit temp directory>
 ```
 
 It must not declare a Blob Helper repository, hasher, key strategy, service, transaction wrapper, entity scan, or schema bean.
@@ -450,7 +450,7 @@ exactly one result is duplicate after the race settles
 - [ ] **Step 4: Run starter and JPA verification**
 
 ```bash
-./mvnw --batch-mode --no-transfer-progress -pl dedup4j-jpa,blob-helper-spring-boot-starter -am verify
+./mvnw --batch-mode --no-transfer-progress -pl dedup4j-jpa,dedup4j-spring-boot-starter -am verify
 ```
 
 Expected: `BUILD SUCCESS`, including schema and context-start coverage.

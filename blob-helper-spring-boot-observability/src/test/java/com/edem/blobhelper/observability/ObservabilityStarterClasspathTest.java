@@ -1,4 +1,4 @@
-package com.edem.blobhelper.observability;
+package com.edem.dedup4j.observability;
 
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration;
 import com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration;

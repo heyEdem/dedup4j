@@ -10,7 +10,7 @@ The current integration requires consumers to add the base starter and a provide
 
 ## Decision
 
-`blob-helper-spring-boot-starter` is the single standard consumer dependency and transitively includes the local, S3, and Azure adapter modules. Provider implementation code remains inside those modules. The provider auto-configuration planned for PLAN-010 will create only the provider selected by `blob-helper.storage.provider`, reuse an application-provided provider client when available, and otherwise create the client from standard SDK configuration.
+`dedup4j-spring-boot-starter` is the single standard consumer dependency and transitively includes the local, S3, and Azure adapter modules. Provider implementation code remains inside those modules. The provider auto-configuration planned for PLAN-010 will create only the provider selected by `dedup4j.storage.provider`, reuse an application-provided provider client when available, and otherwise create the client from standard SDK configuration.
 
 For S3, provider and bucket are the only Blob Helper-required properties. Region, endpoint, and path style are optional overrides. Dashboard and management modules remain outside this starter.
 
@@ -28,7 +28,7 @@ For S3, provider and bucket are the only Blob Helper-required properties. Region
 
 | Concern | Owner |
 |---|---|
-| Consumer dependency aggregation | `blob-helper-spring-boot-starter/pom.xml` |
+| Consumer dependency aggregation | `dedup4j-spring-boot-starter/pom.xml` |
 | Provider conditions and property binding | starter auto-configuration package |
 | AWS implementation | `dedup4j-storage-s3` |
 | Azure implementation | `dedup4j-storage-azure` |

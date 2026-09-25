@@ -1,6 +1,6 @@
 package com.edem.blobhelper.management;
 
-import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
+import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -19,20 +19,20 @@ import java.util.UUID;
 public class BlobHelperManagementController {
 
     private final BlobHelperManagementProperties managementProperties;
-    private final BlobHelperProperties blobHelperProperties;
+    private final Dedup4jProperties dedup4jProperties;
     private final MeterRegistry meterRegistry;
     private final AssetContentRepository contentRepository;
     private final BlobHelperManagementSnapshot.FailureSource failureSource;
 
     public BlobHelperManagementController(
             BlobHelperManagementProperties managementProperties,
-            BlobHelperProperties blobHelperProperties,
+            Dedup4jProperties dedup4jProperties,
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<AssetContentRepository> contentRepository,
             ObjectProvider<BlobHelperManagementSnapshot.FailureSource> failureSource
     ) {
         this.managementProperties = managementProperties;
-        this.blobHelperProperties = blobHelperProperties;
+        this.dedup4jProperties = dedup4jProperties;
         this.meterRegistry = meterRegistry.getIfAvailable();
         this.contentRepository = contentRepository.getIfAvailable();
         this.failureSource = failureSource.getIfAvailable(() -> since -> List.of());
@@ -55,11 +55,11 @@ public class BlobHelperManagementController {
     public BlobHelperManagementSnapshot.Metrics metrics() {
         List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll();
         return new BlobHelperManagementSnapshot.Metrics(
-                counter("blob.helper.uploads"),
-                counter("blob.helper.duplicates"),
-                counter("blob.helper.skipped.physical.writes"),
-                counter("blob.helper.bytes.accepted"),
-                counter("blob.helper.bytes.avoided"),
+                counter("dedup4j.uploads"),
+                counter("dedup4j.duplicates"),
+                counter("dedup4j.skipped.physical.writes"),
+                counter("dedup4j.bytes.accepted"),
+                counter("dedup4j.bytes.avoided"),
                 contents.size(),
                 contents.stream().mapToLong(AssetContent::getSizeBytes).sum());
     }
@@ -72,7 +72,7 @@ public class BlobHelperManagementController {
     }
 
     private String provider() {
-        String provider = blobHelperProperties.getStorage().getProvider();
+        String provider = dedup4jProperties.getStorage().getProvider();
         return provider == null || provider.isBlank() ? "unknown" : provider;
     }
 

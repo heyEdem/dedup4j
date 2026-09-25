@@ -74,7 +74,7 @@ Expected: `BUILD SUCCESS`; existing core and starter boundary tests continue to 
 
 - [x] **Step 2: Check dependency isolation**
 
-Run: `./mvnw dependency:tree -pl dedup4j-core` and `./mvnw dependency:tree -pl blob-helper-spring-boot-starter`
+Run: `./mvnw dependency:tree -pl dedup4j-core` and `./mvnw dependency:tree -pl dedup4j-spring-boot-starter`
 
 Expected: neither output contains `software.amazon.awssdk`; the S3 module is the only module that resolves the AWS SDK.
 

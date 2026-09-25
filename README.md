@@ -33,7 +33,7 @@ Many logical assets can point to one physical content record.
 ```text
 dedup4j-core
 dedup4j-jpa
-blob-helper-spring-boot-starter
+dedup4j-spring-boot-starter
 dedup4j-storage-s3
 dedup4j-storage-azure
 blob-helper-spring-boot-management  (optional local management API)
@@ -52,7 +52,7 @@ For a consumer application, add the single starter dependency:
 ```xml
 <dependency>
   <groupId>com.edem</groupId>
-  <artifactId>blob-helper-spring-boot-starter</artifactId>
+  <artifactId>dedup4j-spring-boot-starter</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
@@ -93,8 +93,8 @@ blob-helper:
       root-directory: ./blobs
 ```
 
-For S3, set `blob-helper.storage.provider=s3` and
-`blob-helper.storage.s3.bucket`. AWS's standard region and credential chains
+For S3, set `dedup4j.storage.provider=s3` and
+`dedup4j.storage.s3.bucket`. AWS's standard region and credential chains
 apply; `storage.s3.region`, `storage.s3.endpoint`, and
 `storage.s3.path-style` are optional overrides for AWS or S3-compatible stores.
 For Azure, set `storage.provider=azure`, `storage.azure.container`, and
@@ -115,7 +115,7 @@ Each collaborator can be replaced with an application bean of the same type.
 The consumer supplies its database driver and connection configuration; H2 is
 not a runtime dependency of the starter.
 
-`blob-helper.persistence.initialize-schema` controls the packaged Liquibase
+`dedup4j.persistence.initialize-schema` controls the packaged Liquibase
 migration:
 
 | Mode | Behavior |
@@ -139,7 +139,7 @@ transaction retains the winning row, without replaying the input stream or
 writing storage again during recovery. These transactions do not include the
 application's logical records or make object storage and the database atomic.
 
-For common Spring upload flows, inject the auto-configured `BlobHelper` facade:
+For common Spring upload flows, inject the auto-configured `Dedup4j` facade:
 
 ```java
 public String uploadImage(MultipartFile file) {

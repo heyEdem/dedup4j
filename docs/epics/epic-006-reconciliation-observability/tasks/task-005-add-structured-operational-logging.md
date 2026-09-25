@@ -10,15 +10,15 @@ Log operational decisions without exposing full content hashes by default.
 
 ## Files
 
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/DefaultBlobDeduplicationService.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/observability/BlobHelperLoggingTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/DefaultBlobDeduplicationService.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/observability/Dedup4jLoggingTest.java`
 
 ## Steps
 
 - [x] Log content id, provider, object key, duplicate/new decision, and hash prefix.
 - [x] Do not add a separate full hash field by default.
 - [x] Log failed physical deletes for later reconciliation.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter -Dtest=BlobHelperLoggingTest test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter -Dtest=Dedup4jLoggingTest test`.
 
 ## Acceptance
 

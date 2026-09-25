@@ -10,15 +10,15 @@ Wire exactly one configured `BlobStorage` provider and fail clearly otherwise.
 
 ## Files
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/BlobHelperAutoConfigurationTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/Dedup4jAutoConfigurationTest.java`
 
 ## Steps
 
 - [x] Add conditional auto-configuration for a single `BlobStorage`.
 - [x] Fail startup for unsupported provider names.
 - [x] Fail startup for missing or ambiguous providers.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter -Dtest=BlobHelperAutoConfigurationTest test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter -Dtest=Dedup4jAutoConfigurationTest test`.
 
 ## Acceptance
 

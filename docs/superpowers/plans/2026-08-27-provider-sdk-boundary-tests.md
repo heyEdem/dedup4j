@@ -18,7 +18,7 @@
 
 - [x] **Step 1: Write the failing test**
 
-Parse the root reactor POM and each module POM. Assert that AWS coordinates occur only in `dedup4j-storage-s3`, Azure coordinates occur only in `dedup4j-storage-azure`, and neither provider coordinate occurs in `dedup4j-core` or `blob-helper-spring-boot-starter`.
+Parse the root reactor POM and each module POM. Assert that AWS coordinates occur only in `dedup4j-storage-s3`, Azure coordinates occur only in `dedup4j-storage-azure`, and neither provider coordinate occurs in `dedup4j-core` or `dedup4j-spring-boot-starter`.
 
 - [x] **Step 2: Run the boundary test to verify it fails**
 

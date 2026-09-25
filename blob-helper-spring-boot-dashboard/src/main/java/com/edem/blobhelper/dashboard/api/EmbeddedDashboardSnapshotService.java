@@ -1,6 +1,6 @@
 package com.edem.blobhelper.dashboard.api;
 
-import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
+import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.blobhelper.management.BlobHelperManagementProperties;
@@ -12,33 +12,33 @@ import java.util.List;
 public class EmbeddedDashboardSnapshotService {
     private final MeterRegistry meterRegistry;
     private final AssetContentRepository contentRepository;
-    private final BlobHelperProperties blobHelperProperties;
+    private final Dedup4jProperties dedup4jProperties;
     private final BlobHelperManagementProperties managementProperties;
 
     public EmbeddedDashboardSnapshotService(
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<AssetContentRepository> contentRepository,
-            BlobHelperProperties blobHelperProperties,
+            Dedup4jProperties dedup4jProperties,
             BlobHelperManagementProperties managementProperties) {
         this.meterRegistry = meterRegistry.getIfAvailable();
         this.contentRepository = contentRepository.getIfAvailable();
-        this.blobHelperProperties = blobHelperProperties;
+        this.dedup4jProperties = dedup4jProperties;
         this.managementProperties = managementProperties;
     }
 
     public Snapshot current() {
         List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll();
-        long uploads = counter("blob.helper.uploads");
-        long duplicates = counter("blob.helper.duplicates");
+        long uploads = counter("dedup4j.uploads");
+        long duplicates = counter("dedup4j.duplicates");
         return new Snapshot(
                 managementProperties.getInstanceId(), managementProperties.getInstanceName(), provider(),
-                uploads, duplicates, counter("blob.helper.skipped.physical.writes"),
-                counter("blob.helper.bytes.accepted"), counter("blob.helper.bytes.avoided"),
+                uploads, duplicates, counter("dedup4j.skipped.physical.writes"),
+                counter("dedup4j.bytes.accepted"), counter("dedup4j.bytes.avoided"),
                 contents.size(), contents.stream().mapToLong(AssetContent::getSizeBytes).sum());
     }
 
     private String provider() {
-        String provider = blobHelperProperties.getStorage().getProvider();
+        String provider = dedup4jProperties.getStorage().getProvider();
         return provider == null || provider.isBlank() ? "unknown" : provider;
     }
 

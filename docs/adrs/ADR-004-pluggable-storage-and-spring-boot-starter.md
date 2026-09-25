@@ -28,7 +28,7 @@ Applications interact with `BlobDeduplicationService`, not provider-specific API
 | Concern | Owner |
 |---------|-------|
 | Provider-neutral contracts | `dedup4j-core` |
-| Auto-configuration and properties | `blob-helper-spring-boot-starter` |
+| Auto-configuration and properties | `dedup4j-spring-boot-starter` |
 | S3 SDK code | `dedup4j-storage-s3` |
 | Azure SDK code | `dedup4j-storage-azure` |
 | Local filesystem storage | `dedup4j-storage-local` |

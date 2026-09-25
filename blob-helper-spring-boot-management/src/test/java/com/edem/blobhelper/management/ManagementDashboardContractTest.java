@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ManagementDashboardContractTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(BlobHelperManagementAutoConfiguration.class))
-            .withPropertyValues("blob-helper.management.enabled=true", "blob-helper.storage.provider=local",
+            .withPropertyValues("blob-helper.management.enabled=true", "dedup4j.storage.provider=local",
                     "blob-helper.management.instance-id=11111111-1111-1111-1111-111111111111",
                     "blob-helper.management.instance-name=orders");
 

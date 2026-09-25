@@ -54,7 +54,7 @@ class ProviderDependencyBoundaryTest {
         }
 
         ModulePom starter = modulePoms.stream()
-                .filter(modulePom -> modulePom.name().equals("blob-helper-spring-boot-starter"))
+                .filter(modulePom -> modulePom.name().equals("dedup4j-spring-boot-starter"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Starter POM is not part of the Maven reactor"));
         Set<String> starterDependencies = declaredDependencies(starter.path()).stream()

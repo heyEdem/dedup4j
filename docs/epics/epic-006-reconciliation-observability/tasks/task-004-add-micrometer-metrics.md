@@ -10,15 +10,15 @@ Expose metrics for upload volume, deduplication savings, storage latency, delete
 
 ## Files
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/observability/BlobHelperMetrics.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/observability/BlobHelperMetricsTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/observability/Dedup4jMetrics.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/observability/Dedup4jMetricsTest.java`
 
 ## Steps
 
 - [x] Add counters for uploads, duplicates, skipped physical writes, accepted bytes, and avoided bytes.
 - [x] Add timers for hashing and storage writes.
 - [x] Add counters for storage delete failures and repairs.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter -Dtest=BlobHelperMetricsTest test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter -Dtest=Dedup4jMetricsTest test`.
 
 ## Acceptance
 

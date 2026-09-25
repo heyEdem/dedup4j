@@ -1,6 +1,6 @@
 package com.edem.blobhelper.dashboard.autoconfigure;
 
-import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
+import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardController;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardSnapshotService;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardView;
@@ -27,9 +27,9 @@ public class BlobHelperDashboardAutoConfiguration {
     EmbeddedDashboardSnapshotService embeddedDashboardSnapshotService(
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
-            BlobHelperProperties blobHelperProperties,
+            Dedup4jProperties dedup4jProperties,
             BlobHelperManagementProperties managementProperties) {
-        return new EmbeddedDashboardSnapshotService(meterRegistry, contentRepository, blobHelperProperties, managementProperties);
+        return new EmbeddedDashboardSnapshotService(meterRegistry, contentRepository, dedup4jProperties, managementProperties);
     }
 
     @Bean

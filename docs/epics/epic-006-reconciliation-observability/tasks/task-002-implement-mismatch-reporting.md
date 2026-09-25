@@ -10,8 +10,8 @@ Compare stored `ref_count` values with application-provided logical counts.
 
 ## Files
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/reconcile/ReconciliationService.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/reconcile/ReconciliationServiceTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationService.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/reconcile/ReconciliationServiceTest.java`
 
 ## Steps
 
@@ -19,7 +19,7 @@ Compare stored `ref_count` values with application-provided logical counts.
 - [x] Load physical content metadata.
 - [x] Ask the application count source for expected counts.
 - [x] Return mismatch reports without mutating the database.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter -Dtest=ReconciliationServiceTest test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter -Dtest=ReconciliationServiceTest test`.
 
 ## Acceptance
 

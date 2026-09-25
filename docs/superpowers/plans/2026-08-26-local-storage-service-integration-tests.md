@@ -13,7 +13,7 @@
 ### Task 1: Add the local adapter test dependency
 
 **Files:**
-- Modify: `blob-helper-spring-boot-starter/pom.xml`
+- Modify: `dedup4j-spring-boot-starter/pom.xml`
 
 - [x] **Step 1: Add the test-scoped reactor dependency**
 
@@ -21,14 +21,14 @@ Add `com.edem:dedup4j-storage-local:${project.version}` with `<scope>test</scope
 
 - [x] **Step 2: Verify the dependency resolves**
 
-Run: `./mvnw -pl blob-helper-spring-boot-starter -am -DskipTests test-compile`
+Run: `./mvnw -pl dedup4j-spring-boot-starter -am -DskipTests test-compile`
 
 Expected: `BUILD SUCCESS` and compilation of the starter test sources.
 
 ### Task 2: Write the failing service integration test
 
 **Files:**
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/LocalStorageDeduplicationIntegrationTest.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/LocalStorageDeduplicationIntegrationTest.java`
 
 - [x] **Step 1: Define the end-to-end test**
 
@@ -59,7 +59,7 @@ Use one active transaction for the complete flow, roll it back in `@AfterEach`, 
 
 - [x] **Step 2: Run the focused test to verify the expected failure**
 
-Run: `./mvnw -pl blob-helper-spring-boot-starter -am -Dtest=LocalStorageDeduplicationIntegrationTest test`
+Run: `./mvnw -pl dedup4j-spring-boot-starter -am -Dtest=LocalStorageDeduplicationIntegrationTest test`
 
 Expected: the test initially fails to compile or execute until the dependency and test wiring are present; after the dependency is added, any remaining failure must identify a real test/setup issue rather than an unresolved class.
 
@@ -72,7 +72,7 @@ Expected: the test initially fails to compile or execute until the dependency an
 
 - [x] **Step 1: Run the focused test after implementation**
 
-Run: `./mvnw -pl blob-helper-spring-boot-starter -am -Dtest=LocalStorageDeduplicationIntegrationTest test`
+Run: `./mvnw -pl dedup4j-spring-boot-starter -am -Dtest=LocalStorageDeduplicationIntegrationTest test`
 
 Expected: `BUILD SUCCESS`; the test proves one physical file for two logical references and deletion only after the second release.
 
@@ -91,8 +91,8 @@ Run: `git diff HEAD~1 --name-only` after committing the implementation, then re-
 Run:
 
 ```bash
-git add blob-helper-spring-boot-starter/pom.xml \
-  blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/LocalStorageDeduplicationIntegrationTest.java \
+git add dedup4j-spring-boot-starter/pom.xml \
+  dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/LocalStorageDeduplicationIntegrationTest.java \
   docs/taskindex.md docs/implementation.md docs/changelog.md \
   docs/superpowers/plans/2026-08-26-local-storage-service-integration-tests.md
 git commit -m "test: cover local storage service integration"

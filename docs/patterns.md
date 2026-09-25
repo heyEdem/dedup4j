@@ -22,7 +22,7 @@
 
 - Error handling: not enough implemented code to determine project-specific error handling.
 - Async: not present in current implementation.
-- Provider dependency injection: starter-owned auto-configurations activate on `blob-helper.storage.provider`, bind settings independently, and back off their entire default graph for an application `BlobStorage`. Individual provider properties and clients also use missing-bean conditions. Final validation counts storage beans by type rather than bean name.
+- Provider dependency injection: starter-owned auto-configurations activate on `dedup4j.storage.provider`, bind settings independently, and back off their entire default graph for an application `BlobStorage`. Individual provider properties and clients also use missing-bean conditions. Final validation counts storage beans by type rather than bean name.
 - S3 lifecycle: Spring owns client-bean cleanup; the auto-configured storage adapter disables inferred destruction to avoid closing the same client twice.
 - Validation: constructors reject null or blank required text and invalid negative sizes before state crosses a module boundary.
 - Testing: current tests are JUnit Jupiter tests with package-private test classes.

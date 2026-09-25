@@ -98,12 +98,12 @@ Applications can switch storage providers through dependencies and configuration
 
 **Q3 - Where should this logic live?**
 - Provider-neutral contracts live in `dedup4j-core`.
-- Auto-configuration and properties live in `blob-helper-spring-boot-starter`.
+- Auto-configuration and properties live in `dedup4j-spring-boot-starter`.
 - Provider SDK code lives only in provider modules.
 
 **Q4 - What test proves the rule?**
-- `BlobHelperAutoConfigurationTest.wiresConfiguredProvider`: given `blob-helper.storage.provider=local`, when context starts, then the local `BlobStorage` bean is selected.
-- `BlobHelperAutoConfigurationTest.failsForUnsupportedProvider`: given an unsupported provider, when context starts, then startup fails with a clear configuration error.
+- `Dedup4jAutoConfigurationTest.wiresConfiguredProvider`: given `dedup4j.storage.provider=local`, when context starts, then the local `BlobStorage` bean is selected.
+- `Dedup4jAutoConfigurationTest.failsForUnsupportedProvider`: given an unsupported provider, when context starts, then startup fails with a clear configuration error.
 - `LocalBlobStorageIntegrationTest.putGetDeleteRoundTrip`: given local storage config, when storing, reading, and deleting a blob, then filesystem state matches each operation.
 
 **Q5 - What should AI not touch?**
@@ -131,7 +131,7 @@ Reference count drift, failed deletes, and operational savings are detectable an
 **Q4 - What test proves the rule?**
 - `ReconciliationServiceTest.reportsReferenceCountMismatch`: given actual and expected counts differ, when reconciliation runs, then a mismatch report is returned.
 - `ReconciliationServiceTest.repairsOnlyWhenEnabled`: given repair disabled, when reconciliation finds drift, then no database mutation occurs.
-- `BlobHelperMetricsTest.recordsDuplicateAndSkippedUpload`: given a duplicate upload, then duplicate and skipped-upload metrics are incremented.
+- `Dedup4jMetricsTest.recordsDuplicateAndSkippedUpload`: given a duplicate upload, then duplicate and skipped-upload metrics are incremented.
 
 **Q5 - What should AI not touch?**
 - Do not enable scheduled repairs by default.

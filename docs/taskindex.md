@@ -40,7 +40,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | Full test suite | `./mvnw test` |
 | Core module tests | `./mvnw -pl dedup4j-core test` |
 | JPA module tests | `./mvnw -pl dedup4j-jpa test` |
-| Starter tests | `./mvnw -pl blob-helper-spring-boot-starter test` |
+| Starter tests | `./mvnw -pl dedup4j-spring-boot-starter test` |
 | Local storage tests | `./mvnw -pl dedup4j-storage-local test` |
 | Azure module tests | `./mvnw -pl dedup4j-storage-azure test` |
 | Dependency boundary checks | `./mvnw test -Dtest='*BoundaryTest'` |
@@ -143,7 +143,7 @@ Checkbox states: `[x]` done · `[~]` in progress · `[ ]` pending. Task IDs are 
 | 2026-08-26 | Completed task 4.3 with normalized key resolution, containment checks against the storage root, and rejection of `../`, absolute-path, and self-resolving keys before file IO. Epic 4 is in progress. |
 | 2026-08-26 | Completed task 4.2 with the filesystem `LocalBlobStorage` adapter implementing put/get/idempotent delete/exists against a configurable root directory. Epic 4 is in progress. |
 | 2026-08-26 | Completed task 4.1 with the `dedup4j-storage-local` reactor module, a `dedup4j-core` dependency with no cloud SDKs, and configurable root-directory properties. Epic 4 is in progress. |
-| 2026-08-26 | Completed task 3.5 with `BlobHelperAutoConfiguration`, registered via `AutoConfiguration.imports`, and a startup validator that fails clearly for unsupported, missing, and ambiguous providers. Epic 3 is complete. |
+| 2026-08-26 | Completed task 3.5 with `Dedup4jAutoConfiguration`, registered via `AutoConfiguration.imports`, and a startup validator that fails clearly for unsupported, missing, and ambiguous providers. Epic 3 is complete. |
 | 2026-08-25 | Completed task 3.4 with pre-write content identity lookup, lock-aware duplicate reference retention, and no-op physical storage for duplicate uploads. |
 | 2026-08-24 | Completed task 3.3 with buffered upload hashing, deterministic object-key generation, one physical storage write, and `AssetContent` creation through the JPA create-or-retain service. |
 | 2026-08-22 | Completed task 3.2 with the provider-neutral `BlobDeduplicationService` contract, default retain/release/get facade, and missing-content coverage. |

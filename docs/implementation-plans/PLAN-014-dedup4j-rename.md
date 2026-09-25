@@ -17,7 +17,7 @@
 | Product display name | `dedup4j` |
 | `blob-helper` artifact/module/path prefix | `dedup4j` |
 | `com.edem.blobhelper` package | `com.edem.dedup4j` |
-| `BlobHelper` class-name segment | `Dedup4j` |
+| `Dedup4j` class-name segment | `Dedup4j` |
 | `blobHelper` variable/bean segment | `dedup4j` |
 | `blob_helper` SQL/identifier prefix | `dedup4j` |
 | `BLOB_HELPER` identifier prefix | `DEDUP4J` |
@@ -168,7 +168,7 @@ Per Edem’s execution instruction, implement and verify one module per commit, 
 - [x] Local storage module — clean reactor verify: 189 tests, zero failures/errors.
 - [x] S3 module — clean reactor verify: 189 tests, zero failures/errors.
 - [x] Azure module — clean reactor verify: 189 tests, zero failures/errors.
-- [ ] Spring Boot starter
+- [x] Spring Boot starter — clean reactor verify: 189 tests, zero failures/errors.
 - [ ] Management module
 - [ ] Embedded dashboard module
 - [ ] Observability aggregate

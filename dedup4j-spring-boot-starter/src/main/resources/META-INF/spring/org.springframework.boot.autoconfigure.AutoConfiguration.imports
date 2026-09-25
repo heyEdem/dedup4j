@@ -1,0 +1,6 @@
+com.edem.dedup4j.autoconfigure.storage.LocalBlobStorageAutoConfiguration
+com.edem.dedup4j.autoconfigure.storage.S3BlobStorageAutoConfiguration
+com.edem.dedup4j.autoconfigure.storage.AzureBlobStorageAutoConfiguration
+com.edem.dedup4j.autoconfigure.persistence.Dedup4jPersistenceAutoConfiguration
+com.edem.dedup4j.autoconfigure.service.Dedup4jServiceAutoConfiguration
+com.edem.dedup4j.autoconfigure.Dedup4jAutoConfiguration

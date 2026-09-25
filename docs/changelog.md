@@ -5,7 +5,7 @@
 - Resolved the documentation conflicts while preserving the Boot 4.1.1/Jackson 3 migration and the PLAN-011/012/013 implementation history.
 - Updated persistence auto-configuration to Boot 4 package locations and public Liquibase configuration APIs, and kept invalid provider selection errors ahead of service construction.
 - Updated Spring Boot 4 test fixtures for relocated entity scanning and Spring Framework 7 transaction status APIs.
-- Modules affected: `blob-helper-spring-boot-starter`, root build metadata, and project documentation.
+- Modules affected: `dedup4j-spring-boot-starter`, root build metadata, and project documentation.
 
 ## 2026-09-07 — Add combined observability starter
 
@@ -17,9 +17,9 @@
 ## 2026-09-07 — Add friendly upload facade, stable locations, and ordered batches
 
 - Added provider-neutral `BlobLocation` values and complete locations on new and duplicate `BlobReference` results, plus metadata-only location lookup through the transactional service.
-- Added the Spring-facing `BlobHelper` facade for multipart, path, byte-array, and described-stream uploads with size enforcement, and auto-configured it with application back-off.
+- Added the Spring-facing `Dedup4j` facade for multipart, path, byte-array, and described-stream uploads with size enforcement, and auto-configured it with application back-off.
 - Added ordered success/failure batch outcomes with continue-on-failure semantics and MVC usage coverage without introducing a library controller.
-- Modules affected: `dedup4j-core`, `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and project documentation.
+- Modules affected: `dedup4j-core`, `dedup4j-jpa`, `dedup4j-spring-boot-starter`, and project documentation.
 
 ## 2026-09-07 — Consumer JPA and guarded schema auto-configuration
 
@@ -27,14 +27,14 @@
 - Moved duplicate-key recovery across Spring `REQUIRES_NEW` transactions without replaying upload input or storage writes; retained framework-neutral JPA behavior and application-managed migration configuration.
 - Fixed local concurrent publication through same-directory temporary files and atomic replacement; added failed-stream preservation and maximum-filename coverage. Corrected the S3 client test proxy for Spring persistence lifecycle callbacks.
 - Updated consumer guidance, architecture/implementation indexes, patterns, decisions, and completion records. Legacy table data requires a separate application-managed transition.
-- Modules affected: `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and `dedup4j-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`, and `dedup4j-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
 
 ## 2026-09-05 — Auto-configure selected storage providers
 
 - Implemented PLAN-010 with nested local/S3/Azure settings, selected-provider client and storage defaults, application-client reuse, and complete back-off for application storage.
 - Required explicit provider selection and exactly one storage bean by type; Spring owns S3 client shutdown, and Azure exposes its existing client factory for shared construction.
 - Added provider context, client lifecycle, and automatic-discovery coverage. Full reactor verification passed: 137 tests, zero failures, errors, or skips.
-- Modules affected: `blob-helper-spring-boot-starter`, `dedup4j-storage-azure`, and consumer/project documentation.
+- Modules affected: `dedup4j-spring-boot-starter`, `dedup4j-storage-azure`, and consumer/project documentation.
 
 ## 2026-09-01 — Fix embedded dashboard root asset paths
 
@@ -82,7 +82,7 @@
 - Added structured upload decision logs for new and duplicate content with content ID, provider, object key, decision, size, and an explicit short hash prefix.
 - Added failed physical-delete logs with reconciliation context and SLF4J/Logback-backed coverage.
 - Completed Epic 6 (5/5); project scope is now 30/35 tasks complete.
-- Modules affected: `blob-helper-spring-boot-starter` and Epic 6 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-starter` and Epic 6 planning/status documentation.
 
 ## 2026-08-29 — Implement opt-in reconciliation repair
 
@@ -93,13 +93,13 @@
 
 - Added a read-only reconciliation service that compares stored reference counts with application-provided logical counts and reports omitted IDs as zero expected references.
 - Added a repository query for loading all physical content metadata and Hibernate/H2 integration coverage proving mismatch details and no database mutation.
-- Modules affected: `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and Epic 6 planning/status documentation.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`, and Epic 6 planning/status documentation.
 
 ## 2026-08-28 — Add reconciliation contracts
 
 - Added an application-owned logical reference count callback plus immutable validated reconciliation report and mismatch records.
 - Kept report generation independent from repair commands and consuming-application schema details.
-- Modules affected: `blob-helper-spring-boot-starter` and Epic 6 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-starter` and Epic 6 planning/status documentation.
 
 ## 2026-08-28 — Define local multi-instance dashboard
 
@@ -138,7 +138,7 @@
 
 - Added `dedup4j-storage-s3` to the Maven reactor with a module-local AWS SDK for Java 2.x BOM and S3 dependency.
 - Added configurable S3 properties for bucket, region, optional endpoint override, and path-style access, which defaults to disabled.
-- Verified AWS SDK isolation from `dedup4j-core` and `blob-helper-spring-boot-starter`; Epic 5 is in progress (1/5).
+- Verified AWS SDK isolation from `dedup4j-core` and `dedup4j-spring-boot-starter`; Epic 5 is in progress (1/5).
 - Modules affected: root reactor, `dedup4j-storage-s3`, and Epic 5 planning/status documentation.
 
 ## 2026-08-26 — Add local storage service integration tests
@@ -146,7 +146,7 @@
 - Added `LocalStorageDeduplicationIntegrationTest` covering the real service, JPA metadata, and temporary-directory local storage flow.
 - Verified service readback, duplicate uploads retaining one physical file, and physical deletion after the final reference release.
 - Added `dedup4j-storage-local` as a test-scoped starter dependency; Epic 4 is complete (4/4).
-- Modules affected: `blob-helper-spring-boot-starter`, `dedup4j-storage-local`, and Epic 4 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-starter`, `dedup4j-storage-local`, and Epic 4 planning/status documentation.
 
 ## 2026-08-26 — Add path traversal protection
 
@@ -171,35 +171,35 @@
 
 ## 2026-08-26 — Add provider auto-configuration validation
 
-- Added `BlobHelperAutoConfiguration` registered through Spring Boot `AutoConfiguration.imports`, enabling `BlobHelperProperties` and a startup provider validator.
+- Added `Dedup4jAutoConfiguration` registered through Spring Boot `AutoConfiguration.imports`, enabling `Dedup4jProperties` and a startup provider validator.
 - Startup now fails clearly for unsupported provider names, missing provider beans, selected providers without a matching bean (`<provider>BlobStorage` naming convention), and ambiguous multi-provider contexts.
 - Added `ApplicationContextRunner` coverage for provider selection and every failure mode; added test-scope `spring-boot-test` and AssertJ to the starter module.
-- Epic 3 is complete (5/5). Modules affected: `blob-helper-spring-boot-starter` and planning/status documentation.
+- Epic 3 is complete (5/5). Modules affected: `dedup4j-spring-boot-starter` and planning/status documentation.
 
 ## 2026-08-25 — Add duplicate-content upload orchestration
 
 - Added pre-write content identity lookup and lock-aware reference retention for duplicate uploads.
 - Duplicate uploads now skip `BlobStorage.put`, reuse the existing physical object, and return `BlobReference.duplicate = true`.
 - Added service coverage for one physical write, one metadata row, and `ref_count` increasing from one to two.
-- Modules affected: `blob-helper-spring-boot-starter` and Epic 3 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-starter` and Epic 3 planning/status documentation.
 
 ## 2026-08-24 — Add new-content upload orchestration
 
 - Added buffered upload hashing, deterministic object-key generation, provider-neutral storage writes, and JPA metadata creation through `DefaultBlobDeduplicationService`.
 - Added Hibernate/H2 service coverage for one physical write, one metadata row with `ref_count = 1`, and a non-duplicate `BlobReference`.
-- Modules affected: `blob-helper-spring-boot-starter` and Epic 3 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-starter` and Epic 3 planning/status documentation.
 
 ## 2026-08-22 — Add BlobDeduplicationService contract
 
 - Added the provider-neutral `BlobDeduplicationService` API and default retain/release/get facade.
 - Added missing-content contract coverage and starter dependencies on the core and JPA modules.
-- Modules affected: `blob-helper-spring-boot-starter` and Epic 3 planning/status documentation.
+- Modules affected: `dedup4j-spring-boot-starter` and Epic 3 planning/status documentation.
 
 ## 2026-08-21 — Add Spring Boot starter properties
 
-- Added the `blob-helper-spring-boot-starter` Maven module and `BlobHelperProperties` binding for storage, deduplication, and cleanup configuration.
+- Added the `dedup4j-spring-boot-starter` Maven module and `Dedup4jProperties` binding for storage, deduplication, and cleanup configuration.
 - Added Spring Boot binding coverage for provider selection, upload-size parsing, content-type validation, physical deletion, and disabled-by-default reconciliation.
-- Modules affected: root reactor, `blob-helper-spring-boot-starter`, and Epic 3 planning/status documentation.
+- Modules affected: root reactor, `dedup4j-spring-boot-starter`, and Epic 3 planning/status documentation.
 
 ## 2026-08-21 — Add concurrent duplicate upload integration test
 
@@ -278,7 +278,7 @@
 
 - Added optional Micrometer counters and timers for upload outcomes, deduplication savings, hashing and storage latency, delete failures, and reconciliation repairs.
 - Instrumented the starter service and reconciliation flow while preserving no-registry compatibility.
-- Modules affected: `blob-helper-spring-boot-starter`, Epic 6 planning/status documentation, and the living implementation indexes.
+- Modules affected: `dedup4j-spring-boot-starter`, Epic 6 planning/status documentation, and the living implementation indexes.
 ## 2026-09-01 — Align dashboard monitoring with demo console
 
 - Fixed dashboard polling compatibility with the demo management URL and explicit `since` parameter binding.
@@ -312,13 +312,13 @@
 
 - Upgraded the root Spring Boot BOM from 3.5.10 to 4.1.1 and removed obsolete Boot 3 database auto-configuration exclusions from provider discovery coverage.
 - Migrated the standalone dashboard to Boot 4 MVC/Jackson starters and Jackson 3's `tools.jackson` API while preserving metrics polling behavior.
-- Modules affected: root Maven reactor, `blob-helper-spring-boot-starter`, `blob-helper-dashboard`, and project architecture/implementation/decision documentation.
+- Modules affected: root Maven reactor, `dedup4j-spring-boot-starter`, `blob-helper-dashboard`, and project architecture/implementation/decision documentation.
 
 ## 2026-09-03 — Aggregate provider adapters in the standard starter
 
 - Made the Spring Boot starter the single consumer dependency for local, S3, and Azure storage adapters while preserving provider-local SDK ownership.
 - Added Maven dependency-convergence enforcement, Dependabot updates, and a pull-request dependency-review gate; documented the packaging contract and classpath/boundary tests, and repaired the task-index/ADR documentation references found during final review.
-- Modules affected: root Maven build, `blob-helper-spring-boot-starter`, `dedup4j-core` boundary tests, `.github` automation, and project documentation.
+- Modules affected: root Maven build, `dedup4j-spring-boot-starter`, `dedup4j-core` boundary tests, `.github` automation, and project documentation.
 
 ## 2026-09-25 — Rename core module to dedup4j
 
@@ -344,4 +344,9 @@
 ## 2026-09-25 — Rename azure module to dedup4j
 
 - Renamed the Azure adapter artifact and packages, consumer references, SDK ownership assertions, and affected documentation; in-process Azure contract tests passed.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename spring boot starter to dedup4j
+
+- Renamed the starter artifact, API facade, packages, Spring discovery registrations and bean names; updated configuration binding and metric producers/readers together. Corrected stale Binder test prefixes; full verification passed.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.

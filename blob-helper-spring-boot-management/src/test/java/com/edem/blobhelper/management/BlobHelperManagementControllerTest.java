@@ -24,7 +24,7 @@ class BlobHelperManagementControllerTest {
     void managementIsCreatedWhenExplicitlyEnabled() {
         contextRunner.withPropertyValues(
                         "blob-helper.management.enabled=true",
-                        "blob-helper.storage.provider=local")
+                        "dedup4j.storage.provider=local")
                 .run(context -> assertThat(context).hasSingleBean(BlobHelperManagementController.class));
     }
 

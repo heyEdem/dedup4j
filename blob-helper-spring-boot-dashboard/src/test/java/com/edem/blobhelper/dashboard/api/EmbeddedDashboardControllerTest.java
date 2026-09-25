@@ -1,6 +1,6 @@
 package com.edem.blobhelper.dashboard.api;
 
-import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
+import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardProperties;
 import com.edem.blobhelper.management.BlobHelperManagementProperties;
 import com.edem.dedup4j.jpa.AssetContentRepository;
@@ -24,7 +24,7 @@ class EmbeddedDashboardControllerTest {
     void servesReadOnlyDashboardViews() throws Exception {
         var management = new BlobHelperManagementProperties();
         var props = new BlobHelperDashboardProperties();
-        var service = new EmbeddedDashboardSnapshotService(empty(MeterRegistry.class), empty(AssetContentRepository.class), new BlobHelperProperties(), management);
+        var service = new EmbeddedDashboardSnapshotService(empty(MeterRegistry.class), empty(AssetContentRepository.class), new Dedup4jProperties(), management);
         var controller = new EmbeddedDashboardController(service, props, since -> List.of());
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
                 .setMessageConverters(new JacksonJsonHttpMessageConverter(JsonMapper.builder().build())).build();

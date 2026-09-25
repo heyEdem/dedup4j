@@ -31,7 +31,7 @@ plan.
 
 | Logic | Location |
 |-------|----------|
-| Reconciliation contracts | `blob-helper-spring-boot-starter/src/main/java/.../reconcile` |
+| Reconciliation contracts | `dedup4j-spring-boot-starter/src/main/java/.../reconcile` |
 | Reference count queries/updates | `dedup4j-jpa` |
 | Metrics and logs | Starter service orchestration |
 | Application logical count input | App-provided callback/query adapter |
@@ -40,8 +40,8 @@ plan.
 
 - [x] **ReconciliationServiceTest.reportsReferenceCountMismatch:** Given actual and expected counts differ, when reconciliation runs, then a mismatch report is returned.
 - [x] **ReconciliationServiceTest.repairsOnlyWhenEnabled:** Given repair disabled, when reconciliation finds drift, then no database mutation occurs.
-- [x] **BlobHelperMetricsTest.recordsDuplicateAndSkippedUpload:** Given a duplicate upload, then duplicate and skipped-upload metrics are incremented.
-- [x] **BlobHelperLoggingTest.logsHashPrefixOnlyByDefault:** Given an upload, then logs include an explicit hash prefix and do not add a separate full content hash field.
+- [x] **Dedup4jMetricsTest.recordsDuplicateAndSkippedUpload:** Given a duplicate upload, then duplicate and skipped-upload metrics are incremented.
+- [x] **Dedup4jLoggingTest.logsHashPrefixOnlyByDefault:** Given an upload, then logs include an explicit hash prefix and do not add a separate full content hash field.
 
 ## Out of Scope (from Q5)
 

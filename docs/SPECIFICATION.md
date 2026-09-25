@@ -122,7 +122,7 @@ Responsibilities:
 - reference count operations
 - reconciliation query support
 
-### blob-helper-spring-boot-starter
+### dedup4j-spring-boot-starter
 
 Spring integration module.
 
@@ -670,7 +670,7 @@ cloud credentials.
 The project is successful when another Spring Boot app can:
 
 1. add Blob Helper dependencies
-2. configure `blob-helper.storage.provider`
+2. configure `dedup4j.storage.provider`
 3. call one upload service
 4. store its own logical asset pointing to `AssetContent`
 5. avoid re-uploading identical bytes

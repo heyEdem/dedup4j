@@ -14,7 +14,7 @@ Blob Helper reuses the consuming application's `DataSource`, JPA `EntityManager`
 
 Public Blob Helper operations own Spring-managed metadata transactions. Each batch item uses an independent metadata transaction so one failure does not hide completed outcomes. Duplicate-key retry occurs across transaction boundaries and never manipulates `EntityTransaction` directly.
 
-Blob Helper stores metadata in clearly prefixed tables and ships versioned schema resources. `blob-helper.persistence.initialize-schema` supports `embedded` (default), `always`, and `never`. External databases are mutated only by `always`. SQLite is deferred as an optional single-instance adapter.
+Blob Helper stores metadata in clearly prefixed tables and ships versioned schema resources. `dedup4j.persistence.initialize-schema` supports `embedded` (default), `always`, and `never`. External databases are mutated only by `always`. SQLite is deferred as an optional single-instance adapter.
 
 ## Invariants (from Q2)
 
@@ -31,7 +31,7 @@ Blob Helper stores metadata in clearly prefixed tables and ships versioned schem
 | Concern | Owner |
 |---|---|
 | Entity and lock-aware repository behavior | `dedup4j-jpa` |
-| Spring bean and transaction orchestration | `blob-helper-spring-boot-starter` |
+| Spring bean and transaction orchestration | `dedup4j-spring-boot-starter` |
 | Schema properties, initialization, validation | starter persistence auto-configuration |
 | Versioned schema resources | starter `src/main/resources/db/blob-helper` |
 | Logical upload records | consuming application |

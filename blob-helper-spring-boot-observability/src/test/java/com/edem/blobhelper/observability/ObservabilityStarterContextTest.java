@@ -1,6 +1,6 @@
-package com.edem.blobhelper.observability;
+package com.edem.dedup4j.observability;
 
-import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
+import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardController;
 import com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration;
 import com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration;
@@ -98,8 +98,8 @@ class ObservabilityStarterContextTest {
     @Configuration(proxyBeanMethods = false)
     static class RequiredProperties {
         @Bean
-        BlobHelperProperties blobHelperProperties() {
-            return new BlobHelperProperties();
+        Dedup4jProperties dedup4jProperties() {
+            return new Dedup4jProperties();
         }
     }
 }

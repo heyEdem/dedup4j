@@ -1,6 +1,0 @@
-com.edem.blobhelper.autoconfigure.storage.LocalBlobStorageAutoConfiguration
-com.edem.blobhelper.autoconfigure.storage.S3BlobStorageAutoConfiguration
-com.edem.blobhelper.autoconfigure.storage.AzureBlobStorageAutoConfiguration
-com.edem.blobhelper.autoconfigure.persistence.BlobHelperPersistenceAutoConfiguration
-com.edem.blobhelper.autoconfigure.service.BlobHelperServiceAutoConfiguration
-com.edem.blobhelper.autoconfigure.BlobHelperAutoConfiguration

@@ -86,35 +86,35 @@ dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/ConcurrentUploadIntegrationTest.j
 Starter production and migrations:
 
 ```text
-blob-helper-spring-boot-starter/pom.xml
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperAutoConfiguration.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperProperties.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperPersistenceAutoConfiguration.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperSchemaValidator.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/persistence/SchemaInitialization.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/service/BlobHelperServiceAutoConfiguration.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/BlobReferences.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/DefaultBlobDeduplicationService.java
-blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/SpringTransactionalBlobDeduplicationService.java
-blob-helper-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
-blob-helper-spring-boot-starter/src/main/resources/db/blob-helper/db.changelog-master.yaml
-blob-helper-spring-boot-starter/src/main/resources/db/blob-helper/changes/001-create-asset-content.yaml
+dedup4j-spring-boot-starter/pom.xml
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jAutoConfiguration.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jPersistenceAutoConfiguration.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jSchemaValidator.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/persistence/SchemaInitialization.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfiguration.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/BlobReferences.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/DefaultBlobDeduplicationService.java
+dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/SpringTransactionalBlobDeduplicationService.java
+dedup4j-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+dedup4j-spring-boot-starter/src/main/resources/db/blob-helper/db.changelog-master.yaml
+dedup4j-spring-boot-starter/src/main/resources/db/blob-helper/changes/001-create-asset-content.yaml
 ```
 
 Starter tests and fixtures:
 
 ```text
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/BlobHelperContextStartTest.java
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/BlobHelperPropertiesTest.java
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/ProviderAutoConfigurationDiscoveryTest.java
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/persistence/BlobHelperPersistenceAutoConfigurationTest.java
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/service/BlobHelperServiceAutoConfigurationTest.java
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/storage/S3BlobStorageAutoConfigurationTest.java
-blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/SpringTransactionalBlobDeduplicationServiceTest.java
-blob-helper-spring-boot-starter/src/test/java/example/defaultpkg/DefaultEntity.java
-blob-helper-spring-boot-starter/src/test/java/example/explicit/ExplicitEntity.java
-blob-helper-spring-boot-starter/src/test/resources/consumer-default-changelog/db/changelog/db.changelog-master.yaml
-blob-helper-spring-boot-starter/src/test/resources/db/blob-helper/consumer-test-changelog.yaml
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/Dedup4jContextStartTest.java
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/Dedup4jPropertiesTest.java
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/ProviderAutoConfigurationDiscoveryTest.java
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/persistence/Dedup4jPersistenceAutoConfigurationTest.java
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/service/Dedup4jServiceAutoConfigurationTest.java
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/storage/S3BlobStorageAutoConfigurationTest.java
+dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/SpringTransactionalBlobDeduplicationServiceTest.java
+dedup4j-spring-boot-starter/src/test/java/example/defaultpkg/DefaultEntity.java
+dedup4j-spring-boot-starter/src/test/java/example/explicit/ExplicitEntity.java
+dedup4j-spring-boot-starter/src/test/resources/consumer-default-changelog/db/changelog/db.changelog-master.yaml
+dedup4j-spring-boot-starter/src/test/resources/db/blob-helper/consumer-test-changelog.yaml
 ```
 
 Local storage and documentation:

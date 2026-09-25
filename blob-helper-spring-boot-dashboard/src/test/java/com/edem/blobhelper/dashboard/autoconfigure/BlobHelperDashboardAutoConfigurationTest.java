@@ -1,6 +1,6 @@
 package com.edem.blobhelper.dashboard.autoconfigure;
 
-import com.edem.blobhelper.autoconfigure.BlobHelperProperties;
+import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.blobhelper.dashboard.api.EmbeddedDashboardController;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -28,6 +28,6 @@ class BlobHelperDashboardAutoConfigurationTest {
 
     @Configuration(proxyBeanMethods = false)
     static class RequiredProperties {
-        @Bean BlobHelperProperties blobHelperProperties() { return new BlobHelperProperties(); }
+        @Bean Dedup4jProperties dedup4jProperties() { return new Dedup4jProperties(); }
     }
 }

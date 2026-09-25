@@ -15,8 +15,8 @@ Applications should add dependencies, configure a provider, and call services. T
 
 ## What to Build
 
-- Add `blob-helper-spring-boot-starter` module.
-- Add `BlobHelperProperties` for `storage`, `deduplication`, and `cleanup` settings.
+- Add `dedup4j-spring-boot-starter` module.
+- Add `Dedup4jProperties` for `storage`, `deduplication`, and `cleanup` settings.
 - Add `BlobDeduplicationService` with `store`, `retain`, `release`, and `get`.
 - Add upload orchestration that hashes bytes, looks up content, writes new content, increments duplicates, and returns `BlobReference`.
 - Add conditional auto-configuration for exactly one `BlobStorage`.
@@ -26,17 +26,17 @@ Applications should add dependencies, configure a provider, and call services. T
 
 | Logic | Location |
 |-------|----------|
-| Properties binding | `blob-helper-spring-boot-starter/src/main/java/.../autoconfigure/BlobHelperProperties.java` |
-| Service API | `blob-helper-spring-boot-starter/src/main/java/.../service/BlobDeduplicationService.java` |
-| Upload/release orchestration | `blob-helper-spring-boot-starter/src/main/java/.../service/DefaultBlobDeduplicationService.java` |
-| Provider selection | `blob-helper-spring-boot-starter/src/main/java/.../autoconfigure` |
+| Properties binding | `dedup4j-spring-boot-starter/src/main/java/.../autoconfigure/Dedup4jProperties.java` |
+| Service API | `dedup4j-spring-boot-starter/src/main/java/.../service/BlobDeduplicationService.java` |
+| Upload/release orchestration | `dedup4j-spring-boot-starter/src/main/java/.../service/DefaultBlobDeduplicationService.java` |
+| Provider selection | `dedup4j-spring-boot-starter/src/main/java/.../autoconfigure` |
 
 ## Acceptance Criteria (from Q4)
 
 - [ ] **BlobDeduplicationServiceTest.storesNewContent:** Given unseen bytes, when `store` is called, then storage is written once and the content row has `ref_count = 1`.
 - [ ] **BlobDeduplicationServiceTest.reusesDuplicateContent:** Given existing bytes, when `store` is called again, then storage is not written and `ref_count` increases by one.
-- [ ] **BlobHelperAutoConfigurationTest.wiresConfiguredProvider:** Given `blob-helper.storage.provider=local`, when context starts, then the local `BlobStorage` bean is selected.
-- [ ] **BlobHelperAutoConfigurationTest.failsForUnsupportedProvider:** Given an unsupported provider, when context starts, then startup fails with a clear configuration error.
+- [ ] **Dedup4jAutoConfigurationTest.wiresConfiguredProvider:** Given `dedup4j.storage.provider=local`, when context starts, then the local `BlobStorage` bean is selected.
+- [ ] **Dedup4jAutoConfigurationTest.failsForUnsupportedProvider:** Given an unsupported provider, when context starts, then startup fails with a clear configuration error.
 
 ## Out of Scope (from Q5)
 

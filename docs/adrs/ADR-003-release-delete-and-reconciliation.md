@@ -27,7 +27,7 @@ Release operations lock the `AssetContent` row, prevent underflow, decrement `re
 | Concern | Owner |
 |---------|-------|
 | Row locking and underflow protection | `dedup4j-jpa` |
-| Release orchestration | `blob-helper-spring-boot-starter` service |
+| Release orchestration | `dedup4j-spring-boot-starter` service |
 | Physical deletion | `BlobStorage.delete` |
 | Drift reporting and repair | Reconciliation service |
 | Logical reference count input | Consuming application callback/query adapter |
