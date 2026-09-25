@@ -10,8 +10,8 @@ Implement the `BlobStorage` contract using the local filesystem.
 
 ## Files
 
-- Create: `blob-helper-storage-local/src/main/java/com/edem/blobhelper/storage/local/LocalBlobStorage.java`
-- Create: `blob-helper-storage-local/src/test/java/com/edem/blobhelper/storage/local/LocalBlobStorageIntegrationTest.java`
+- Create: `dedup4j-storage-local/src/main/java/com/edem/dedup4j/storage/local/LocalBlobStorage.java`
+- Create: `dedup4j-storage-local/src/test/java/com/edem/dedup4j/storage/local/LocalBlobStorageIntegrationTest.java`
 
 ## Steps
 
@@ -19,7 +19,7 @@ Implement the `BlobStorage` contract using the local filesystem.
 - [ ] Implement `get`.
 - [ ] Implement idempotent `delete`.
 - [ ] Implement `exists`.
-- [ ] Run `./mvnw -pl blob-helper-storage-local -Dtest=LocalBlobStorageIntegrationTest test`.
+- [ ] Run `./mvnw -pl dedup4j-storage-local -Dtest=LocalBlobStorageIntegrationTest test`.
 
 ## Acceptance
 

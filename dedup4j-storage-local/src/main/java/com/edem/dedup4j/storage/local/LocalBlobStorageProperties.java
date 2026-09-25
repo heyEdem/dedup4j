@@ -1,4 +1,4 @@
-package com.edem.blobhelper.storage.local;
+package com.edem.dedup4j.storage.local;
 
 import java.nio.file.Path;
 import java.util.Objects;

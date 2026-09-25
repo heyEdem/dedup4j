@@ -31,7 +31,7 @@ Applications interact with `BlobDeduplicationService`, not provider-specific API
 | Auto-configuration and properties | `blob-helper-spring-boot-starter` |
 | S3 SDK code | `blob-helper-storage-s3` |
 | Azure SDK code | `blob-helper-storage-azure` |
-| Local filesystem storage | `blob-helper-storage-local` |
+| Local filesystem storage | `dedup4j-storage-local` |
 
 **Explicitly excluded layers:** `dedup4j-core` and the starter must not contain provider SDK implementation code.
 

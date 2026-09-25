@@ -10,15 +10,15 @@ Prevent local storage keys from escaping the configured root directory.
 
 ## Files
 
-- Modify: `blob-helper-storage-local/src/main/java/com/edem/blobhelper/storage/local/LocalBlobStorage.java`
-- Modify: `blob-helper-storage-local/src/test/java/com/edem/blobhelper/storage/local/LocalBlobStorageIntegrationTest.java`
+- Modify: `dedup4j-storage-local/src/main/java/com/edem/dedup4j/storage/local/LocalBlobStorage.java`
+- Modify: `dedup4j-storage-local/src/test/java/com/edem/dedup4j/storage/local/LocalBlobStorageIntegrationTest.java`
 
 ## Steps
 
 - [ ] Normalize resolved paths.
 - [ ] Reject keys that resolve outside the storage root.
 - [ ] Add tests for `../` and absolute-path attempts.
-- [ ] Run `./mvnw -pl blob-helper-storage-local -Dtest=LocalBlobStorageIntegrationTest test`.
+- [ ] Run `./mvnw -pl dedup4j-storage-local -Dtest=LocalBlobStorageIntegrationTest test`.
 
 ## Acceptance
 

@@ -1,8 +1,8 @@
 package com.edem.blobhelper.autoconfigure.storage;
 
 import com.edem.dedup4j.core.storage.BlobStorage;
-import com.edem.blobhelper.storage.local.LocalBlobStorage;
-import com.edem.blobhelper.storage.local.LocalBlobStorageProperties;
+import com.edem.dedup4j.storage.local.LocalBlobStorage;
+import com.edem.dedup4j.storage.local.LocalBlobStorageProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;

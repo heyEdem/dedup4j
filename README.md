@@ -40,7 +40,7 @@ blob-helper-spring-boot-management  (optional local management API)
 blob-helper-spring-boot-dashboard   (optional embedded read-only dashboard)
 blob-helper-spring-boot-observability (optional embedded management + dashboard)
 blob-helper-dashboard                (standalone local monitoring console)
-blob-helper-storage-local
+dedup4j-storage-local
 ```
 
 `dedup4j-core` contains hashing, deduplication contracts, and storage-neutral

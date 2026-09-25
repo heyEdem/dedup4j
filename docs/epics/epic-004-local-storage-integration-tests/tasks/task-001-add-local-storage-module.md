@@ -6,20 +6,20 @@
 
 ## Goal
 
-Create `blob-helper-storage-local` and its configuration model.
+Create `dedup4j-storage-local` and its configuration model.
 
 ## Files
 
 - Modify: `pom.xml`
-- Create: `blob-helper-storage-local/pom.xml`
-- Create: `blob-helper-storage-local/src/main/java/com/edem/blobhelper/storage/local/LocalBlobStorageProperties.java`
+- Create: `dedup4j-storage-local/pom.xml`
+- Create: `dedup4j-storage-local/src/main/java/com/edem/dedup4j/storage/local/LocalBlobStorageProperties.java`
 
 ## Steps
 
 - [ ] Add local storage module to the reactor.
 - [ ] Depend on `dedup4j-core`.
 - [ ] Add root-directory configuration.
-- [ ] Run `./mvnw -pl blob-helper-storage-local test`.
+- [ ] Run `./mvnw -pl dedup4j-storage-local test`.
 
 ## Acceptance
 

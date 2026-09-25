@@ -1,4 +1,4 @@
-package com.edem.blobhelper.storage.local;
+package com.edem.dedup4j.storage.local;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

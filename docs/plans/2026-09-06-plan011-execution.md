@@ -120,8 +120,8 @@ blob-helper-spring-boot-starter/src/test/resources/db/blob-helper/consumer-test-
 Local storage and documentation:
 
 ```text
-blob-helper-storage-local/src/main/java/com/edem/blobhelper/storage/local/LocalBlobStorage.java
-blob-helper-storage-local/src/test/java/com/edem/blobhelper/storage/local/LocalBlobStorageIntegrationTest.java
+dedup4j-storage-local/src/main/java/com/edem/dedup4j/storage/local/LocalBlobStorage.java
+dedup4j-storage-local/src/test/java/com/edem/dedup4j/storage/local/LocalBlobStorageIntegrationTest.java
 README.md
 docs/architecture.md
 docs/implementation.md

@@ -159,7 +159,7 @@ Responsibilities:
 - delete blobs from Azure Blob Storage
 - return object metadata and access information
 
-### blob-helper-storage-local
+### dedup4j-storage-local
 
 Local filesystem adapter for tests and development.
 

@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>com.edem</groupId>
-            <artifactId>blob-helper-storage-local</artifactId>
+            <artifactId>dedup4j-storage-local</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

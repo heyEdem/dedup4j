@@ -32,7 +32,7 @@ For S3, provider and bucket are the only Blob Helper-required properties. Region
 | Provider conditions and property binding | starter auto-configuration package |
 | AWS implementation | `blob-helper-storage-s3` |
 | Azure implementation | `blob-helper-storage-azure` |
-| Local implementation | `blob-helper-storage-local` |
+| Local implementation | `dedup4j-storage-local` |
 | Convergence/security gates | root Maven build and `.github` workflows |
 
 **Explicitly excluded layers:** `dedup4j-core`, JPA entities, management/dashboard modules.

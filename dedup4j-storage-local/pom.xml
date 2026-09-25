@@ -10,9 +10,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>blob-helper-storage-local</artifactId>
-    <name>blob-helper-storage-local</name>
-    <description>Local filesystem storage adapter for Blob Helper.</description>
+    <artifactId>dedup4j-storage-local</artifactId>
+    <name>dedup4j-storage-local</name>
+    <description>Local filesystem storage adapter for dedup4j.</description>
 
     <dependencies>
         <dependency>

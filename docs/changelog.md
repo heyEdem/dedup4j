@@ -27,7 +27,7 @@
 - Moved duplicate-key recovery across Spring `REQUIRES_NEW` transactions without replaying upload input or storage writes; retained framework-neutral JPA behavior and application-managed migration configuration.
 - Fixed local concurrent publication through same-directory temporary files and atomic replacement; added failed-stream preservation and maximum-filename coverage. Corrected the S3 client test proxy for Spring persistence lifecycle callbacks.
 - Updated consumer guidance, architecture/implementation indexes, patterns, decisions, and completion records. Legacy table data requires a separate application-managed transition.
-- Modules affected: `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and `blob-helper-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
+- Modules affected: `dedup4j-jpa`, `blob-helper-spring-boot-starter`, and `dedup4j-storage-local`. Clean full-reactor verification passed all 168 tests across ten modules; no failures, errors, or skips.
 
 ## 2026-09-05 — Auto-configure selected storage providers
 
@@ -145,29 +145,29 @@
 
 - Added `LocalStorageDeduplicationIntegrationTest` covering the real service, JPA metadata, and temporary-directory local storage flow.
 - Verified service readback, duplicate uploads retaining one physical file, and physical deletion after the final reference release.
-- Added `blob-helper-storage-local` as a test-scoped starter dependency; Epic 4 is complete (4/4).
-- Modules affected: `blob-helper-spring-boot-starter`, `blob-helper-storage-local`, and Epic 4 planning/status documentation.
+- Added `dedup4j-storage-local` as a test-scoped starter dependency; Epic 4 is complete (4/4).
+- Modules affected: `blob-helper-spring-boot-starter`, `dedup4j-storage-local`, and Epic 4 planning/status documentation.
 
 ## 2026-08-26 — Add path traversal protection
 
 - `LocalBlobStorage` now normalizes every resolved key and rejects keys that escape or equal the storage root before any file IO, throwing core `BlobValidationException`.
 - Rejected patterns include `../` parent traversal, absolute keys such as `/etc/passwd`, and self-resolving keys like `nested/..`; valid nested keys (including redundant `.` segments) still resolve.
 - Added temporary-directory tests proving escapes never touch the filesystem outside the root and that pre-existing sibling files remain unchanged.
-- Modules affected: `blob-helper-storage-local` and Epic 4 planning/status documentation.
+- Modules affected: `dedup4j-storage-local` and Epic 4 planning/status documentation.
 
 ## 2026-08-26 — Implement local put/get/delete/exists
 
 - Added `LocalBlobStorage`, a filesystem `BlobStorage` adapter that streams uploads under the configured root directory, creates parent directories on demand, and overwrites existing objects.
 - `get` returns an owner-managed `BlobResource` stream and throws core `ContentNotFoundException` for missing objects; `delete` is idempotent through `Files.deleteIfExists`; `exists` reflects filesystem state.
 - Added JUnit temporary-directory integration coverage for the round trip, idempotent missing-object delete, overwrite behavior, existence checks, and blank-key rejection.
-- Modules affected: `blob-helper-storage-local` and Epic 4 planning/status documentation.
+- Modules affected: `dedup4j-storage-local` and Epic 4 planning/status documentation.
 
 ## 2026-08-26 — Add local storage module
 
-- Added the `blob-helper-storage-local` Maven module to the reactor with a dependency on `dedup4j-core` and no cloud SDKs.
+- Added the `dedup4j-storage-local` Maven module to the reactor with a dependency on `dedup4j-core` and no cloud SDKs.
 - Added `LocalBlobStorageProperties` with a configurable root directory (`blob-helper-storage` default) and null-rejection on assignment.
 - Added property coverage for defaults, custom roots, and null rejection; full `./mvnw verify` passes.
-- Modules affected: root reactor, `blob-helper-storage-local`, and Epic 4 planning/status documentation.
+- Modules affected: root reactor, `dedup4j-storage-local`, and Epic 4 planning/status documentation.
 
 ## 2026-08-26 — Add provider auto-configuration validation
 
@@ -329,4 +329,9 @@
 ## 2026-09-25 — Rename jpa module to dedup4j
 
 - Renamed the JPA artifact and packages, persistence-unit class references, downstream imports, and affected documentation; schema names remain pending the persistence compatibility decision.
+- Clean verification passed across all ten modules (189 tests); no architectural decision changed.
+
+## 2026-09-25 — Rename local storage module to dedup4j
+
+- Renamed the local adapter artifact and packages, consumer references, and module documentation; retained the existing storage-directory default pending persistence work.
 - Clean verification passed across all ten modules (189 tests); no architectural decision changed.

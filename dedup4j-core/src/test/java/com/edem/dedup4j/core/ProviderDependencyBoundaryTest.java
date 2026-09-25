@@ -27,7 +27,7 @@ class ProviderDependencyBoundaryTest {
     );
 
     private static final Set<String> STARTER_PROVIDER_ADAPTERS = Set.of(
-            "com.edem:blob-helper-storage-local",
+            "com.edem:dedup4j-storage-local",
             "com.edem:blob-helper-storage-s3",
             "com.edem:blob-helper-storage-azure"
     );
