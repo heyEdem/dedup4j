@@ -16,14 +16,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class DefaultDedup4j implements Dedup4j {
+public final class DefaultBlobStore implements BlobStore {
 
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
     private final BlobDeduplicationService service;
     private final Dedup4jProperties properties;
 
-    public DefaultDedup4j(BlobDeduplicationService service, Dedup4jProperties properties) {
+    public DefaultBlobStore(BlobDeduplicationService service, Dedup4jProperties properties) {
         this.service = Objects.requireNonNull(service, "service must not be null");
         this.properties = Objects.requireNonNull(properties, "properties must not be null");
     }

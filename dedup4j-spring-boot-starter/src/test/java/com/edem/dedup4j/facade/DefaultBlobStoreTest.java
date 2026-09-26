@@ -29,11 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class DefaultDedup4jTest {
+class DefaultBlobStoreTest {
 
     private final RecordingService service = new RecordingService();
     private final Dedup4jProperties properties = new Dedup4jProperties();
-    private final DefaultDedup4j helper = new DefaultDedup4j(service, properties);
+    private final DefaultBlobStore helper = new DefaultBlobStore(service, properties);
 
     @Test
     void multipartDelegatesOnce() {

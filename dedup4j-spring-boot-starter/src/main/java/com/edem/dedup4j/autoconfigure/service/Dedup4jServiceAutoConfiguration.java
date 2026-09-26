@@ -17,8 +17,8 @@ import com.edem.dedup4j.observability.Dedup4jMetrics;
 import com.edem.dedup4j.service.BlobDeduplicationService;
 import com.edem.dedup4j.service.DefaultBlobDeduplicationService;
 import com.edem.dedup4j.service.SpringTransactionalBlobDeduplicationService;
-import com.edem.dedup4j.facade.Dedup4j;
-import com.edem.dedup4j.facade.DefaultDedup4j;
+import com.edem.dedup4j.facade.BlobStore;
+import com.edem.dedup4j.facade.DefaultBlobStore;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -143,9 +143,9 @@ public class Dedup4jServiceAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(Dedup4j.class)
-    Dedup4j dedup4j(BlobDeduplicationService service, Dedup4jProperties properties) {
-        return new DefaultDedup4j(service, properties);
+    @ConditionalOnMissingBean(BlobStore.class)
+    BlobStore blobStore(BlobDeduplicationService service, Dedup4jProperties properties) {
+        return new DefaultBlobStore(service, properties);
     }
 
     private static EntityManager resolveEntityManager(

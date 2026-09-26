@@ -75,9 +75,9 @@ class Dedup4jPersistenceAutoConfigurationTest {
                         "dedup4j.persistence.initialize-schema=embedded")
                 .run(context -> assertThat(context).hasFailed()
                         .getFailure()
-                        .hasMessageContaining("blob_helper_asset_content")
+                        .hasMessageContaining("dedup4j_asset_content")
                         .hasMessageContaining("embedded")
-                        .hasMessageContaining("classpath:db/blob-helper/db.changelog-master.yaml"));
+                        .hasMessageContaining("classpath:db/dedup4j/db.changelog-master.yaml"));
         assertBlobSchemaAbsent(dataSource);
     }
 
@@ -95,9 +95,9 @@ class Dedup4jPersistenceAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasFailed()
                             .getFailure()
-                            .hasMessageContaining("blob_helper_asset_content")
+                            .hasMessageContaining("dedup4j_asset_content")
                             .hasMessageContaining("never")
-                            .hasMessageContaining("classpath:db/blob-helper/db.changelog-master.yaml");
+                            .hasMessageContaining("classpath:db/dedup4j/db.changelog-master.yaml");
                 });
         assertBlobSchemaAbsent(dataSource);
     }
@@ -123,8 +123,8 @@ class Dedup4jPersistenceAutoConfigurationTest {
                         "dedup4j.persistence.initialize-schema=never")
                 .run(context -> assertThat(context).hasFailed()
                         .getFailure()
-                        .hasMessageContaining("blob_helper_asset_content")
-                        .hasMessageContaining("classpath:db/blob-helper/db.changelog-master.yaml"));
+                        .hasMessageContaining("dedup4j_asset_content")
+                        .hasMessageContaining("classpath:db/dedup4j/db.changelog-master.yaml"));
     }
 
     @Test
@@ -146,7 +146,7 @@ class Dedup4jPersistenceAutoConfigurationTest {
                 .withUserConfiguration(TestDataSourceConfiguration.class,
                         Dedup4jPersistenceAutoConfiguration.class)
                 .withPropertyValues(
-                        "spring.liquibase.change-log=classpath:db/blob-helper/consumer-test-changelog.yaml",
+                        "spring.liquibase.change-log=classpath:db/dedup4j/consumer-test-changelog.yaml",
                         "spring.liquibase.parameters.marker=configured")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
@@ -215,13 +215,13 @@ class Dedup4jPersistenceAutoConfigurationTest {
         JdbcDataSource dataSource = dataSource();
         liquibase.integration.spring.SpringLiquibase liquibase = new liquibase.integration.spring.SpringLiquibase();
         liquibase.setDataSource(dataSource);
-        liquibase.setChangeLog("classpath:db/blob-helper/db.changelog-master.yaml");
+        liquibase.setChangeLog("classpath:db/dedup4j/db.changelog-master.yaml");
         liquibase.afterPropertiesSet();
 
         try (Connection connection = dataSource.getConnection()) {
             Set<String> columns = new HashSet<>();
             try (java.sql.ResultSet result = connection.getMetaData().getColumns(null, null,
-                    "BLOB_HELPER_ASSET_CONTENT", null)) {
+                    "DEDUP4J_ASSET_CONTENT", null)) {
                 while (result.next()) {
                     columns.add(result.getString("COLUMN_NAME").toLowerCase());
                 }
@@ -244,7 +244,7 @@ class Dedup4jPersistenceAutoConfigurationTest {
 
     private static boolean tableExists(DataSource dataSource) {
         return Boolean.TRUE.equals(new JdbcTemplate(dataSource).queryForObject(
-                "select count(*) from information_schema.tables where table_name = 'BLOB_HELPER_ASSET_CONTENT'",
+                "select count(*) from information_schema.tables where table_name = 'DEDUP4J_ASSET_CONTENT'",
                 Integer.class) > 0);
     }
 
@@ -255,9 +255,9 @@ class Dedup4jPersistenceAutoConfigurationTest {
     }
 
     private static void assertBlobSchemaAbsent(DataSource dataSource) {
-        assertThat(tableExistsNamed(dataSource, "BLOB_HELPER_ASSET_CONTENT")).isFalse();
-        assertThat(tableExistsNamed(dataSource, "BLOB_HELPER_DATABASE_CHANGELOG")).isFalse();
-        assertThat(tableExistsNamed(dataSource, "BLOB_HELPER_DATABASE_CHANGELOG_LOCK")).isFalse();
+        assertThat(tableExistsNamed(dataSource, "DEDUP4J_ASSET_CONTENT")).isFalse();
+        assertThat(tableExistsNamed(dataSource, "DEDUP4J_DATABASE_CHANGELOG")).isFalse();
+        assertThat(tableExistsNamed(dataSource, "DEDUP4J_DATABASE_CHANGELOG_LOCK")).isFalse();
     }
 
     private static JdbcDataSource dataSource() {
@@ -286,12 +286,12 @@ class Dedup4jPersistenceAutoConfigurationTest {
     static class PrecreatedSchemaConfiguration {
         @Bean
         Object precreateSchema(DataSource dataSource) {
-            new JdbcTemplate(dataSource).execute("create table blob_helper_asset_content ("
+            new JdbcTemplate(dataSource).execute("create table dedup4j_asset_content ("
                     + "id uuid not null, hash_algorithm varchar(32) not null, content_hash varchar(128) not null,"
                     + "size_bytes bigint not null, object_key varchar(1024) not null, storage_provider varchar(64) not null,"
                     + "bucket_or_container varchar(255) not null, content_type varchar(255), original_extension varchar(32),"
                     + "ref_count bigint not null, created_at timestamp not null, updated_at timestamp not null, version bigint not null,"
-                    + "constraint uk_blob_helper_asset_content_identity unique (hash_algorithm, content_hash, size_bytes))");
+                    + "constraint uk_dedup4j_asset_content_identity unique (hash_algorithm, content_hash, size_bytes))");
             return new Object();
         }
     }
@@ -302,7 +302,7 @@ class Dedup4jPersistenceAutoConfigurationTest {
         @Bean
         Object precreateIncompleteSchema(DataSource dataSource) {
             new JdbcTemplate(dataSource).execute(
-                    "create table blob_helper_asset_content (id uuid not null primary key)");
+                    "create table dedup4j_asset_content (id uuid not null primary key)");
             return new Object();
         }
     }

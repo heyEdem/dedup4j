@@ -31,7 +31,7 @@ class LocalBlobStorageAutoConfigurationTest {
                 .run(context -> assertThat(context).hasSingleBean(LocalBlobStorage.class)
                         .hasSingleBean(LocalBlobStorageProperties.class)
                         .satisfies(c -> assertThat(c.getBean(LocalBlobStorageProperties.class).getRootDirectory())
-                                .isEqualTo(Path.of("blob-helper-storage"))));
+                                .isEqualTo(Path.of("dedup4j-storage"))));
     }
 
     @Test

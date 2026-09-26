@@ -13,7 +13,7 @@ class LocalBlobStoragePropertiesTest {
     @Test
     void hasDefaultRootDirectory() {
         assertNotNull(new LocalBlobStorageProperties().getRootDirectory());
-        assertEquals(Path.of("blob-helper-storage"), new LocalBlobStorageProperties().getRootDirectory());
+        assertEquals(Path.of("dedup4j-storage"), new LocalBlobStorageProperties().getRootDirectory());
     }
 
     @Test

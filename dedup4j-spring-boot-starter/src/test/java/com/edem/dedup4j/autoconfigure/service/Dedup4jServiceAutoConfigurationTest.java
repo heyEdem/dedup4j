@@ -15,8 +15,8 @@ import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
 import com.edem.dedup4j.service.BlobDeduplicationService;
-import com.edem.dedup4j.facade.Dedup4j;
-import com.edem.dedup4j.facade.DefaultDedup4j;
+import com.edem.dedup4j.facade.BlobStore;
+import com.edem.dedup4j.facade.DefaultBlobStore;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -50,9 +50,9 @@ class Dedup4jServiceAutoConfigurationTest {
             assertEquals(1, context.getBeansOfType(ObjectKeyStrategy.class).size());
             assertEquals(1, context.getBeansOfType(Dedup4jMetrics.class).size());
             assertEquals(1, context.getBeansOfType(BlobDeduplicationService.class).size());
-            assertEquals(1, context.getBeansOfType(Dedup4j.class).size());
-            org.assertj.core.api.Assertions.assertThat(context.getBean(Dedup4j.class))
-                    .isInstanceOf(DefaultDedup4j.class);
+            assertEquals(1, context.getBeansOfType(BlobStore.class).size());
+            org.assertj.core.api.Assertions.assertThat(context.getBean(BlobStore.class))
+                    .isInstanceOf(DefaultBlobStore.class);
         });
     }
 
@@ -60,7 +60,7 @@ class Dedup4jServiceAutoConfigurationTest {
     void backsOffForApplicationFacade() {
         FacadeOverride override = new FacadeOverride();
         runner.withUserConfiguration(FacadeOverride.class).run(context -> {
-            assertSame(override.FACADE, context.getBean(Dedup4j.class));
+            assertSame(override.FACADE, context.getBean(BlobStore.class));
             assertEquals(1, context.getBeansOfType(BlobDeduplicationService.class).size());
         });
     }
@@ -186,12 +186,12 @@ class Dedup4jServiceAutoConfigurationTest {
 
     @Configuration(proxyBeanMethods = false)
     static class FacadeOverride {
-        private static final Dedup4j FACADE = new TestFacade();
+        private static final BlobStore FACADE = new TestFacade();
 
-        @Bean Dedup4j dedup4j() { return FACADE; }
+        @Bean BlobStore blobStore() { return FACADE; }
     }
 
-    private static final class TestFacade implements Dedup4j {
+    private static final class TestFacade implements BlobStore {
         @Override public BlobReference store(org.springframework.web.multipart.MultipartFile file) { return null; }
         @Override public BlobReference store(java.nio.file.Path path) { return null; }
         @Override public BlobReference store(byte[] content, String filename, String contentType) { return null; }

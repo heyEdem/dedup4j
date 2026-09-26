@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Map;
 
-public interface Dedup4j {
+public interface BlobStore {
 
     BlobReference store(MultipartFile file);
 

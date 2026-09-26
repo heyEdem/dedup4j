@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class Dedup4jMvcUsageTest {
+class BlobStoreMvcUsageTest {
 
     @Test
     void bindsMultipartArrayWithoutLibraryController() throws Exception {
@@ -44,9 +44,9 @@ class Dedup4jMvcUsageTest {
 
     @RestController
     static final class TestUploadController {
-        private final Dedup4j helper;
+        private final BlobStore helper;
 
-        TestUploadController(Dedup4j helper) {
+        TestUploadController(BlobStore helper) {
             this.helper = helper;
         }
 
@@ -56,7 +56,7 @@ class Dedup4jMvcUsageTest {
         }
     }
 
-    private static final class CapturingFacade implements Dedup4j {
+    private static final class CapturingFacade implements BlobStore {
         private MultipartFile[] files;
 
         @Override public BlobReference store(MultipartFile file) { return reference(false); }

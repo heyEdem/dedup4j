@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DefaultDedup4jBatchTest {
+class DefaultBlobStoreBatchTest {
 
     @Test
     void reportsEveryOutcomeInOrder() {
         RecordingService service = new RecordingService();
-        DefaultDedup4j helper = new DefaultDedup4j(service, new Dedup4jProperties());
+        DefaultBlobStore helper = new DefaultBlobStore(service, new Dedup4jProperties());
 
         BatchStoreResult result = helper.storeAll(new MockMultipartFile[] {
                 file("first.txt"), file("broken.txt"), file("duplicate.txt")
@@ -50,7 +50,7 @@ class DefaultDedup4jBatchTest {
     @Test
     void nullItemBecomesFailureAndLaterInputsContinue() {
         RecordingService service = new RecordingService();
-        DefaultDedup4j helper = new DefaultDedup4j(service, new Dedup4jProperties());
+        DefaultBlobStore helper = new DefaultBlobStore(service, new Dedup4jProperties());
 
         BatchStoreResult result = helper.storeAll(new MockMultipartFile[] {
                 file("first.txt"), null, file("third.txt")
@@ -64,7 +64,7 @@ class DefaultDedup4jBatchTest {
 
     @Test
     void nullArrayIsRejectedBeforeProcessing() {
-        DefaultDedup4j helper = new DefaultDedup4j(
+        DefaultBlobStore helper = new DefaultBlobStore(
                 new RecordingService(), new Dedup4jProperties()
         );
 

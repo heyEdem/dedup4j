@@ -54,8 +54,8 @@ public class Dedup4jPersistenceAutoConfiguration {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(Dedup4jSchemaValidator.CHANGELOG);
-        liquibase.setDatabaseChangeLogTable("BLOB_HELPER_DATABASE_CHANGELOG");
-        liquibase.setDatabaseChangeLogLockTable("BLOB_HELPER_DATABASE_CHANGELOG_LOCK");
+        liquibase.setDatabaseChangeLogTable("DEDUP4J_DATABASE_CHANGELOG");
+        liquibase.setDatabaseChangeLogLockTable("DEDUP4J_DATABASE_CHANGELOG_LOCK");
         liquibase.setShouldRun(shouldInitialize);
         return liquibase;
     }

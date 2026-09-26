@@ -39,3 +39,6 @@ build/
 **/dedup4j-dashboard.sqlite
 **/dedup4j-dashboard.sqlite-*
 **/dedup4j-dashboard.sqlite.backup*
+
+# macOS
+.DS_Store

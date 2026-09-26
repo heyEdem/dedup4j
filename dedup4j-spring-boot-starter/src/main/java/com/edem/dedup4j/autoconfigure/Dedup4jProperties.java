@@ -96,7 +96,7 @@ public class Dedup4jProperties {
 
     public static class Local {
 
-        private Path rootDirectory = Path.of("blob-helper-storage");
+        private Path rootDirectory = Path.of("dedup4j-storage");
 
         public Path getRootDirectory() {
             return rootDirectory;

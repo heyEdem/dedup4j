@@ -69,7 +69,7 @@ class Dedup4jContextStartTest {
                     .hasSingleBean(JdbcTemplate.class);
 
             assertThat(context.getBean(JdbcTemplate.class).queryForObject(
-                    "select count(*) from blob_helper_asset_content", Integer.class
+                    "select count(*) from dedup4j_asset_content", Integer.class
             )).isZero();
         });
     }
@@ -171,13 +171,13 @@ class Dedup4jContextStartTest {
 
     private static int rowCount(org.springframework.context.ApplicationContext context) {
         return context.getBean(JdbcTemplate.class).queryForObject(
-                "select count(*) from blob_helper_asset_content", Integer.class
+                "select count(*) from dedup4j_asset_content", Integer.class
         );
     }
 
     private static int refCount(org.springframework.context.ApplicationContext context) {
         return context.getBean(JdbcTemplate.class).queryForObject(
-                "select ref_count from blob_helper_asset_content", Integer.class
+                "select ref_count from dedup4j_asset_content", Integer.class
         );
     }
 

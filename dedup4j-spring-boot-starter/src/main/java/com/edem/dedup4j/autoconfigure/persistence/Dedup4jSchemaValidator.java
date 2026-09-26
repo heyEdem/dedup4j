@@ -9,7 +9,7 @@ import java.util.Objects;
 
 final class Dedup4jSchemaValidator implements InitializingBean {
 
-    static final String CHANGELOG = "classpath:db/blob-helper/db.changelog-master.yaml";
+    static final String CHANGELOG = "classpath:db/dedup4j/db.changelog-master.yaml";
 
     private final JdbcTemplate jdbcTemplate;
     private final SchemaInitialization mode;
@@ -29,10 +29,10 @@ final class Dedup4jSchemaValidator implements InitializingBean {
             jdbcTemplate.queryForList("select id, hash_algorithm, content_hash, size_bytes, object_key, "
                     + "storage_provider, bucket_or_container, content_type, original_extension, ref_count, "
                     + "created_at, updated_at, version "
-                    + "from blob_helper_asset_content where 1 = 0");
+                    + "from dedup4j_asset_content where 1 = 0");
         }
         catch (DataAccessException failure) {
-            throw new IllegalStateException("dedup4j schema table 'blob_helper_asset_content' is missing "
+            throw new IllegalStateException("dedup4j schema table 'dedup4j_asset_content' is missing "
                     + "for initialize-schema mode '" + mode.name().toLowerCase() + "'. Apply " + CHANGELOG
                     + " or set dedup4j.persistence.initialize-schema to an appropriate mode.", failure);
         }

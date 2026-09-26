@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class LocalBlobStorageProperties {
 
-    private Path rootDirectory = Path.of("blob-helper-storage");
+    private Path rootDirectory = Path.of("dedup4j-storage");
 
     public Path getRootDirectory() {
         return rootDirectory;

@@ -4,11 +4,11 @@ server:
 
 dedup4j:
   dashboard:
-    database-path: ./blob-helper-dashboard.sqlite
+    database-path: ./dedup4j-dashboard.sqlite
     polling-interval: 30s
     failure-retention: 7d
 
 spring:
   datasource:
-    url: jdbc:sqlite:${dedup4j.dashboard.database-path:./blob-helper-dashboard.sqlite}
+    url: jdbc:sqlite:${dedup4j.dashboard.database-path:./dedup4j-dashboard.sqlite}
     driver-class-name: org.sqlite.JDBC
