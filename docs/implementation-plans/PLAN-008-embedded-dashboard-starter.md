@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let a Spring Boot application serve the Blob Helper dashboard UI automatically when an optional dashboard dependency is added, without requiring a second dashboard process.
+**Goal:** Let a Spring Boot application serve the dedup4j dashboard UI automatically when an optional dashboard dependency is added, without requiring a second dashboard process.
 
-**Architecture:** Add a new `blob-helper-spring-boot-dashboard` starter that auto-configures a same-application read-only dashboard at `/blob-helper/dashboard`. It will expose current-instance metrics through dashboard-shaped REST resources and serve the existing static console from the consuming application. The existing `blob-helper-dashboard` application remains available for multi-instance fleet monitoring and is not activated by the starter.
+**Architecture:** Add a new `dedup4j-spring-boot-dashboard` starter that auto-configures a same-application read-only dashboard at `/dedup4j/dashboard`. It will expose current-instance metrics through dashboard-shaped REST resources and serve the existing static console from the consuming application. The existing `dedup4j-dashboard` application remains available for multi-instance fleet monitoring and is not activated by the starter.
 
 **Tech Stack:** Java 21, Spring Boot 3.5.10, Spring MVC, Spring Boot auto-configuration, Micrometer, Jakarta Persistence, vanilla HTML/CSS/JavaScript, JUnit 5, Spring Boot test, AssertJ, Maven.
 
@@ -13,15 +13,15 @@
 ## Global Constraints
 
 - Keep the dashboard read-only; it must not add blob mutation or repair endpoints.
-- Keep provider SDKs isolated in `blob-helper-storage-s3` and `blob-helper-storage-azure`.
-- Keep the existing `blob-helper-spring-boot-starter` free of dashboard controllers and UI resources.
-- The dashboard must be disabled explicitly with `blob-helper.dashboard.enabled=false`.
-- The embedded UI default route is `/blob-helper/dashboard`.
-- Embedded dashboard API routes are under `/blob-helper/dashboard/api/v1`.
+- Keep provider SDKs isolated in `dedup4j-storage-s3` and `dedup4j-storage-azure`.
+- Keep the existing `dedup4j-spring-boot-starter` free of dashboard controllers and UI resources.
+- The dashboard must be disabled explicitly with `dedup4j.dashboard.enabled=false`.
+- The embedded UI default route is `/dedup4j/dashboard`.
+- Embedded dashboard API routes are under `/dedup4j/dashboard/api/v1`.
 - The standalone dashboard remains a separate executable for multi-instance monitoring.
 - Every implementation task must add or update focused tests before implementation code.
 - Run `./mvnw --batch-mode --no-transfer-progress verify` before claiming completion.
-- Do not publish `blob-helper-dashboard` as a library dependency; publish the new dashboard starter as an optional library artifact.
+- Do not publish `dedup4j-dashboard` as a library dependency; publish the new dashboard starter as an optional library artifact.
 
 ---
 
@@ -29,25 +29,25 @@
 
 ### New embedded dashboard module
 
-- Create: `blob-helper-spring-boot-dashboard/pom.xml`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardProperties.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardController.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardView.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/index.html`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/css/dashboard.css`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/css/states.css`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/js/dashboard.js`
-- Create: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardAutoConfigurationTest.java`
-- Create: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardControllerTest.java`
-- Create: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/EmbeddedDashboardIntegrationTest.java`
+- Create: `dedup4j-spring-boot-dashboard/pom.xml`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardProperties.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardView.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/index.html`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/css/dashboard.css`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/css/states.css`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/js/dashboard.js`
+- Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfigurationTest.java`
+- Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardControllerTest.java`
+- Create: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/EmbeddedDashboardIntegrationTest.java`
 
 ### Existing project files
 
 - Modify: `pom.xml` to include the new module and manage its shared version.
-- Modify: `blob-helper-spring-boot-management/pom.xml` only if a shared snapshot service is extracted.
-- Modify: `blob-helper-dashboard/pom.xml` only if static resource ownership is moved to a shared resource module.
+- Modify: `dedup4j-spring-boot-management/pom.xml` only if a shared snapshot service is extracted.
+- Modify: `dedup4j-dashboard/pom.xml` only if static resource ownership is moved to a shared resource module.
 - Modify: `docs/architecture.md` and `docs/implementation.md` for the new starter and changed dashboard roles.
 - Create: `docs/adrs/ADR-006-embedded-dashboard-starter.md` documenting the decision to make the embedded dashboard primary.
 - Modify: `docs/SPECIFICATION.md` to distinguish embedded single-instance UI from the standalone fleet dashboard.
@@ -59,25 +59,25 @@
 The starter must provide these routes in a consuming Spring Boot application:
 
 ```text
-GET /blob-helper/dashboard
+GET /dedup4j/dashboard
     Serves the dashboard index page.
 
-GET /blob-helper/dashboard/api/v1/overview
+GET /dedup4j/dashboard/api/v1/overview
     Returns current-instance aggregate metrics.
 
-GET /blob-helper/dashboard/api/v1/instances/status
+GET /dedup4j/dashboard/api/v1/instances/status
     Returns one instance row representing the host application.
 
-GET /blob-helper/dashboard/api/v1/instances/{id}/history
+GET /dedup4j/dashboard/api/v1/instances/{id}/history
     Returns current-process history if history storage is implemented; otherwise
     returns an empty points list with the stable instance ID.
 
-GET /blob-helper/dashboard/api/v1/failures
+GET /dedup4j/dashboard/api/v1/failures
     Returns recent failures supplied by the optional failure source.
 ```
 
 The UI JavaScript must use a configurable relative API base so the same visual
-console can be served under `/blob-helper/dashboard` without hard-coded host
+console can be served under `/dedup4j/dashboard` without hard-coded host
 names or a second process.
 
 ## Tasks
@@ -104,7 +104,7 @@ Document the context, decision, alternatives, and consequences. The decision mus
 Change the dashboard requirements so they cover both modes:
 
 ```text
-Embedded mode: add the dashboard starter and open /blob-helper/dashboard.
+Embedded mode: add the dashboard starter and open /dedup4j/dashboard.
 Standalone mode: run the dashboard application separately to aggregate multiple instances.
 ```
 
@@ -128,22 +128,22 @@ git commit -m "docs: decide embedded dashboard starter architecture"
 **Files:**
 
 - Modify: `pom.xml`
-- Create: `blob-helper-spring-boot-dashboard/pom.xml`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardProperties.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-- Test: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardPropertiesTest.java`
+- Create: `dedup4j-spring-boot-dashboard/pom.xml`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardProperties.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardPropertiesTest.java`
 
 **Interfaces:**
 
-- Consumes: `blob-helper-core`, `blob-helper-jpa`, and `blob-helper-spring-boot-starter`.
-- Produces: `com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardProperties` with `enabled`, `basePath`, and `failureLookback` properties.
+- Consumes: `dedup4j-core`, `dedup4j-jpa`, and `dedup4j-spring-boot-starter`.
+- Produces: `com.edem.dedup4j.dashboard.autoconfigure.Dedup4jDashboardProperties` with `enabled`, `basePath`, and `failureLookback` properties.
 
 The default property values must be:
 
 ```text
-blob-helper.dashboard.enabled=true
-blob-helper.dashboard.base-path=/blob-helper/dashboard
-blob-helper.dashboard.failure-lookback=7d
+dedup4j.dashboard.enabled=true
+dedup4j.dashboard.base-path=/dedup4j/dashboard
+dedup4j.dashboard.failure-lookback=7d
 ```
 
 - [ ] **Step 1: Add the failing properties test**
@@ -152,13 +152,13 @@ Verify defaults and relaxed binding for:
 
 ```java
 assertThat(properties.isEnabled()).isTrue();
-assertThat(properties.getBasePath()).isEqualTo("/blob-helper/dashboard");
+assertThat(properties.getBasePath()).isEqualTo("/dedup4j/dashboard");
 assertThat(properties.getFailureLookback()).isEqualTo(Duration.ofDays(7));
 ```
 
 - [ ] **Step 2: Run the focused test and verify it fails**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=BlobHelperDashboardPropertiesTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=Dedup4jDashboardPropertiesTest`
 
 Expected: compilation failure because the new module and properties class do not exist.
 
@@ -171,19 +171,19 @@ Use Spring Boot configuration binding with a `Duration` field and normalize the 
 Add exactly:
 
 ```text
-com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration
+com.edem.dedup4j.dashboard.autoconfigure.Dedup4jDashboardAutoConfiguration
 ```
 
 to `AutoConfiguration.imports`.
 
 - [ ] **Step 5: Run the focused test and verify it passes**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=BlobHelperDashboardPropertiesTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=Dedup4jDashboardPropertiesTest`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add pom.xml blob-helper-spring-boot-dashboard
+git add pom.xml dedup4j-spring-boot-dashboard
 git commit -m "feat: add embedded dashboard starter module"
 ```
 
@@ -191,24 +191,24 @@ git commit -m "feat: add embedded dashboard starter module"
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardSnapshotService.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardFailureSource.java` only when an application failure source is available through the existing contract.
-- Test: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardSnapshotServiceTest.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardSnapshotService.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardFailureSource.java` only when an application failure source is available through the existing contract.
+- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardSnapshotServiceTest.java`
 
 **Interfaces:**
 
-- Consumes: `MeterRegistry`, optional `AssetContentRepository`, `BlobHelperProperties`, and the existing management `FailureSource` contract where available.
+- Consumes: `MeterRegistry`, optional `AssetContentRepository`, `Dedup4jProperties`, and the existing management `FailureSource` contract where available.
 - Produces: immutable current-instance values used by `EmbeddedDashboardController`.
 
 The snapshot service must calculate the same metric meanings as the existing
 management API:
 
 ```text
-uploads                  = blob.helper.uploads counter
-duplicates               = blob.helper.duplicates counter
-physicalUploads          = blob.helper.skipped.physical.writes counter
-logicalBytes             = blob.helper.bytes.accepted counter
-avoidedBytes             = blob.helper.bytes.avoided counter
+uploads                  = dedup4j.uploads counter
+duplicates               = dedup4j.duplicates counter
+physicalUploads          = dedup4j.skipped.physical.writes counter
+logicalBytes             = dedup4j.bytes.accepted counter
+avoidedBytes             = dedup4j.bytes.avoided counter
 contentCount             = number of AssetContent rows, or 0 when unavailable
 physicalBytes            = sum of AssetContent.sizeBytes, or 0 when unavailable
 newUploads               = uploads - duplicates, never below 0
@@ -221,7 +221,7 @@ Cover a populated registry/repository and a context with no meter registry or re
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=EmbeddedDashboardSnapshotServiceTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=EmbeddedDashboardSnapshotServiceTest`
 
 Expected: compilation failure because the snapshot service does not exist.
 
@@ -231,12 +231,12 @@ Use `ObjectProvider` for optional collaborators. Read each counter by exact metr
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=EmbeddedDashboardSnapshotServiceTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=EmbeddedDashboardSnapshotServiceTest`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add blob-helper-spring-boot-dashboard/src/main/java blob-helper-spring-boot-dashboard/src/test/java
+git add dedup4j-spring-boot-dashboard/src/main/java dedup4j-spring-boot-dashboard/src/test/java
 git commit -m "feat: add embedded dashboard metrics snapshot"
 ```
 
@@ -244,16 +244,16 @@ git commit -m "feat: add embedded dashboard metrics snapshot"
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardView.java`
-- Create: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardController.java`
-- Modify: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardAutoConfiguration.java`
-- Test: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardControllerTest.java`
-- Test: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/autoconfigure/BlobHelperDashboardAutoConfigurationTest.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardView.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`
+- Modify: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfiguration.java`
+- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardControllerTest.java`
+- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/autoconfigure/Dedup4jDashboardAutoConfigurationTest.java`
 
 **Interfaces:**
 
-- Consumes: `EmbeddedDashboardSnapshotService`, `BlobHelperDashboardProperties`, and the optional failure source.
-- Produces: read-only JSON routes under `${blob-helper.dashboard.base-path}/api/v1`.
+- Consumes: `EmbeddedDashboardSnapshotService`, `Dedup4jDashboardProperties`, and the optional failure source.
+- Produces: read-only JSON routes under `${dedup4j.dashboard.base-path}/api/v1`.
 
 The controller must use the same field meanings as the standalone `DashboardView` records so the static UI can render either mode. For a single host application, return exactly one instance row with the configured management instance ID/name and provider.
 
@@ -262,12 +262,12 @@ The controller must use the same field meanings as the standalone `DashboardView
 Verify:
 
 ```java
-mockMvc.perform(get("/blob-helper/dashboard/api/v1/overview"))
+mockMvc.perform(get("/dedup4j/dashboard/api/v1/overview"))
        .andExpect(status().isOk())
        .andExpect(jsonPath("$.instanceCount").value(1))
        .andExpect(jsonPath("$.uploads").value(15));
 
-mockMvc.perform(get("/blob-helper/dashboard/api/v1/failures"))
+mockMvc.perform(get("/dedup4j/dashboard/api/v1/failures"))
        .andExpect(status().isOk());
 ```
 
@@ -275,7 +275,7 @@ Also verify that POST/PUT/DELETE requests are not mapped and that the configured
 
 - [ ] **Step 2: Run controller tests to verify they fail**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=EmbeddedDashboardControllerTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=EmbeddedDashboardControllerTest`
 
 Expected: failure because the controller and routes do not exist.
 
@@ -289,7 +289,7 @@ Verify:
 
 ```text
 dashboard enabled by default when the module is on a web application classpath
-dashboard disabled when blob-helper.dashboard.enabled=false
+dashboard disabled when dedup4j.dashboard.enabled=false
 custom base path changes both UI and API routes
 dashboard does not require dashboard-registration properties
 ```
@@ -300,12 +300,12 @@ Use `@ConditionalOnWebApplication` and `@ConditionalOnClass` for Spring MVC. Reg
 
 - [ ] **Step 6: Run focused tests to verify they pass**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=EmbeddedDashboardControllerTest,BlobHelperDashboardAutoConfigurationTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=EmbeddedDashboardControllerTest,Dedup4jDashboardAutoConfigurationTest`
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add blob-helper-spring-boot-dashboard/src/main/java blob-helper-spring-boot-dashboard/src/test/java
+git add dedup4j-spring-boot-dashboard/src/main/java dedup4j-spring-boot-dashboard/src/test/java
 git commit -m "feat: serve embedded dashboard API"
 ```
 
@@ -313,28 +313,28 @@ git commit -m "feat: serve embedded dashboard API"
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/index.html`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/css/dashboard.css`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/css/states.css`
-- Create: `blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/js/dashboard.js`
-- Modify: `blob-helper-spring-boot-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/EmbeddedDashboardController.java`
-- Test: `blob-helper-spring-boot-dashboard/src/test/java/com/edem/blobhelper/dashboard/EmbeddedDashboardIntegrationTest.java`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/index.html`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/css/dashboard.css`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/css/states.css`
+- Create: `dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/js/dashboard.js`
+- Modify: `dedup4j-spring-boot-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/EmbeddedDashboardController.java`
+- Test: `dedup4j-spring-boot-dashboard/src/test/java/com/edem/dedup4j/dashboard/EmbeddedDashboardIntegrationTest.java`
 
 **Interfaces:**
 
 - Consumes: embedded API routes from Task 4.
-- Produces: browser UI at `/blob-helper/dashboard` with relative API requests.
+- Produces: browser UI at `/dedup4j/dashboard` with relative API requests.
 
 - [ ] **Step 1: Write the static UI integration test**
 
 Start a minimal Spring Boot test application with the dashboard starter and verify:
 
 ```java
-mockMvc.perform(get("/blob-helper/dashboard"))
+mockMvc.perform(get("/dedup4j/dashboard"))
        .andExpect(status().isOk())
        .andExpect(content().string(containsString("Make every byte count.")));
 
-mockMvc.perform(get("/blob-helper/dashboard/js/dashboard.js"))
+mockMvc.perform(get("/dedup4j/dashboard/js/dashboard.js"))
        .andExpect(status().isOk())
        .andExpect(content().string(containsString("/api/v1/overview")));
 ```
@@ -343,7 +343,7 @@ The test must also verify that the API returns the same metrics to the UI and th
 
 - [ ] **Step 2: Run the integration test to verify it fails**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=EmbeddedDashboardIntegrationTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=EmbeddedDashboardIntegrationTest`
 
 Expected: 404 because the embedded static resources are not present.
 
@@ -357,7 +357,7 @@ Reuse the approved dashboard visual design and fix the browser paths so the scri
 ./api/v1/failures
 ```
 
-The dashboard root controller must forward `/blob-helper/dashboard` to the packaged `index.html` resource.
+The dashboard root controller must forward `/dedup4j/dashboard` to the packaged `index.html` resource.
 
 - [ ] **Step 4: Add the static resource and root route configuration**
 
@@ -365,12 +365,12 @@ Serve the resource directory under the configured base path and ensure the root 
 
 - [ ] **Step 5: Run the integration test to verify it passes**
 
-Run: `./mvnw -pl blob-helper-spring-boot-dashboard test -Dtest=EmbeddedDashboardIntegrationTest`
+Run: `./mvnw -pl dedup4j-spring-boot-dashboard test -Dtest=EmbeddedDashboardIntegrationTest`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add blob-helper-spring-boot-dashboard/src/main/resources blob-helper-spring-boot-dashboard/src/main/java blob-helper-spring-boot-dashboard/src/test/java
+git add dedup4j-spring-boot-dashboard/src/main/resources dedup4j-spring-boot-dashboard/src/main/java dedup4j-spring-boot-dashboard/src/test/java
 git commit -m "feat: embed dashboard UI in Spring Boot applications"
 ```
 
@@ -378,10 +378,10 @@ git commit -m "feat: embed dashboard UI in Spring Boot applications"
 
 **Files:**
 
-- Modify: `blob-helper-dashboard/src/main/resources/static/js/dashboard.js` only if the shared UI path change requires it.
-- Modify: `blob-helper-dashboard/pom.xml` only if the standalone app consumes a shared UI resource artifact.
-- Test: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/MultiInstanceDashboardIntegrationTest.java`
-- Test: `blob-helper-spring-boot-management/src/test/java/com/edem/blobhelper/management/ManagementDashboardContractTest.java`
+- Modify: `dedup4j-dashboard/src/main/resources/static/js/dashboard.js` only if the shared UI path change requires it.
+- Modify: `dedup4j-dashboard/pom.xml` only if the standalone app consumes a shared UI resource artifact.
+- Test: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/MultiInstanceDashboardIntegrationTest.java`
+- Test: `dedup4j-spring-boot-management/src/test/java/com/edem/dedup4j/management/ManagementDashboardContractTest.java`
 
 **Interfaces:**
 
@@ -390,7 +390,7 @@ git commit -m "feat: embed dashboard UI in Spring Boot applications"
 
 - [ ] **Step 1: Run existing standalone and management tests before changes**
 
-Run: `./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test`
+Run: `./mvnw -pl dedup4j-spring-boot-management,dedup4j-dashboard test`
 
 Record the passing baseline in the task notes.
 
@@ -404,12 +404,12 @@ Do not merge SQLite polling, instance registration, or multi-instance persistenc
 
 - [ ] **Step 4: Run the regression suite**
 
-Run: `./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test`
+Run: `./mvnw -pl dedup4j-spring-boot-management,dedup4j-dashboard test`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add blob-helper-dashboard blob-helper-spring-boot-management
+git add dedup4j-dashboard dedup4j-spring-boot-management
 git commit -m "test: preserve standalone dashboard monitoring mode"
 ```
 
@@ -417,8 +417,8 @@ git commit -m "test: preserve standalone dashboard monitoring mode"
 
 **Files:**
 
-- Create or modify in `/Users/Edem/Documents/IdeaProjects/blob-helper-docs/docs/`: `getting-started/installation.md`, `getting-started/quick-start.md`, `guides/embedded-dashboard.md`, and `releases.md`.
-- Modify: `/Users/Edem/Documents/blob-helper-maven-central-roadmap.md` if the artifact list changes.
+- Create or modify in `/Users/Edem/Documents/IdeaProjects/dedup4j-docs/docs/`: `getting-started/installation.md`, `getting-started/quick-start.md`, `guides/embedded-dashboard.md`, and `releases.md`.
+- Modify: `/Users/Edem/Documents/dedup4j-maven-central-roadmap.md` if the artifact list changes.
 - Modify: `README.md` in the Java repository with the embedded dashboard dependency and route.
 - Modify: `docs/architecture.md`, `docs/implementation.md`, and `docs/changelog.md`.
 
@@ -433,7 +433,7 @@ Document the dependency using the confirmed release namespace and version. The e
 
 ```text
 start the application
-open http://localhost:8080/blob-helper/dashboard
+open http://localhost:8080/dedup4j/dashboard
 ```
 
 - [ ] **Step 2: Document configuration**
@@ -441,7 +441,7 @@ open http://localhost:8080/blob-helper/dashboard
 Explain the default-on behavior and opt-out:
 
 ```yaml
-blob-helper:
+dedup4j:
   dashboard:
     enabled: false
 ```
@@ -483,7 +483,7 @@ Run:
 
 ```bash
 git diff --check
-node --check blob-helper-spring-boot-dashboard/src/main/resources/static/blob-helper/dashboard/js/dashboard.js
+node --check dedup4j-spring-boot-dashboard/src/main/resources/static/dedup4j/dashboard/js/dashboard.js
 ```
 
 - [ ] **Step 2: Run the complete reactor verification**
@@ -503,17 +503,17 @@ Build a temporary Spring Boot consumer that declares only:
 ```xml
 <dependency>
     <groupId>io.github.heyEdem</groupId>
-    <artifactId>blob-helper-spring-boot-starter</artifactId>
+    <artifactId>dedup4j-spring-boot-starter</artifactId>
     <version>...</version>
 </dependency>
 <dependency>
     <groupId>io.github.heyEdem</groupId>
-    <artifactId>blob-helper-spring-boot-dashboard</artifactId>
+    <artifactId>dedup4j-spring-boot-dashboard</artifactId>
     <version>...</version>
 </dependency>
 ```
 
-Start it and verify `/blob-helper/dashboard`, `/blob-helper/dashboard/api/v1/overview`, and the static JavaScript resource all return successfully.
+Start it and verify `/dedup4j/dashboard`, `/dedup4j/dashboard/api/v1/overview`, and the static JavaScript resource all return successfully.
 
 - [ ] **Step 4: Re-scan changed files and direct neighbors**
 
@@ -533,15 +533,15 @@ Confirm that ADR-006 records the reversal from standalone-only user experience t
 
 ```bash
 git add .
-git commit -m "feat: add embedded Blob Helper dashboard starter"
+git commit -m "feat: add embedded dedup4j dashboard starter"
 ```
 
 ## Acceptance criteria
 
-- Adding `blob-helper-spring-boot-dashboard` to a Spring Boot application makes `/blob-helper/dashboard` available after application startup.
+- Adding `dedup4j-spring-boot-dashboard` to a Spring Boot application makes `/dedup4j/dashboard` available after application startup.
 - No second Java process, SQLite file, registration URL, or dashboard application is required for embedded mode.
 - The embedded UI shows current uploads, duplicates, logical bytes, physical bytes, avoided bytes, instance status, and failures when available.
-- `blob-helper.dashboard.enabled=false` disables the UI and all embedded dashboard routes.
+- `dedup4j.dashboard.enabled=false` disables the UI and all embedded dashboard routes.
 - The embedded API is GET-only and does not mutate blobs, metadata, or reference counts.
 - Existing standalone multi-instance dashboard tests continue to pass.
 - A clean consumer project can resolve the dashboard starter as a Maven dependency.

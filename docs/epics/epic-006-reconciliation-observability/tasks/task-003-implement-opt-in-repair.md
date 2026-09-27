@@ -10,8 +10,8 @@ Repair reference count drift only when explicitly enabled.
 
 ## Files
 
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/reconcile/ReconciliationService.java`
-- Modify: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/reconcile/ReconciliationServiceTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationService.java`
+- Modify: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/reconcile/ReconciliationServiceTest.java`
 
 ## Steps
 
@@ -19,7 +19,7 @@ Repair reference count drift only when explicitly enabled.
 - [x] Write `repairsOnlyWhenEnabled`.
 - [x] Keep disabled mode read-only.
 - [x] Update `ref_count` only through the JPA reference-count boundary.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter -Dtest=ReconciliationServiceTest test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter -Dtest=ReconciliationServiceTest test`.
 
 ## Acceptance
 

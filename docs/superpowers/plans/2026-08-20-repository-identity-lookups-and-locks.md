@@ -13,22 +13,22 @@
 ### Task 1: Add repository behavior tests
 
 **Files:**
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentRepositoryTest.java`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentRepositoryTest.java`
 
 - [x] **Step 1: Write tests for identity lookup, locked id lookup, and duplicate identity rejection**
 
-  Bootstrap the existing `blob-helper-jpa-test` persistence unit, persist one `AssetContent`, assert the identity lookup finds it only when algorithm/hash/size all match, assert the locked lookup returns the same row, and assert a second row with the same identity fails at transaction commit.
+  Bootstrap the existing `dedup4j-jpa-test` persistence unit, persist one `AssetContent`, assert the identity lookup finds it only when algorithm/hash/size all match, assert the locked lookup returns the same row, and assert a second row with the same identity fails at transaction commit.
 
 - [x] **Step 2: Run the repository test before implementation**
 
-  Run `./mvnw -pl blob-helper-jpa -Dtest=AssetContentRepositoryTest test`.
+  Run `./mvnw -pl dedup4j-jpa -Dtest=AssetContentRepositoryTest test`.
 
   Expected: compilation failure because `AssetContentRepository` does not exist.
 
 ### Task 2: Implement the repository
 
 **Files:**
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentRepository.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentRepository.java`
 
 - [x] **Step 1: Add an EntityManager-backed repository**
 
@@ -36,7 +36,7 @@
 
 - [x] **Step 2: Run the focused repository test**
 
-  Run `./mvnw -pl blob-helper-jpa -Dtest=AssetContentRepositoryTest test`.
+  Run `./mvnw -pl dedup4j-jpa -Dtest=AssetContentRepositoryTest test`.
 
   Expected: all repository tests pass.
 
@@ -56,7 +56,7 @@
 
 - [x] **Step 2: Run module and full verification**
 
-  Run `./mvnw -pl blob-helper-jpa test` and `./mvnw verify`.
+  Run `./mvnw -pl dedup4j-jpa test` and `./mvnw verify`.
 
   Expected: both commands exit successfully with all tests passing.
 

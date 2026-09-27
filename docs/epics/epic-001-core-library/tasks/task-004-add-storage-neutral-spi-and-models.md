@@ -10,20 +10,20 @@ Define provider-neutral storage and service models used by every adapter.
 
 ## Files
 
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/BlobStorage.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/PutBlobRequest.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/StoredBlob.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/storage/BlobResource.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/StoreBlobCommand.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/model/BlobReference.java`
-- Create: `blob-helper-core/src/main/java/com/edem/blobhelper/core/exception/*.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobStorage.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/PutBlobRequest.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/StoredBlob.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobResource.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/StoreBlobCommand.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/model/BlobReference.java`
+- Create: `dedup4j-core/src/main/java/com/edem/dedup4j/core/exception/*.java`
 
 ## Steps
 
 - [x] Define `BlobStorage.put`, `get`, `delete`, and `exists`.
 - [x] Add immutable request/response records.
 - [x] Add domain exceptions for validation, hashing, storage, content not found, and reference count underflow.
-- [x] Run `./mvnw -pl blob-helper-core test`.
+- [x] Run `./mvnw -pl dedup4j-core test`.
 
 ## Acceptance
 

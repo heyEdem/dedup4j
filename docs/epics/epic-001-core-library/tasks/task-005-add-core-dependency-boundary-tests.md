@@ -6,18 +6,18 @@
 
 ## Goal
 
-Protect `blob-helper-core` from Spring, JPA, AWS, and Azure dependencies.
+Protect `dedup4j-core` from Spring, JPA, AWS, and Azure dependencies.
 
 ## Files
 
-- Modify: `blob-helper-core/pom.xml`
-- Create: `blob-helper-core/src/test/java/com/edem/blobhelper/core/CoreModuleBoundaryTest.java`
+- Modify: `dedup4j-core/pom.xml`
+- Create: `dedup4j-core/src/test/java/com/edem/dedup4j/core/CoreModuleBoundaryTest.java`
 
 ## Steps
 
 - [x] Add a dependency-boundary test using Maven dependency output or classpath inspection.
 - [x] Assert no `org.springframework`, `jakarta.persistence`, `software.amazon.awssdk`, or `com.azure` artifacts are present.
-- [x] Run `./mvnw -pl blob-helper-core test`.
+- [x] Run `./mvnw -pl dedup4j-core test`.
 
 ## Acceptance
 

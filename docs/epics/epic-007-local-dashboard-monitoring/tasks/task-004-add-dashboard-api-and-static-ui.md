@@ -11,12 +11,12 @@ RabbitMQ-style local console.
 
 ## Files
 
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/DashboardController.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/api/DashboardView.java`
-- Create: `blob-helper-dashboard/src/main/resources/static/index.html`
-- Create: `blob-helper-dashboard/src/main/resources/static/css/dashboard.css`
-- Create: `blob-helper-dashboard/src/main/resources/static/js/dashboard.js`
-- Create: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/api/DashboardControllerTest.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/DashboardController.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/api/DashboardView.java`
+- Create: `dedup4j-dashboard/src/main/resources/static/index.html`
+- Create: `dedup4j-dashboard/src/main/resources/static/css/dashboard.css`
+- Create: `dedup4j-dashboard/src/main/resources/static/js/dashboard.js`
+- Create: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/api/DashboardControllerTest.java`
 
 ## Acceptance
 

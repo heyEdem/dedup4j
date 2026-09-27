@@ -11,15 +11,15 @@ failure records bounded to seven days.
 
 ## Files
 
-- Modify: `blob-helper-dashboard/pom.xml`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/persistence/DashboardDatabase.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/persistence/InstanceRepository.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/persistence/MetricSnapshotRepository.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/persistence/FailureEventRepository.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/polling/InstancePollingService.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/polling/MetricDeltaCalculator.java`
-- Create: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/persistence/FailureEventRepositoryTest.java`
-- Create: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/polling/MetricDeltaCalculatorTest.java`
+- Modify: `dedup4j-dashboard/pom.xml`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/persistence/DashboardDatabase.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/persistence/InstanceRepository.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/persistence/MetricSnapshotRepository.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/persistence/FailureEventRepository.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/polling/InstancePollingService.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/polling/MetricDeltaCalculator.java`
+- Create: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/persistence/FailureEventRepositoryTest.java`
+- Create: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/polling/MetricDeltaCalculatorTest.java`
 
 ## Acceptance
 

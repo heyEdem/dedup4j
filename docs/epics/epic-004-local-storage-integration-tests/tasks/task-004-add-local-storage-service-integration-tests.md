@@ -10,7 +10,7 @@ Test the complete service path with local storage.
 
 ## Files
 
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/LocalStorageDeduplicationIntegrationTest.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/LocalStorageDeduplicationIntegrationTest.java`
 
 ## Steps
 
@@ -18,7 +18,7 @@ Test the complete service path with local storage.
 - [x] Store new content and verify file exists.
 - [x] Store duplicate content and verify no second file is created.
 - [x] Release both references and verify final delete.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter -Dtest=LocalStorageDeduplicationIntegrationTest test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter -Dtest=LocalStorageDeduplicationIntegrationTest test`.
 
 ## Acceptance
 

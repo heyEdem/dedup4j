@@ -3,11 +3,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.edem</groupId>
-    <artifactId>blob-helper</artifactId>
+    <artifactId>dedup4j</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>blob-helper</name>
-    <description>blob-helper</description>
+    <name>dedup4j</name>
+    <description>dedup4j</description>
     <url/>
     <licenses>
         <license/>
@@ -31,15 +31,16 @@
     </properties>
 
     <modules>
-        <module>blob-helper-core</module>
-        <module>blob-helper-jpa</module>
-        <module>blob-helper-spring-boot-starter</module>
-        <module>blob-helper-storage-local</module>
-        <module>blob-helper-storage-s3</module>
-        <module>blob-helper-storage-azure</module>
-        <module>blob-helper-spring-boot-management</module>
-        <module>blob-helper-spring-boot-dashboard</module>
-        <module>blob-helper-dashboard</module>
+        <module>dedup4j-core</module>
+        <module>dedup4j-jpa</module>
+        <module>dedup4j-spring-boot-starter</module>
+        <module>dedup4j-storage-local</module>
+        <module>dedup4j-storage-s3</module>
+        <module>dedup4j-storage-azure</module>
+        <module>dedup4j-spring-boot-management</module>
+        <module>dedup4j-spring-boot-dashboard</module>
+        <module>dedup4j-spring-boot-observability</module>
+        <module>dedup4j-dashboard</module>
     </modules>
 
     <dependencyManagement>

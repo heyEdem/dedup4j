@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dedup4j / Operations</title>
+  <link rel="stylesheet" href="/css/dashboard.css"><link rel="stylesheet" href="/css/states.css">
+</head>
+<body>
+  <!-- THESIS: a quiet instrument panel that makes deduplication work visible at a glance, without dashboard clutter.
+  OWN-WORLD: ink, mist, and a single amber signal accent; measured lines, dense tables, and calm status language.
+  STORY: operators see the current fleet, understand bytes saved, and investigate the latest failure.
+  FIRST VIEWPORT: a narrow sidebar frames one dominant overview, headline savings, and a live instance list.
+  FORM: operate-mode instrument panel, position 1; seed key: dashboard-operations-panel.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md -->
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview"><span class="brand-mark">D</span><span>dedup4j<small>operations console</small></span></a>
+      <nav aria-label="Primary navigation"><a class="nav-link active" href="#overview">Overview</a><a class="nav-link" href="#instances">Instances</a><a class="nav-link" href="#failures">Failures</a><a class="nav-link" href="#settings">Settings</a></nav>
+      <div class="sidebar-foot"><span class="pulse" aria-hidden="true"></span><span>Local collection<br><small>Read-only · loopback</small></span></div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar"><div><p class="section-label">Local operations / Overview</p><h1>Make every byte count.</h1><p class="topbar-caption">A quiet view of deduplication across your running instances.</p></div><button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle color theme">◐</button></header>
+      <div id="app-status" class="status-line" role="status">Connecting to local history…</div>
+      <section id="overview" class="overview-grid" aria-labelledby="overview-title">
+        <div class="hero-panel"><div class="panel-heading"><div><p class="section-label">Fleet signal</p><h2 id="overview-title">Deduplication at work</h2></div><span class="live-tag"><span class="pulse"></span> LIVE</span></div><div class="hero-number" id="avoided-bytes">—</div><p class="hero-caption">bytes avoided by duplicate uploads</p><div class="chart-wrap"><canvas id="trend-chart" aria-label="Metric trend chart"></canvas><div id="chart-empty" class="empty-note" hidden>No snapshots collected yet.</div></div></div>
+        <div class="metrics-column"><article class="metric-block"><span>Total uploads</span><strong id="total-uploads">—</strong><small>all instances</small></article><article class="metric-block"><span>New uploads</span><strong id="new-uploads">—</strong><small>unique content arrivals</small></article><article class="metric-block accent"><span>Duplicates</span><strong id="duplicates">—</strong><small id="upload-summary">waiting for a poll</small></article><article class="metric-block"><span>Unique content</span><strong id="content-count">—</strong><small>current records</small></article><article class="metric-block"><span>Logical bytes</span><strong id="logical-bytes">—</strong><small>accepted by the fleet</small></article><article class="metric-block"><span>Physical bytes</span><strong id="physical-bytes">—</strong><small>written to storage</small></article></div>
+      </section>
+      <section id="instances" class="content-section"><div class="section-heading"><div><p class="section-label">Fleet observability</p><h2>Instances</h2></div><span id="instance-count" class="count-label">—</span></div><div class="instance-table" role="table" aria-label="Aggregated dedup4j metrics by instance"><div class="instance-table-head" role="row"><span>Instance</span><span>Status</span><span>Uploads</span><span>New</span><span>Duplicates</span><span>Rate</span><span>Content</span><span>Physical</span><span>Avoided</span></div><div id="instances-list" class="instance-list"><div class="loading-row">Loading registered instances<span class="loading-bar"></span></div></div></div></section>
+      <section id="failures" class="content-section"><div class="section-heading"><div><p class="section-label latest-event-label">LATEST EVENT</p><h2>Recent failures</h2></div><span class="count-label">last 7 days</span></div><div id="failures-list" class="failure-list"><div class="loading-row">Loading failure history<span class="loading-bar"></span></div></div></section>
+      <section id="settings" class="content-section settings-panel"><div class="section-heading"><div><p class="section-label">Configuration</p><h2>Local collection</h2></div><span class="read-only-tag">READ-ONLY</span></div><dl><div><dt>Polling interval</dt><dd>30 seconds</dd></div><div><dt>Failure retention</dt><dd>7 days</dd></div><div><dt>Database</dt><dd>SQLite · local file</dd></div><div><dt>Access</dt><dd>Read-only · loopback</dd></div></dl></section>
+      <footer>dedup4j Dashboard <span>·</span> local, read-only monitoring</footer>
+    </main>
+  </div>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

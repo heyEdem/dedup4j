@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local fleet-dashboard runtime data, sidecars, and backups
+**/blob-helper-dashboard.sqlite
+**/blob-helper-dashboard.sqlite-*
+**/blob-helper-dashboard.sqlite.backup*
+**/dedup4j-dashboard.sqlite
+**/dedup4j-dashboard.sqlite-*
+**/dedup4j-dashboard.sqlite.backup*
+
+# macOS
+.DS_Store

@@ -9,7 +9,7 @@ Add a reusable persistence module that owns physical blob metadata without coupl
 
 ## Architecture
 
-Create `blob-helper-jpa` as a Maven child module. The module uses Jakarta Persistence for its public mapping contract, Hibernate ORM as the persistence implementation, and H2 only for tests. It does not depend on Spring or storage-provider SDKs.
+Create `dedup4j-jpa` as a Maven child module. The module uses Jakarta Persistence for its public mapping contract, Hibernate ORM as the persistence implementation, and H2 only for tests. It does not depend on Spring or storage-provider SDKs.
 
 `AssetContent` maps to `blob_asset_content` and owns the physical content identity, object location, optional content metadata, reference count, timestamps, and optimistic-lock version. The database identity invariant is enforced by a unique constraint over `hash_algorithm`, `content_hash`, and `size_bytes`.
 

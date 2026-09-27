@@ -8,7 +8,7 @@
 ## Goal
 
 Build a lightweight, standalone, read-only dashboard that monitors multiple
-local Blob Helper instances through self-registration and pull-based management
+local dedup4j instances through self-registration and pull-based management
 endpoints, retaining aggregate history in SQLite and detailed failures for
 seven days.
 
@@ -16,9 +16,9 @@ seven days.
 
 Add two optional Maven modules:
 
-- `blob-helper-spring-boot-management`: instance-side configuration,
+- `dedup4j-spring-boot-management`: instance-side configuration,
   read-only management endpoints, and self-registration client.
-- `blob-helper-dashboard`: standalone Spring Boot app with registration,
+- `dedup4j-dashboard`: standalone Spring Boot app with registration,
   polling, SQLite persistence, REST view API, and static HTML/CSS/JavaScript UI.
 
 The management module must not own application logical assets, cloud-provider
@@ -38,9 +38,9 @@ instance database or object store.
 
 | Boundary | Responsibility |
 |---|---|
-| `blob-helper-spring-boot-management/pom.xml` | Optional management module dependencies and auto-configuration metadata. |
-| `.../management/BlobHelperManagementProperties.java` | Enablement, base path, instance ID/name, advertised URL, and dashboard registration settings. |
-| `.../management/BlobHelperManagementController.java` | Read-only info, health, metrics, and failure endpoints. |
+| `dedup4j-spring-boot-management/pom.xml` | Optional management module dependencies and auto-configuration metadata. |
+| `.../management/Dedup4jManagementProperties.java` | Enablement, base path, instance ID/name, advertised URL, and dashboard registration settings. |
+| `.../management/Dedup4jManagementController.java` | Read-only info, health, metrics, and failure endpoints. |
 | `.../dashboard/registration/InstanceRegistrationController.java` | Local dashboard registration endpoint. |
 | `.../dashboard/registration/InstanceRegistrationClient.java` | Startup self-registration from an instance. |
 | `.../dashboard/persistence/*` | SQLite schema and repositories for registry, snapshots, and failures. |
@@ -53,15 +53,15 @@ instance database or object store.
 Instance configuration:
 
 ```yaml
-blob-helper:
+dedup4j:
   management:
     enabled: true
-    base-path: /blob-helper/management
+    base-path: /dedup4j/management
   dashboard-registration:
     enabled: true
     dashboard-url: http://127.0.0.1:9090
     instance-name: orders-service
-    advertised-url: http://127.0.0.1:8081/blob-helper/management
+    advertised-url: http://127.0.0.1:8081/dedup4j/management
 ```
 
 Dashboard configuration:
@@ -71,7 +71,7 @@ server:
   address: 127.0.0.1
   port: 9090
 
-blob-helper:
+dedup4j:
   dashboard:
     database-path: ./blob-helper-dashboard.sqlite
     polling-interval: 30s
@@ -87,12 +87,12 @@ accepts local registrations without tokens in the MVP.
 **Files:**
 
 - Create the module POM and add it to the root reactor.
-- Create `BlobHelperManagementProperties` with management disabled by default,
-  `/blob-helper/management` as the default base path, and dashboard
+- Create `Dedup4jManagementProperties` with management disabled by default,
+  `/dedup4j/management` as the default base path, and dashboard
   registration disabled by default.
 - Create provider-neutral response records for info, health, metrics, and
   failures.
-- Create `BlobHelperManagementController` with:
+- Create `Dedup4jManagementController` with:
   `GET /v1/info`, `GET /v1/health`, `GET /v1/metrics`, and
   `GET /v1/failures?since=<timestamp>`.
 - Register auto-configuration through
@@ -109,7 +109,7 @@ accepts local registrations without tokens in the MVP.
 Run:
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-management -Dtest=BlobHelperManagementControllerTest test
+./mvnw -pl dedup4j-spring-boot-management -Dtest=Dedup4jManagementControllerTest test
 ```
 
 Execution steps:
@@ -129,7 +129,7 @@ Execution steps:
   client.
 - Set dashboard defaults to address `127.0.0.1` and port `9090`.
 - Make registration retryable without blocking the consuming application’s
-  startup; an unavailable dashboard must not prevent Blob Helper startup.
+  startup; an unavailable dashboard must not prevent dedup4j startup.
 
 **Tests first:**
 
@@ -142,7 +142,7 @@ Execution steps:
 Run:
 
 ```bash
-./mvnw -pl blob-helper-dashboard -Dtest=InstanceRegistrationTest test
+./mvnw -pl dedup4j-dashboard -Dtest=InstanceRegistrationTest test
 ```
 
 Execution steps:
@@ -179,7 +179,7 @@ Execution steps:
 Run:
 
 ```bash
-./mvnw -pl blob-helper-dashboard -Dtest='*RepositoryTest,*CalculatorTest' test
+./mvnw -pl dedup4j-dashboard -Dtest='*RepositoryTest,*CalculatorTest' test
 ```
 
 Execution steps:
@@ -213,7 +213,7 @@ Execution steps:
 Run:
 
 ```bash
-./mvnw -pl blob-helper-dashboard -Dtest=DashboardControllerTest test
+./mvnw -pl dedup4j-dashboard -Dtest=DashboardControllerTest test
 ```
 
 Execution steps:
@@ -248,7 +248,7 @@ Execution steps:
 Run the focused and full verification:
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-management,blob-helper-dashboard test
+./mvnw -pl dedup4j-spring-boot-management,dedup4j-dashboard test
 ./mvnw --batch-mode --no-transfer-progress verify
 ```
 

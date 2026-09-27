@@ -1,4 +1,4 @@
-# Blob Helper Documentation
+# dedup4j Documentation
 
 ## Documents
 

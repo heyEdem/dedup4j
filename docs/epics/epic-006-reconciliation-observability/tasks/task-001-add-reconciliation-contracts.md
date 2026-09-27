@@ -6,20 +6,20 @@
 
 ## Goal
 
-Define how consuming applications report logical reference counts to Blob Helper.
+Define how consuming applications report logical reference counts to dedup4j.
 
 ## Files
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/reconcile/LogicalReferenceCountSource.java`
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/reconcile/ReconciliationReport.java`
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/reconcile/ReconciliationMismatch.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/LogicalReferenceCountSource.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationReport.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/reconcile/ReconciliationMismatch.java`
 
 ## Steps
 
 - [x] Add callback/query adapter interface for app-owned logical assets.
 - [x] Add report and mismatch records.
 - [x] Keep repair commands separate from report generation.
-- [x] Run `./mvnw -pl blob-helper-spring-boot-starter test`.
+- [x] Run `./mvnw -pl dedup4j-spring-boot-starter test`.
 
 ## Acceptance
 

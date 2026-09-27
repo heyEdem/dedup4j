@@ -1,8 +1,8 @@
-# Blob Helper Specification
+# dedup4j Specification
 
 ## 1. Overview
 
-Blob Helper is a reusable Java/Spring Boot library for deduplicated object
+dedup4j is a reusable Java/Spring Boot library for deduplicated object
 uploads. It prevents byte-identical files from being uploaded and stored more
 than once while keeping application-level asset models flexible.
 
@@ -31,7 +31,7 @@ multiple object storage providers.
 - Support transparent upload, download, and delete workflows.
 - Provide reconciliation tools for reference count drift.
 - Provide a lightweight local dashboard for inspecting the current application;
-  optionally provide a separate dashboard for monitoring multiple Blob Helper
+  optionally provide a separate dashboard for monitoring multiple dedup4j
   instances and measuring deduplication savings over time.
 
 ## 3. Non-Goals
@@ -60,7 +60,7 @@ different ownership, permissions, lifecycle, and business fields.
 
 ### Asset Content
 
-Asset content is the physical blob metadata owned by Blob Helper.
+Asset content is the physical blob metadata owned by dedup4j.
 
 Many logical assets can point to one asset content row.
 
@@ -95,7 +95,7 @@ Including `size_bytes` provides an extra guard and improves lookup precision.
 
 ## 5. Module Design
 
-### blob-helper-core
+### dedup4j-core
 
 Framework-neutral code.
 
@@ -110,7 +110,7 @@ Responsibilities:
 
 No Spring, JPA, AWS, or Azure dependency should be required here.
 
-### blob-helper-jpa
+### dedup4j-jpa
 
 Persistence module for relational databases.
 
@@ -122,7 +122,7 @@ Responsibilities:
 - reference count operations
 - reconciliation query support
 
-### blob-helper-spring-boot-starter
+### dedup4j-spring-boot-starter
 
 Spring integration module.
 
@@ -135,7 +135,7 @@ Responsibilities:
 - delete/reference service bean
 - optional scheduled reconciliation bean
 
-### blob-helper-storage-s3
+### dedup4j-storage-s3
 
 AWS S3 adapter.
 
@@ -147,7 +147,7 @@ Responsibilities:
 - delete objects from S3
 - return object metadata and access information
 
-### blob-helper-storage-azure
+### dedup4j-storage-azure
 
 Azure Blob Storage adapter.
 
@@ -159,7 +159,7 @@ Responsibilities:
 - delete blobs from Azure Blob Storage
 - return object metadata and access information
 
-### blob-helper-storage-local
+### dedup4j-storage-local
 
 Local filesystem adapter for tests and development.
 
@@ -169,38 +169,38 @@ Responsibilities:
 - store files under a configured directory
 - support deterministic integration tests without cloud credentials
 
-### blob-helper-spring-boot-management
+### dedup4j-spring-boot-management
 
 Optional Spring Boot management module for consuming applications.
 
 Responsibilities:
 
 - expose local, read-only health, metrics, information, and failure endpoints
-- self-register the application with a local Blob Helper dashboard
+- self-register the application with a local dedup4j dashboard
 - report provider-neutral operational data without exposing provider credentials
 
-### blob-helper-dashboard
+### dedup4j-dashboard
 
 Standalone local fleet administration dashboard.
 
 Responsibilities:
 
-- accept self-registration from multiple local Blob Helper instances
+- accept self-registration from multiple local dedup4j instances
 - pull operational data from registered management endpoints
 - retain aggregate traffic and deduplication history in SQLite
 - retain detailed failures for seven days
 - present a read-only light/dark web dashboard
 
-### blob-helper-spring-boot-dashboard
+### dedup4j-spring-boot-dashboard
 
 Optional embedded dashboard starter for a single consuming Spring Boot
 application.
 
 Responsibilities:
 
-- serve the read-only UI at `/blob-helper/dashboard` by default
+- serve the read-only UI at `/dedup4j/dashboard` by default
 - expose current-process overview, status, history, and failure views
-- remain disabled only when `blob-helper.dashboard.enabled=false`
+- remain disabled only when `dedup4j.dashboard.enabled=false`
 - avoid SQLite persistence, instance registration, and blob mutation
 
 ## 6. Storage Abstraction
@@ -305,13 +305,13 @@ The app should store a foreign key or UUID reference to `blob_asset_content.id`.
 
 ```text
 1. App receives upload.
-2. Blob Helper validates size and optional content type.
-3. Blob Helper streams bytes through SHA-256 hasher.
-4. Blob Helper checks for existing AssetContent by hash + size.
+2. dedup4j validates size and optional content type.
+3. dedup4j streams bytes through SHA-256 hasher.
+4. dedup4j checks for existing AssetContent by hash + size.
 5. No match is found.
-6. Blob Helper creates an object key.
-7. Blob Helper uploads bytes through BlobStorage.
-8. Blob Helper inserts AssetContent with ref_count = 1.
+6. dedup4j creates an object key.
+7. dedup4j uploads bytes through BlobStorage.
+8. dedup4j inserts AssetContent with ref_count = 1.
 9. App creates its logical asset pointing to AssetContent.
 10. App returns its normal response.
 ```
@@ -320,10 +320,10 @@ The app should store a foreign key or UUID reference to `blob_asset_content.id`.
 
 ```text
 1. App receives upload.
-2. Blob Helper computes SHA-256 and size.
+2. dedup4j computes SHA-256 and size.
 3. Existing AssetContent is found.
-4. Blob Helper increments ref_count.
-5. Blob Helper skips object storage upload.
+4. dedup4j increments ref_count.
+5. dedup4j skips object storage upload.
 6. App creates a new logical asset pointing to the existing content.
 7. App returns its normal response.
 ```
@@ -332,12 +332,12 @@ The app should store a foreign key or UUID reference to `blob_asset_content.id`.
 
 ```text
 1. App deletes or detaches its logical asset.
-2. App calls Blob Helper with the referenced AssetContent id.
-3. Blob Helper locks the AssetContent row.
-4. Blob Helper decrements ref_count.
+2. App calls dedup4j with the referenced AssetContent id.
+3. dedup4j locks the AssetContent row.
+4. dedup4j decrements ref_count.
 5. If ref_count remains above 0, no storage delete occurs.
-6. If ref_count reaches 0, Blob Helper deletes the object from storage.
-7. Blob Helper deletes or tombstones the AssetContent row.
+6. If ref_count reaches 0, dedup4j deletes the object from storage.
+7. dedup4j deletes or tombstones the AssetContent row.
 ```
 
 Deletion should be idempotent at the storage adapter level. Missing objects
@@ -385,7 +385,7 @@ uploads/sha-256/a3/a3f1...
 Target Spring Boot configuration:
 
 ```yaml
-blob-helper:
+dedup4j:
   storage:
     provider: s3
     key-prefix: uploads
@@ -401,7 +401,7 @@ blob-helper:
 S3:
 
 ```yaml
-blob-helper:
+dedup4j:
   storage:
     provider: s3
     s3:
@@ -412,7 +412,7 @@ blob-helper:
 Azure:
 
 ```yaml
-blob-helper:
+dedup4j:
   storage:
     provider: azure
     azure:
@@ -423,11 +423,11 @@ blob-helper:
 Local:
 
 ```yaml
-blob-helper:
+dedup4j:
   storage:
     provider: local
     local:
-      root-directory: ./.blob-helper
+      root-directory: ./.dedup4j
 ```
 
 ## 12. Public Service API
@@ -506,7 +506,7 @@ name, advertised management URL, provider name, and API version. The dashboard
 polls each instance independently and marks only the affected instance stale or
 disconnected when a poll fails.
 
-The dashboard tracks Blob Helper's traffic contribution, not provider billing:
+The dashboard tracks dedup4j's traffic contribution, not provider billing:
 
 - upload attempts and duplicate uploads
 - physical uploads and bytes written to the configured provider
@@ -669,8 +669,8 @@ cloud credentials.
 
 The project is successful when another Spring Boot app can:
 
-1. add Blob Helper dependencies
-2. configure `blob-helper.storage.provider`
+1. add dedup4j dependencies
+2. configure `dedup4j.storage.provider`
 3. call one upload service
 4. store its own logical asset pointing to `AssetContent`
 5. avoid re-uploading identical bytes

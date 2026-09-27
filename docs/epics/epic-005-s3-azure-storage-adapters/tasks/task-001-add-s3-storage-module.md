@@ -11,17 +11,17 @@ Create the S3 provider module and configuration.
 ## Files
 
 - Modify: `pom.xml`
-- Create: `blob-helper-storage-s3/pom.xml`
-- Create: `blob-helper-storage-s3/src/main/java/com/edem/blobhelper/storage/s3/S3BlobStorageProperties.java`
+- Create: `dedup4j-storage-s3/pom.xml`
+- Create: `dedup4j-storage-s3/src/main/java/com/edem/dedup4j/storage/s3/S3BlobStorageProperties.java`
 
 ## Steps
 
 - [x] Add module to the reactor.
 - [x] Add AWS SDK dependency only in this module.
 - [x] Add properties for bucket, region, endpoint override, and path-style access.
-- [x] Run `./mvnw -pl blob-helper-storage-s3 test`.
+- [x] Run `./mvnw -pl dedup4j-storage-s3 test`.
 
 ## Acceptance
 
-- [x] AWS SDK dependency is isolated to `blob-helper-storage-s3`.
+- [x] AWS SDK dependency is isolated to `dedup4j-storage-s3`.
 - [x] S3-compatible storage can be configured.

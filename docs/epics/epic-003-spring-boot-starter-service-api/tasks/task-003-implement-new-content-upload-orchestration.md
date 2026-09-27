@@ -10,8 +10,8 @@ Store unseen bytes by hashing, uploading once, and creating metadata with `ref_c
 
 ## Files
 
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/DefaultBlobDeduplicationService.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/BlobDeduplicationServiceTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/DefaultBlobDeduplicationService.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/BlobDeduplicationServiceTest.java`
 
 ## Steps
 

@@ -6,19 +6,19 @@
 
 ## Goal
 
-Allow local Blob Helper applications to register themselves and provide a
+Allow local dedup4j applications to register themselves and provide a
 standalone dashboard process bound to loopback.
 
 ## Files
 
 - Modify: `pom.xml`
-- Create: `blob-helper-dashboard/pom.xml`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/BlobHelperDashboardApplication.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/registration/InstanceRegistrationController.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/registration/InstanceRegistrationClient.java`
-- Create: `blob-helper-dashboard/src/main/java/com/edem/blobhelper/dashboard/registration/InstanceRegistration.java`
-- Create: `blob-helper-dashboard/src/main/resources/application.yaml`
-- Create: `blob-helper-dashboard/src/test/java/com/edem/blobhelper/dashboard/registration/InstanceRegistrationTest.java`
+- Create: `dedup4j-dashboard/pom.xml`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/Dedup4jDashboardApplication.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/registration/InstanceRegistrationController.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/registration/InstanceRegistrationClient.java`
+- Create: `dedup4j-dashboard/src/main/java/com/edem/dedup4j/dashboard/registration/InstanceRegistration.java`
+- Create: `dedup4j-dashboard/src/main/resources/application.yaml`
+- Create: `dedup4j-dashboard/src/test/java/com/edem/dedup4j/dashboard/registration/InstanceRegistrationTest.java`
 
 ## Acceptance
 

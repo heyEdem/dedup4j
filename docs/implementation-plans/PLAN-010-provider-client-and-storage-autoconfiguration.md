@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Configure exactly one local, S3, or Azure `BlobStorage` automatically from `blob-helper.storage.*`, reusing application provider clients before creating defaults.
+**Goal:** Configure exactly one local, S3, or Azure `BlobStorage` automatically from `dedup4j.storage.*`, reusing application provider clients before creating defaults.
 
 **Architecture:** Starter-owned provider auto-configurations bind provider settings but delegate physical IO to the existing provider modules. Each configuration is activated by an exact provider property and uses conditional beans. The existing final validator remains the clear failure boundary for missing, unsupported, or ambiguous wiring.
 
@@ -24,30 +24,30 @@
 
 ## File Map
 
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperProperties.java` — add local/S3/Azure nested properties.
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java` — add local/S3/Azure nested properties.
 - Create: `.../autoconfigure/storage/LocalBlobStorageAutoConfiguration.java`.
 - Create: `.../autoconfigure/storage/S3BlobStorageAutoConfiguration.java`.
 - Create: `.../autoconfigure/storage/AzureBlobStorageAutoConfiguration.java`.
-- Modify: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java` — expose its existing client factory to auto-configuration.
-- Modify: `.../autoconfigure/BlobHelperAutoConfiguration.java` — require an explicit provider and validate the final bean graph by type, not bean-name substring.
-- Modify: `blob-helper-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
-- Modify: `.../autoconfigure/BlobHelperPropertiesTest.java`.
+- Modify: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java` — expose its existing client factory to auto-configuration.
+- Modify: `.../autoconfigure/Dedup4jAutoConfiguration.java` — require an explicit provider and validate the final bean graph by type, not bean-name substring.
+- Modify: `dedup4j-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
+- Modify: `.../autoconfigure/Dedup4jPropertiesTest.java`.
 - Create: `.../autoconfigure/storage/LocalBlobStorageAutoConfigurationTest.java`.
 - Create: `.../autoconfigure/storage/S3BlobStorageAutoConfigurationTest.java`.
 - Create: `.../autoconfigure/storage/AzureBlobStorageAutoConfigurationTest.java`.
-- Modify: `.../autoconfigure/BlobHelperAutoConfigurationTest.java`.
+- Modify: `.../autoconfigure/Dedup4jAutoConfigurationTest.java`.
 - Create: `.../autoconfigure/ProviderAutoConfigurationDiscoveryTest.java` — verify all providers on one classpath and automatic Spring Boot discovery.
 
 ## Acceptance Criteria (from Q4)
 
-- [x] **BlobHelperPropertiesTest.bindsAllProviderPropertiesUnderStorage:** local, S3, and Azure nested properties bind under `blob-helper.storage`.
+- [x] **Dedup4jPropertiesTest.bindsAllProviderPropertiesUnderStorage:** local, S3, and Azure nested properties bind under `dedup4j.storage`.
 - [x] **LocalBlobStorageAutoConfigurationTest / ProviderAutoConfigurationDiscoveryTest:** local creates exactly one adapter and no cloud client.
 - [x] **S3BlobStorageAutoConfigurationTest.reusesApplicationClient:** an application `S3Client` is the adapter client and no second client exists.
 - [x] **S3BlobStorageAutoConfigurationTest.createsDefaultClientWithoutNetwork:** with provider, bucket, and an AWS region-chain value, context creates one S3 client and storage bean without network access.
 - [x] **S3BlobStorageAutoConfigurationTest.bindsMinioOverridesIntoClientAndProperties:** endpoint and region reach the constructed client; path-style reaches translated adapter properties and is passed to the SDK builder.
 - [x] **AzureBlobStorageAutoConfigurationTest.reusesApplicationClient:** an application `BlobContainerClient` takes precedence.
 - [x] **ProviderAutoConfigurationDiscoveryTest:** all adapters are on the classpath but exactly one `BlobStorage` exists for each selected provider through automatic imports discovery.
-- [x] **BlobHelperAutoConfigurationTest:** missing/unsupported provider fails with an actionable message.
+- [x] **Dedup4jAutoConfigurationTest:** missing/unsupported provider fails with an actionable message.
 
 ## Out of Scope (from Q5)
 
@@ -64,39 +64,39 @@
 
 **Files:**
 
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperProperties.java`
-- Modify: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/BlobHelperPropertiesTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jProperties.java`
+- Modify: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/Dedup4jPropertiesTest.java`
 
 - [ ] **Step 1: Add a failing binding test**
 
 Bind these values and assert every value exactly:
 
 ```text
-blob-helper.storage.provider=s3
-blob-helper.storage.local.root-directory=build/blobs
-blob-helper.storage.s3.bucket=media
-blob-helper.storage.s3.region=eu-west-1
-blob-helper.storage.s3.endpoint=http://localhost:9000
-blob-helper.storage.s3.path-style=true
-blob-helper.storage.azure.container=media
-blob-helper.storage.azure.connection-string=UseDevelopmentStorage=true
-blob-helper.storage.azure.endpoint=http://127.0.0.1:10000/devstoreaccount1
-blob-helper.storage.azure.account-name=devstoreaccount1
+dedup4j.storage.provider=s3
+dedup4j.storage.local.root-directory=build/blobs
+dedup4j.storage.s3.bucket=media
+dedup4j.storage.s3.region=eu-west-1
+dedup4j.storage.s3.endpoint=http://localhost:9000
+dedup4j.storage.s3.path-style=true
+dedup4j.storage.azure.container=media
+dedup4j.storage.azure.connection-string=UseDevelopmentStorage=true
+dedup4j.storage.azure.endpoint=http://127.0.0.1:10000/devstoreaccount1
+dedup4j.storage.azure.account-name=devstoreaccount1
 ```
 
 - [ ] **Step 2: Run the test and confirm missing nested properties**
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=BlobHelperPropertiesTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=Dedup4jPropertiesTest
 ```
 
 Expected: compilation/assertion failure for the absent provider property groups.
 
 - [ ] **Step 3: Add nested property groups**
 
-`BlobHelperProperties.Storage` must expose `getLocal()`, `getS3()`, and `getAzure()`. Use these exact fields:
+`Dedup4jProperties.Storage` must expose `getLocal()`, `getS3()`, and `getAzure()`. Use these exact fields:
 
-Declare `Local`, `S3`, and `Azure` as sibling static classes directly inside `BlobHelperProperties`; `Storage` owns one instance of each type.
+Declare `Local`, `S3`, and `Azure` as sibling static classes directly inside `Dedup4jProperties`; `Storage` owns one instance of each type.
 
 ```java
 public static class Local {
@@ -123,14 +123,14 @@ public static class Azure {
 
 - [ ] **Step 4: Re-run the property test**
 
-Expected: `BlobHelperPropertiesTest` passes.
+Expected: `Dedup4jPropertiesTest` passes.
 
 ### Task 2: Auto-configure local storage
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/storage/LocalBlobStorageAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/storage/LocalBlobStorageAutoConfigurationTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/storage/LocalBlobStorageAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/storage/LocalBlobStorageAutoConfigurationTest.java`
 
 - [ ] **Step 1: Write context tests for selected, unselected, and overridden local storage**
 
@@ -148,13 +148,13 @@ Also supply an application `BlobStorage` and assert `isSameAs(customStorage)`.
 - [ ] **Step 2: Implement the conditional configuration**
 
 ```java
-@AutoConfiguration(before = BlobHelperAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "blob-helper.storage", name = "provider", havingValue = "local")
+@AutoConfiguration(before = Dedup4jAutoConfiguration.class)
+@ConditionalOnProperty(prefix = "dedup4j.storage", name = "provider", havingValue = "local")
 public class LocalBlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    LocalBlobStorageProperties localBlobStorageProperties(BlobHelperProperties properties) {
+    LocalBlobStorageProperties localBlobStorageProperties(Dedup4jProperties properties) {
         LocalBlobStorageProperties target = new LocalBlobStorageProperties();
         target.setRootDirectory(properties.getStorage().getLocal().getRootDirectory());
         return target;
@@ -171,7 +171,7 @@ public class LocalBlobStorageAutoConfiguration {
 - [ ] **Step 3: Run the focused local test**
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=LocalBlobStorageAutoConfigurationTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=LocalBlobStorageAutoConfigurationTest
 ```
 
 Expected: all local selection/back-off scenarios pass.
@@ -180,8 +180,8 @@ Expected: all local selection/back-off scenarios pass.
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/storage/S3BlobStorageAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/storage/S3BlobStorageAutoConfigurationTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/storage/S3BlobStorageAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/storage/S3BlobStorageAutoConfigurationTest.java`
 
 - [ ] **Step 1: Write failing context tests**
 
@@ -190,18 +190,18 @@ Cover application client reuse, default client creation, bucket validation, MinI
 - [ ] **Step 2: Implement S3 property translation and client fallback**
 
 ```java
-@AutoConfiguration(before = BlobHelperAutoConfiguration.class)
+@AutoConfiguration(before = Dedup4jAutoConfiguration.class)
 @ConditionalOnClass(S3Client.class)
-@ConditionalOnProperty(prefix = "blob-helper.storage", name = "provider", havingValue = "s3")
+@ConditionalOnProperty(prefix = "dedup4j.storage", name = "provider", havingValue = "s3")
 public class S3BlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    S3BlobStorageProperties s3BlobStorageProperties(BlobHelperProperties properties) {
-        BlobHelperProperties.S3 source = properties.getStorage().getS3();
+    S3BlobStorageProperties s3BlobStorageProperties(Dedup4jProperties properties) {
+        Dedup4jProperties.S3 source = properties.getStorage().getS3();
         if (source.getBucket() == null || source.getBucket().isBlank()) {
             throw new IllegalStateException(
-                    "blob-helper.storage.s3.bucket is required when provider=s3"
+                    "dedup4j.storage.s3.bucket is required when provider=s3"
             );
         }
         S3BlobStorageProperties target = new S3BlobStorageProperties();
@@ -214,7 +214,7 @@ public class S3BlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(S3Client.class)
-    S3Client blobHelperS3Client(S3BlobStorageProperties properties) {
+    S3Client dedup4jS3Client(S3BlobStorageProperties properties) {
         S3ClientBuilder builder = S3Client.builder()
                 .forcePathStyle(properties.isPathStyleAccess());
         if (properties.getRegion() != null && !properties.getRegion().isBlank()) {
@@ -239,7 +239,7 @@ The empty storage destroy method prevents the adapter from closing an applicatio
 - [ ] **Step 3: Run the focused S3 test**
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=S3BlobStorageAutoConfigurationTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=S3BlobStorageAutoConfigurationTest
 ```
 
 Expected: all tests pass without an external S3 call.
@@ -248,9 +248,9 @@ Expected: all tests pass without an external S3 call.
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/storage/AzureBlobStorageAutoConfiguration.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/storage/AzureBlobStorageAutoConfigurationTest.java`
-- Modify: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/storage/AzureBlobStorageAutoConfiguration.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/storage/AzureBlobStorageAutoConfigurationTest.java`
+- Modify: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java`
 
 - [ ] **Step 1: Write failing context tests**
 
@@ -259,18 +259,18 @@ Cover an application-provided `BlobContainerClient`, a development connection-st
 - [ ] **Step 2: Implement Azure property and adapter beans**
 
 ```java
-@AutoConfiguration(before = BlobHelperAutoConfiguration.class)
+@AutoConfiguration(before = Dedup4jAutoConfiguration.class)
 @ConditionalOnClass(BlobContainerClient.class)
-@ConditionalOnProperty(prefix = "blob-helper.storage", name = "provider", havingValue = "azure")
+@ConditionalOnProperty(prefix = "dedup4j.storage", name = "provider", havingValue = "azure")
 public class AzureBlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    AzureBlobStorageProperties azureBlobStorageProperties(BlobHelperProperties properties) {
-        BlobHelperProperties.Azure source = properties.getStorage().getAzure();
+    AzureBlobStorageProperties azureBlobStorageProperties(Dedup4jProperties properties) {
+        Dedup4jProperties.Azure source = properties.getStorage().getAzure();
         if (source.getContainer() == null || source.getContainer().isBlank()) {
             throw new IllegalStateException(
-                    "blob-helper.storage.azure.container is required when provider=azure"
+                    "dedup4j.storage.azure.container is required when provider=azure"
             );
         }
         AzureBlobStorageProperties target = new AzureBlobStorageProperties();
@@ -283,7 +283,7 @@ public class AzureBlobStorageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(BlobContainerClient.class)
-    BlobContainerClient blobHelperAzureContainerClient(AzureBlobStorageProperties properties) {
+    BlobContainerClient dedup4jAzureContainerClient(AzureBlobStorageProperties properties) {
         return AzureBlobStorage.createClient(properties);
     }
 
@@ -303,7 +303,7 @@ Change the existing `AzureBlobStorage.createClient(AzureBlobStorageProperties)` 
 - [ ] **Step 3: Run the focused Azure test**
 
 ```bash
-./mvnw -pl blob-helper-storage-azure,blob-helper-spring-boot-starter -am test -Dtest=AzureBlobStorageAutoConfigurationTest,AzureBlobStorageContractTest
+./mvnw -pl dedup4j-storage-azure,dedup4j-spring-boot-starter -am test -Dtest=AzureBlobStorageAutoConfigurationTest,AzureBlobStorageContractTest
 ```
 
 Expected: configuration and existing provider contracts pass without Azure credentials.
@@ -312,29 +312,29 @@ Expected: configuration and existing provider contracts pass without Azure crede
 
 **Files:**
 
-- Modify: `blob-helper-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-- Modify: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/autoconfigure/BlobHelperAutoConfiguration.java`
-- Modify: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/BlobHelperAutoConfigurationTest.java`
+- Modify: `dedup4j-spring-boot-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- Modify: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/autoconfigure/Dedup4jAutoConfiguration.java`
+- Modify: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/Dedup4jAutoConfigurationTest.java`
 
 - [ ] **Step 1: Register configurations in provider-before-validator order**
 
 ```text
-com.edem.blobhelper.autoconfigure.storage.LocalBlobStorageAutoConfiguration
-com.edem.blobhelper.autoconfigure.storage.S3BlobStorageAutoConfiguration
-com.edem.blobhelper.autoconfigure.storage.AzureBlobStorageAutoConfiguration
-com.edem.blobhelper.autoconfigure.BlobHelperAutoConfiguration
+com.edem.dedup4j.autoconfigure.storage.LocalBlobStorageAutoConfiguration
+com.edem.dedup4j.autoconfigure.storage.S3BlobStorageAutoConfiguration
+com.edem.dedup4j.autoconfigure.storage.AzureBlobStorageAutoConfiguration
+com.edem.dedup4j.autoconfigure.Dedup4jAutoConfiguration
 ```
 
 - [ ] **Step 2: Replace bean-name matching with explicit selection guarantees**
 
-Require `blob-helper.storage.provider`, reject values outside `local`, `s3`, and `azure`, then assert `beanFactory.getBeanNamesForType(BlobStorage.class).length == 1`. Provider configurations already guarantee which adapter is constructed; bean names are not a semantic selector.
+Require `dedup4j.storage.provider`, reject values outside `local`, `s3`, and `azure`, then assert `beanFactory.getBeanNamesForType(BlobStorage.class).length == 1`. Provider configurations already guarantee which adapter is constructed; bean names are not a semantic selector.
 
 - [ ] **Step 3: Test all providers on one classpath**
 
 Run:
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest='*BlobStorageAutoConfigurationTest,BlobHelperAutoConfigurationTest'
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest='*BlobStorageAutoConfigurationTest,Dedup4jAutoConfigurationTest'
 ```
 
 Expected: each selected provider yields one storage bean; missing/unsupported/ambiguous cases fail clearly.
@@ -342,7 +342,7 @@ Expected: each selected provider yields one storage bean; missing/unsupported/am
 - [ ] **Step 4: Run module verification**
 
 ```bash
-./mvnw --batch-mode --no-transfer-progress -pl blob-helper-spring-boot-starter -am verify
+./mvnw --batch-mode --no-transfer-progress -pl dedup4j-spring-boot-starter -am verify
 ```
 
 Expected: `BUILD SUCCESS` with no network credentials.
@@ -356,13 +356,13 @@ Do not run Git commands. Provide the path list and test results for Edem's Git w
 - [x] All acceptance criteria pass.
 - [x] Each provider is activated only by its matching property value (case-insensitive Spring comparison; no whitespace trimming).
 - [x] Application provider clients override defaults.
-- [x] S3 requires no Blob Helper credential properties.
+- [x] S3 requires no dedup4j credential properties.
 - [x] Auto-configuration performs no physical storage call during startup.
 - [x] No Git mutation was performed; read-only inspection followed repository instructions.
 
 ## Implementation review notes — 2026-09-05
 
-- Each provider configuration enables `BlobHelperProperties` itself so it can be loaded independently in a context test or consumer configuration.
+- Each provider configuration enables `Dedup4jProperties` itself so it can be loaded independently in a context test or consumer configuration.
 - An application `BlobStorage` suppresses the entire default provider graph, including translated properties and cloud clients. Backing off only the adapter would still require unused cloud configuration.
 - Provider comparison follows Spring's case-insensitive property condition without trimming surrounding whitespace; the final validator and activation conditions must agree.
 - S3 client lifecycle belongs to Spring; inferred destruction is disabled on the auto-configured storage wrapper to prevent duplicate client closure.

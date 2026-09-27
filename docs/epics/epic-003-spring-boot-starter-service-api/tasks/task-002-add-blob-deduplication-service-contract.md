@@ -10,16 +10,16 @@ Define the app-facing service API for store, retain, release, and get.
 
 ## Files
 
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/BlobDeduplicationService.java`
-- Create: `blob-helper-spring-boot-starter/src/main/java/com/edem/blobhelper/service/DefaultBlobDeduplicationService.java`
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/service/BlobDeduplicationServiceContractTest.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/BlobDeduplicationService.java`
+- Create: `dedup4j-spring-boot-starter/src/main/java/com/edem/dedup4j/service/DefaultBlobDeduplicationService.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/service/BlobDeduplicationServiceContractTest.java`
 
 ## Steps
 
 - [x] Define `store(StoreBlobCommand)`, `retain(UUID)`, `release(UUID)`, and `get(UUID)`.
 - [x] Return provider-neutral `BlobReference` and `BlobResource`.
 - [x] Add a contract test for API shape and missing-content behavior.
-- [x] Run the contract test through the reactor with `./mvnw -pl blob-helper-spring-boot-starter -am -Dtest=BlobDeduplicationServiceContractTest -Dsurefire.failIfNoSpecifiedTests=false test`.
+- [x] Run the contract test through the reactor with `./mvnw -pl dedup4j-spring-boot-starter -am -Dtest=BlobDeduplicationServiceContractTest -Dsurefire.failIfNoSpecifiedTests=false test`.
 
 ## Acceptance
 

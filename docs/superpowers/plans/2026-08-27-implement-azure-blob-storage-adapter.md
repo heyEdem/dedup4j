@@ -13,7 +13,7 @@
 ### Task 1: Add the Azure contract test
 
 **Files:**
-- Create: `blob-helper-storage-azure/src/test/java/com/edem/blobhelper/storage/azure/AzureBlobStorageContractTest.java`
+- Create: `dedup4j-storage-azure/src/test/java/com/edem/dedup4j/storage/azure/AzureBlobStorageContractTest.java`
 
 - [x] **Step 1: Write the failing test**
 
@@ -28,14 +28,14 @@
 
 - [x] **Step 2: Run the test to verify it fails**
 
-  Run: `./mvnw -pl blob-helper-storage-azure -Dtest=AzureBlobStorageContractTest test`
+  Run: `./mvnw -pl dedup4j-storage-azure -Dtest=AzureBlobStorageContractTest test`
 
   Expected: compilation fails because `AzureBlobStorage` does not yet exist.
 
 ### Task 2: Implement the adapter
 
 **Files:**
-- Create: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorage.java`
+- Create: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorage.java`
 
 - [x] **Step 1: Add constructors and provider identity**
 
@@ -51,7 +51,7 @@
 
 - [x] **Step 4: Run the focused test to verify it passes**
 
-  Run: `./mvnw -pl blob-helper-storage-azure -Dtest=AzureBlobStorageContractTest test`
+  Run: `./mvnw -pl dedup4j-storage-azure -Dtest=AzureBlobStorageContractTest test`
 
   Expected: all Azure contract tests pass without credentials or network access outside the in-process HTTP fake.
 
@@ -79,7 +79,7 @@
 
 - [x] **Step 1: Run focused and full tests**
 
-  Run: `./mvnw -pl blob-helper-storage-azure test`
+  Run: `./mvnw -pl dedup4j-storage-azure test`
 
   Run: `./mvnw --batch-mode --no-transfer-progress verify`
 

@@ -18,4 +18,4 @@ Create the provider-neutral core module for hashing, object-key generation, stor
 
 ## Done When
 
-`blob-helper-core` compiles and passes tests without Spring, JPA, AWS, or Azure dependencies.
+`dedup4j-core` compiles and passes tests without Spring, JPA, AWS, or Azure dependencies.

@@ -1,0 +1,3 @@
+databaseChangeLog:
+  - include:
+      file: db/dedup4j/changes/001-create-asset-content.yaml

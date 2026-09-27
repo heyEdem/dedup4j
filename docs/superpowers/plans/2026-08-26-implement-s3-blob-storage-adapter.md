@@ -2,7 +2,7 @@
 
 **Goal:** Implement the S3 provider module's `BlobStorage` contract with streaming reads, idempotent deletion, existence checks, and provider-to-domain exception mapping.
 
-**Architecture:** Keep AWS SDK usage inside `blob-helper-storage-s3`. Support both a properties-based client constructor and an injected `S3Client` constructor so normal wiring can create the provider client while unit tests remain deterministic and credential-free.
+**Architecture:** Keep AWS SDK usage inside `dedup4j-storage-s3`. Support both a properties-based client constructor and an injected `S3Client` constructor so normal wiring can create the provider client while unit tests remain deterministic and credential-free.
 
 ## Task 1: Define the contract behavior with a provider-free test double
 

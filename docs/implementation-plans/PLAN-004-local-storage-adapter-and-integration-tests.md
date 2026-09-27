@@ -15,7 +15,7 @@ The first complete service path needs a storage provider that requires no cloud 
 
 ## What to Build
 
-- Add `blob-helper-storage-local` module.
+- Add `dedup4j-storage-local` module.
 - Implement `LocalBlobStorage`.
 - Add local storage properties for root directory.
 - Implement `put`, `get`, `delete`, and `exists`.
@@ -26,8 +26,8 @@ The first complete service path needs a storage provider that requires no cloud 
 
 | Logic | Location |
 |-------|----------|
-| Local provider implementation | `blob-helper-storage-local/src/main/java/.../local/LocalBlobStorage.java` |
-| Local provider config | `blob-helper-storage-local` and starter auto-configuration |
+| Local provider implementation | `dedup4j-storage-local/src/main/java/.../local/LocalBlobStorage.java` |
+| Local provider config | `dedup4j-storage-local` and starter auto-configuration |
 | Test storage root | JUnit temporary directory |
 
 ## Acceptance Criteria (from Q4)

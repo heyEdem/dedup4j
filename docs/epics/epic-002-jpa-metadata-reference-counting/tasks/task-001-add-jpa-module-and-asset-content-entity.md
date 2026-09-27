@@ -6,22 +6,22 @@
 
 ## Goal
 
-Create `blob-helper-jpa` and map physical blob metadata to `blob_asset_content`.
+Create `dedup4j-jpa` and map physical blob metadata to `blob_asset_content`.
 
 ## Files
 
 - Modify: `pom.xml`
-- Create: `blob-helper-jpa/pom.xml`
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContent.java`
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMappingTest.java`
-- Create: `blob-helper-jpa/src/test/resources/META-INF/persistence.xml`
+- Create: `dedup4j-jpa/pom.xml`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContent.java`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMappingTest.java`
+- Create: `dedup4j-jpa/src/test/resources/META-INF/persistence.xml`
 
 ## Steps
 
-- [x] Add `blob-helper-jpa` to the Maven reactor.
+- [x] Add `dedup4j-jpa` to the Maven reactor.
 - [x] Add JPA dependencies and a test database dependency.
 - [x] Map `AssetContent` with UUID id, content identity, object location, content metadata, `refCount`, timestamps, and version.
-- [x] Run `./mvnw -pl blob-helper-jpa test`.
+- [x] Run `./mvnw -pl dedup4j-jpa test`.
 
 ## Acceptance
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `blob-helper-spring-boot-starter` the single standard upload dependency while enforcing provider-module ownership, dependency convergence, and vulnerability-review safeguards.
+**Goal:** Make `dedup4j-spring-boot-starter` the single standard upload dependency while enforcing provider-module ownership, dependency convergence, and vulnerability-review safeguards.
 
 **Architecture:** The starter depends transitively on the existing local, S3, and Azure adapters, but provider SDK coordinates remain declared only in the corresponding provider POMs. Maven and GitHub checks guard the larger transitive graph. Dashboard and management artifacts remain excluded.
 
@@ -22,10 +22,10 @@
 
 ## File Map
 
-- Modify: `blob-helper-spring-boot-starter/pom.xml` — make provider adapters compile dependencies.
+- Modify: `dedup4j-spring-boot-starter/pom.xml` — make provider adapters compile dependencies.
 - Modify: `pom.xml` — add Enforcer version and dependency-convergence execution.
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/GenericStarterDependencyTest.java` — prove one starter classpath contains all adapters and excludes observability.
-- Modify: `blob-helper-core/src/test/java/com/edem/blobhelper/core/ProviderDependencyBoundaryTest.java` — clarify that transitive adapter inclusion is allowed while direct SDK ownership remains isolated.
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/GenericStarterDependencyTest.java` — prove one starter classpath contains all adapters and excludes observability.
+- Modify: `dedup4j-core/src/test/java/com/edem/dedup4j/core/ProviderDependencyBoundaryTest.java` — clarify that transitive adapter inclusion is allowed while direct SDK ownership remains isolated.
 - Create: `.github/dependabot.yml` — weekly Maven and Actions update proposals.
 - Create: `.github/workflows/dependency-review.yml` — reject newly introduced high/critical vulnerable dependencies.
 - Modify after implementation: `docs/architecture.md`, `docs/implementation.md`, `docs/changelog.md`, `README.md`.
@@ -41,8 +41,8 @@
 ## Out of Scope (from Q5)
 
 - Provider implementation classes — this plan changes packaging, not storage behavior.
-- `blob-helper-core` production dependencies — core remains provider/framework neutral.
-- `blob-helper-spring-boot-management`, `blob-helper-spring-boot-dashboard`, `blob-helper-dashboard` — none become starter dependencies.
+- `dedup4j-core` production dependencies — core remains provider/framework neutral.
+- `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, `dedup4j-dashboard` — none become starter dependencies.
 - SDK version upgrades unrelated to achieving convergence.
 - Git commits, pushes, branches, or pull requests — Edem handles Git unless explicitly delegating it.
 
@@ -52,16 +52,16 @@
 
 **Files:**
 
-- Create: `blob-helper-spring-boot-starter/src/test/java/com/edem/blobhelper/autoconfigure/GenericStarterDependencyTest.java`
+- Create: `dedup4j-spring-boot-starter/src/test/java/com/edem/dedup4j/autoconfigure/GenericStarterDependencyTest.java`
 
 - [ ] **Step 1: Write the failing adapter-availability test**
 
 ```java
-package com.edem.blobhelper.autoconfigure;
+package com.edem.dedup4j.autoconfigure;
 
-import com.edem.blobhelper.storage.azure.AzureBlobStorage;
-import com.edem.blobhelper.storage.local.LocalBlobStorage;
-import com.edem.blobhelper.storage.s3.S3BlobStorage;
+import com.edem.dedup4j.storage.azure.AzureBlobStorage;
+import com.edem.dedup4j.storage.local.LocalBlobStorage;
+import com.edem.dedup4j.storage.s3.S3BlobStorage;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -79,9 +79,9 @@ class GenericStarterDependencyTest {
     @Test
     void excludesObservabilityModules() {
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.management.BlobHelperManagementAutoConfiguration"));
+                () -> Class.forName("com.edem.dedup4j.management.Dedup4jManagementAutoConfiguration"));
         assertThrows(ClassNotFoundException.class,
-                () -> Class.forName("com.edem.blobhelper.dashboard.autoconfigure.BlobHelperDashboardAutoConfiguration"));
+                () -> Class.forName("com.edem.dedup4j.dashboard.autoconfigure.Dedup4jDashboardAutoConfiguration"));
     }
 }
 ```
@@ -91,7 +91,7 @@ class GenericStarterDependencyTest {
 Run:
 
 ```bash
-./mvnw -pl blob-helper-spring-boot-starter test -Dtest=GenericStarterDependencyTest
+./mvnw -pl dedup4j-spring-boot-starter test -Dtest=GenericStarterDependencyTest
 ```
 
 Expected: test compilation fails because the S3 and Azure adapter packages are absent from the starter compile classpath.
@@ -100,24 +100,24 @@ Expected: test compilation fails because the S3 and Azure adapter packages are a
 
 **Files:**
 
-- Modify: `blob-helper-spring-boot-starter/pom.xml`
+- Modify: `dedup4j-spring-boot-starter/pom.xml`
 
 - [ ] **Step 1: Replace the test-only local dependency with three compile dependencies**
 
 ```xml
 <dependency>
     <groupId>com.edem</groupId>
-    <artifactId>blob-helper-storage-local</artifactId>
+    <artifactId>dedup4j-storage-local</artifactId>
     <version>${project.version}</version>
 </dependency>
 <dependency>
     <groupId>com.edem</groupId>
-    <artifactId>blob-helper-storage-s3</artifactId>
+    <artifactId>dedup4j-storage-s3</artifactId>
     <version>${project.version}</version>
 </dependency>
 <dependency>
     <groupId>com.edem</groupId>
-    <artifactId>blob-helper-storage-azure</artifactId>
+    <artifactId>dedup4j-storage-azure</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```
@@ -129,7 +129,7 @@ Do not declare `software.amazon.awssdk:*` or `com.azure:*` directly in the start
 Run:
 
 ```bash
-./mvnw -pl blob-helper-core,blob-helper-spring-boot-starter -am test -Dtest=ProviderDependencyBoundaryTest,GenericStarterDependencyTest
+./mvnw -pl dedup4j-core,dedup4j-spring-boot-starter -am test -Dtest=ProviderDependencyBoundaryTest,GenericStarterDependencyTest
 ```
 
 Expected: both tests pass; provider adapters are visible and SDK ownership remains provider-local.

@@ -13,19 +13,19 @@ Byte-identical content is identified consistently and can be shared by many logi
 - Content identity must use `hash_algorithm + content_hash + size_bytes`.
 - SHA-256 hashes must be computed from the exact uploaded bytes while streaming.
 - Generated object keys must not be controlled by user filenames.
-- `blob-helper-core` must stay framework-neutral.
+- `dedup4j-core` must stay framework-neutral.
 
 **Q3 - Where should this logic live?**
-- Hashing contracts, SHA-256 implementation, storage-neutral models, `BlobStorage`, and object-key strategy live in `blob-helper-core`.
-- Database uniqueness for content identity lives in `blob-helper-jpa`.
+- Hashing contracts, SHA-256 implementation, storage-neutral models, `BlobStorage`, and object-key strategy live in `dedup4j-core`.
+- Database uniqueness for content identity lives in `dedup4j-jpa`.
 
 **Q4 - What test proves the rule?**
 - `Sha256ContentHasherTest.hashesExactBytes`: given known bytes, when hashed through the streaming hasher, then the lowercase SHA-256 hex digest matches the known value.
 - `HashObjectKeyStrategyTest.generatesDeterministicKey`: given a prefix, algorithm, and hash, when generating a key, then the key is `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
-- `CoreModuleBoundaryTest.coreHasNoSpringJpaOrProviderDependencies`: given `blob-helper-core`, then dependency analysis finds no Spring, JPA, AWS, or Azure dependencies.
+- `CoreModuleBoundaryTest.coreHasNoSpringJpaOrProviderDependencies`: given `dedup4j-core`, then dependency analysis finds no Spring, JPA, AWS, or Azure dependencies.
 
 **Q5 - What should AI not touch?**
-- Do not add Spring, JPA, AWS, or Azure dependencies to `blob-helper-core`.
+- Do not add Spring, JPA, AWS, or Azure dependencies to `dedup4j-core`.
 - Do not make user filenames part of the storage object key.
 - Do not create application-owned logical asset tables in this library.
 
@@ -43,7 +43,7 @@ Uploading bytes that already exist reuses the existing physical content and incr
 
 **Q3 - Where should this logic live?**
 - The orchestration lives in the starter upload service.
-- Content lookup, insert, locking, and reference count mutation live in `blob-helper-jpa`.
+- Content lookup, insert, locking, and reference count mutation live in `dedup4j-jpa`.
 - Physical upload lives only behind the `BlobStorage` SPI.
 
 **Q4 - What test proves the rule?**
@@ -69,7 +69,7 @@ Physical blobs are deleted only after the final logical reference is released, a
 - Storage failures after metadata changes must be visible for reconciliation.
 
 **Q3 - Where should this logic live?**
-- Reference locking and underflow protection live in `blob-helper-jpa`.
+- Reference locking and underflow protection live in `dedup4j-jpa`.
 - Release orchestration lives in the starter service.
 - Provider deletion behavior lives in `BlobStorage.delete`.
 - Repair/reporting lives in the reconciliation service.
@@ -92,18 +92,18 @@ Applications can switch storage providers through dependencies and configuration
 
 **Q2 - What must never break?**
 - Public service APIs must remain storage-neutral.
-- Provider-specific settings must stay out of `blob-helper-core`.
+- Provider-specific settings must stay out of `dedup4j-core`.
 - The starter must wire exactly one configured provider.
 - Local storage must support deterministic tests without cloud credentials.
 
 **Q3 - Where should this logic live?**
-- Provider-neutral contracts live in `blob-helper-core`.
-- Auto-configuration and properties live in `blob-helper-spring-boot-starter`.
+- Provider-neutral contracts live in `dedup4j-core`.
+- Auto-configuration and properties live in `dedup4j-spring-boot-starter`.
 - Provider SDK code lives only in provider modules.
 
 **Q4 - What test proves the rule?**
-- `BlobHelperAutoConfigurationTest.wiresConfiguredProvider`: given `blob-helper.storage.provider=local`, when context starts, then the local `BlobStorage` bean is selected.
-- `BlobHelperAutoConfigurationTest.failsForUnsupportedProvider`: given an unsupported provider, when context starts, then startup fails with a clear configuration error.
+- `Dedup4jAutoConfigurationTest.wiresConfiguredProvider`: given `dedup4j.storage.provider=local`, when context starts, then the local `BlobStorage` bean is selected.
+- `Dedup4jAutoConfigurationTest.failsForUnsupportedProvider`: given an unsupported provider, when context starts, then startup fails with a clear configuration error.
 - `LocalBlobStorageIntegrationTest.putGetDeleteRoundTrip`: given local storage config, when storing, reading, and deleting a blob, then filesystem state matches each operation.
 
 **Q5 - What should AI not touch?**
@@ -131,7 +131,7 @@ Reference count drift, failed deletes, and operational savings are detectable an
 **Q4 - What test proves the rule?**
 - `ReconciliationServiceTest.reportsReferenceCountMismatch`: given actual and expected counts differ, when reconciliation runs, then a mismatch report is returned.
 - `ReconciliationServiceTest.repairsOnlyWhenEnabled`: given repair disabled, when reconciliation finds drift, then no database mutation occurs.
-- `BlobHelperMetricsTest.recordsDuplicateAndSkippedUpload`: given a duplicate upload, then duplicate and skipped-upload metrics are incremented.
+- `Dedup4jMetricsTest.recordsDuplicateAndSkippedUpload`: given a duplicate upload, then duplicate and skipped-upload metrics are incremented.
 
 **Q5 - What should AI not touch?**
 - Do not enable scheduled repairs by default.
@@ -142,7 +142,7 @@ Reference count drift, failed deletes, and operational savings are detectable an
 
 **Q1 - What outcome are we protecting?**
 Developers and operators can see the health, traffic contribution, deduplication
-savings, and recent failures of multiple local Blob Helper instances from one
+savings, and recent failures of multiple local dedup4j instances from one
 read-only console.
 
 **Q2 - What must never break?**
@@ -159,9 +159,9 @@ read-only console.
 **Q3 - Where should this logic live?**
 
 - Local management endpoints and self-registration live in the optional
-  `blob-helper-spring-boot-management` module.
+  `dedup4j-spring-boot-management` module.
 - Registration, polling, persistence, and dashboard APIs/UI live in
-  `blob-helper-dashboard`.
+  `dedup4j-dashboard`.
 - Blob bytes, logical assets, and provider credentials remain with the
   consuming application.
 

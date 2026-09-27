@@ -6,7 +6,7 @@
 
 ## Context
 
-The main value of Blob Helper is avoiding repeated physical writes for identical bytes while allowing each application to create its own logical asset records. Concurrent uploads of identical bytes are expected.
+The main value of dedup4j is avoiding repeated physical writes for identical bytes while allowing each application to create its own logical asset records. Concurrent uploads of identical bytes are expected.
 
 ## Decision
 
@@ -24,8 +24,8 @@ The upload service computes content identity, looks up existing content, and eit
 
 | Concern | Owner |
 |---------|-------|
-| Upload orchestration | `blob-helper-spring-boot-starter` upload service |
-| Lookup, insert, locking, and reference count mutation | `blob-helper-jpa` |
+| Upload orchestration | `dedup4j-spring-boot-starter` upload service |
+| Lookup, insert, locking, and reference count mutation | `dedup4j-jpa` |
 | Physical writes | `BlobStorage` implementation |
 | Logical asset creation | Consuming application |
 

@@ -1,6 +1,8 @@
-# Blob Helper
+# dedup4j
 
-Blob Helper is a reusable Spring Boot library for deduplicated object uploads.
+Rename status and consumer changes: [dedup4j migration guide](docs/dedup4j-migration.md). Persistence identifiers and local data defaults remain unchanged pending the compatibility decision.
+
+dedup4j is a reusable Spring Boot library for deduplicated object uploads.
 It stores identical file bytes once, while allowing each application to keep its
 own logical asset records.
 
@@ -21,28 +23,29 @@ Applications often upload the same file many times:
 Without deduplication, each upload becomes a new object-store write and a new
 stored object, even when the bytes are identical.
 
-Blob Helper solves this by separating:
+dedup4j solves this by separating:
 
 - logical assets owned by the consuming application
-- physical blob content owned by Blob Helper
+- physical blob content owned by dedup4j
 
 Many logical assets can point to one physical content record.
 
 ## Modules
 
 ```text
-blob-helper-core
-blob-helper-jpa
-blob-helper-spring-boot-starter
-blob-helper-storage-s3
-blob-helper-storage-azure
-blob-helper-spring-boot-management  (optional local management API)
-blob-helper-spring-boot-dashboard   (optional embedded read-only dashboard)
-blob-helper-dashboard                (standalone local monitoring console)
-blob-helper-storage-local
+dedup4j-core
+dedup4j-jpa
+dedup4j-spring-boot-starter
+dedup4j-storage-s3
+dedup4j-storage-azure
+dedup4j-spring-boot-management  (optional local management API)
+dedup4j-spring-boot-dashboard   (optional embedded read-only dashboard)
+dedup4j-spring-boot-observability (optional embedded management + dashboard)
+dedup4j-dashboard                (standalone local monitoring console)
+dedup4j-storage-local
 ```
 
-`blob-helper-core` contains hashing, deduplication contracts, and storage-neutral
+`dedup4j-core` contains hashing, deduplication contracts, and storage-neutral
 interfaces. Storage providers live in separate adapter modules, which are
 included transitively by the standard Spring Boot starter.
 
@@ -51,7 +54,7 @@ For a consumer application, add the single starter dependency:
 ```xml
 <dependency>
   <groupId>com.edem</groupId>
-  <artifactId>blob-helper-spring-boot-starter</artifactId>
+  <artifactId>dedup4j-spring-boot-starter</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
@@ -61,49 +64,125 @@ remain declared and versioned only in the corresponding adapter modules. The
 management API, embedded dashboard, and standalone dashboard are separate
 optional artifacts and are not part of the generic upload starter.
 
+For one dependency that supplies the embedded single-application observability
+pieces, add:
+
+```xml
+<dependency>
+  <groupId>com.edem</groupId>
+  <artifactId>dedup4j-spring-boot-observability</artifactId>
+  <version>${dedup4j.version}</version>
+</dependency>
+```
+
+This aggregate installs the embedded dashboard and makes the management module
+available. Management remains an explicit choice and is not exposed until the
+consumer enables it:
+
+```yaml
+dedup4j:
+  management:
+    enabled: true
+```
+
 Select the storage provider in application configuration. For local storage:
 
 ```yaml
-blob-helper:
+dedup4j:
   storage:
     provider: local
     local:
       root-directory: ./blobs
 ```
 
-For S3, set `blob-helper.storage.provider=s3` and
-`blob-helper.storage.s3.bucket`. AWS's standard region and credential chains
+For S3, set `dedup4j.storage.provider=s3` and
+`dedup4j.storage.s3.bucket`. AWS's standard region and credential chains
 apply; `storage.s3.region`, `storage.s3.endpoint`, and
 `storage.s3.path-style` are optional overrides for AWS or S3-compatible stores.
 For Azure, set `storage.provider=azure`, `storage.azure.container`, and
 `storage.azure.connection-string` or `storage.azure.endpoint` under
-`blob-helper`.
+`dedup4j`.
 
 The starter reuses an application `S3Client` or `BlobContainerClient` bean
 before creating a default client. An application `BlobStorage` bean replaces
 the provider defaults entirely. A supported provider selection is required
 even with custom storage, and multiple storage beans fail startup. Startup
 constructs clients without contacting storage; successful startup does not
-verify cloud access. These settings configure storage only; automatic JPA
-and upload-service wiring is covered separately by PLAN-011.
+verify cloud access.
+
+The starter uses the application's `DataSource`, JPA entity manager, and Spring
+transaction manager, and automatically supplies `BlobDeduplicationService`
+and its internal collaborators. No dedup4j configuration class is needed.
+Each collaborator can be replaced with an application bean of the same type.
+The consumer supplies its database driver and connection configuration; H2 is
+not a runtime dependency of the starter.
+
+`dedup4j.persistence.initialize-schema` controls the packaged Liquibase
+migration:
+
+| Mode | Behavior |
+|---|---|
+| `embedded` (default) | Initialize supported embedded databases; validate existing schema on external databases. |
+| `always` | Explicitly authorize initialization on the consumer database. |
+| `never` | Validate existing schema without running dedup4j migrations. |
+
+The migration is packaged at
+`classpath:db/blob-helper/db.changelog-master.yaml`. It creates
+`blob_helper_asset_content` and uses separate
+`BLOB_HELPER_DATABASE_CHANGELOG` / `BLOB_HELPER_DATABASE_CHANGELOG_LOCK`
+tracking tables. Missing schema causes a startup error with migration guidance.
+The initial changelog does not transfer data from the earlier
+`blob_asset_content` table; existing installations must migrate that metadata
+as part of their database rollout.
+
+The auto-configured service runs each operation in a new Spring metadata
+transaction. A concurrent identity conflict rolls back before a fresh
+transaction retains the winning row, without replaying the input stream or
+writing storage again during recovery. These transactions do not include the
+application's logical records or make object storage and the database atomic.
+
+For common Spring upload flows, inject the auto-configured `Dedup4j` facade:
+
+```java
+public String uploadImage(MultipartFile file) {
+    BlobReference stored = dedup4j.store(file);
+    BlobLocation location = stored.location();
+    uploadRepository.save(new Upload(location.objectKey(), stored.assetContentId()));
+    return publicUrlMapper.toUrl(location);
+}
+```
+
+`dedup4j.store` is the only physical upload call; the application must not
+call `S3Client.putObject` or another provider SDK afterward. The application
+creates its logical row for every successful call, including duplicates, and
+may return its own URL, DTO, ID, `BlobReference`, or empty response. A stable
+`BlobLocation` is provider-neutral storage identity, not an access URL; the
+application owns public URL and presigned URL creation.
+
+The facade also accepts `Path`, `byte[]`, and described `InputStream` sources.
+`storeAll(MultipartFile[])` processes sequentially and returns one ordered
+success or failure outcome for every input, allowing later uploads to continue
+after an individual failure without claiming all-or-nothing semantics.
 
 The optional management module exposes local read-only operational data and
 self-registers instances with the standalone dashboard. The dashboard polls
 multiple local instances and stores aggregate history in
 SQLite; it does not manage blob bytes or provider credentials.
 
-For a single Spring Boot application, add `blob-helper-spring-boot-dashboard`
-alongside the main starter and open `http://localhost:8080/blob-helper/dashboard`.
-Embedded mode is enabled by default and can be disabled with:
+For a single Spring Boot application, the
+`dedup4j-spring-boot-observability` aggregate supplies the embedded current-
+application UI/API; open `http://localhost:8080/dedup4j/dashboard`.
+Embedded dashboard mode is enabled by default and can be disabled with:
 
 ```yaml
-blob-helper:
+dedup4j:
   dashboard:
     enabled: false
 ```
 
-Use the standalone dashboard when you need multi-instance registration and
-SQLite history.
+`dedup4j-spring-boot-observability` is the embedded current-application
+UI/API. Use the separate `dedup4j-dashboard` application when you need
+multi-instance polling and SQLite history.
 
 ## High-Level Flow
 

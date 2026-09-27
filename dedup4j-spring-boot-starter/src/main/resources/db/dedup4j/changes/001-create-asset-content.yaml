@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-asset-content
+      author: dedup4j
+      changes:
+        - createTable:
+            tableName: dedup4j_asset_content
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_dedup4j_asset_content
+              - column:
+                  name: hash_algorithm
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_hash
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: object_key
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_provider
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bucket_or_container
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_type
+                  type: VARCHAR(255)
+              - column:
+                  name: original_extension
+                  type: VARCHAR(32)
+              - column:
+                  name: ref_count
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: dedup4j_asset_content
+            columnNames: hash_algorithm, content_hash, size_bytes
+            constraintName: uk_dedup4j_asset_content_identity
+        - createIndex:
+            tableName: dedup4j_asset_content
+            indexName: idx_dedup4j_asset_content_hash
+            columns:
+              - column:
+                  name: content_hash
+        - createIndex:
+            tableName: dedup4j_asset_content
+            indexName: idx_dedup4j_asset_content_object_key
+            columns:
+              - column:
+                  name: object_key
+        - createIndex:
+            tableName: dedup4j_asset_content
+            indexName: idx_dedup4j_asset_content_ref_count
+            columns:
+              - column:
+                  name: ref_count

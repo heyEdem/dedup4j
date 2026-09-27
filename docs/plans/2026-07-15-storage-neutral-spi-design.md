@@ -9,7 +9,7 @@ Define the framework- and provider-neutral Java contracts shared by the core ser
 
 ## Chosen Approach
 
-Use small Java 21 records with constructor validation, defensive metadata copies, and unchecked domain exceptions. This keeps the API compact while preventing invalid requests from reaching provider adapters. Provider SDK types and provider-specific settings remain outside `blob-helper-core`.
+Use small Java 21 records with constructor validation, defensive metadata copies, and unchecked domain exceptions. This keeps the API compact while preventing invalid requests from reaching provider adapters. Provider SDK types and provider-specific settings remain outside `dedup4j-core`.
 
 ## API
 
@@ -26,7 +26,7 @@ Required identifiers must be non-blank, streams and identity objects must be non
 
 ## Error Handling
 
-All domain failures extend `BlobHelperException`. The initial categories are `BlobValidationException`, `BlobHashingException`, `BlobStorageException`, `ContentNotFoundException`, and `ReferenceCountUnderflowException`. They are unchecked so provider implementations can translate SDK failures without polluting the SPI with provider-specific checked exceptions.
+All domain failures extend `Dedup4jException`. The initial categories are `BlobValidationException`, `BlobHashingException`, `BlobStorageException`, `ContentNotFoundException`, and `ReferenceCountUnderflowException`. They are unchecked so provider implementations can translate SDK failures without polluting the SPI with provider-specific checked exceptions.
 
 ## Testing
 

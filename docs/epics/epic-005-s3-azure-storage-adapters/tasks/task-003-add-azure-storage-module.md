@@ -11,17 +11,17 @@ Create the Azure Blob Storage provider module and configuration.
 ## Files
 
 - Modify: `pom.xml`
-- Create: `blob-helper-storage-azure/pom.xml`
-- Create: `blob-helper-storage-azure/src/main/java/com/edem/blobhelper/storage/azure/AzureBlobStorageProperties.java`
+- Create: `dedup4j-storage-azure/pom.xml`
+- Create: `dedup4j-storage-azure/src/main/java/com/edem/dedup4j/storage/azure/AzureBlobStorageProperties.java`
 
 ## Steps
 
 - [x] Add module to the reactor.
 - [x] Add Azure Blob SDK dependency only in this module.
 - [x] Add properties for container, connection string, endpoint, and account name.
-- [x] Run `./mvnw -pl blob-helper-storage-azure test`.
+- [x] Run `./mvnw -pl dedup4j-storage-azure test`.
 
 ## Acceptance
 
-- [x] Azure SDK dependency is isolated to `blob-helper-storage-azure`.
+- [x] Azure SDK dependency is isolated to `dedup4j-storage-azure`.
 - [x] Azure provider can be configured without changing core APIs.

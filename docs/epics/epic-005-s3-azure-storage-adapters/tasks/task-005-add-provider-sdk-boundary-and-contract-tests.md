@@ -10,14 +10,14 @@ Prove provider SDKs stay out of core and starter modules.
 
 ## Files
 
-- Create: `src/test/java/com/edem/blobhelper/ProviderDependencyBoundaryTest.java`
+- Create: `src/test/java/com/edem/dedup4j/ProviderDependencyBoundaryTest.java`
 - Create: `docs/provider-testing.md`
 
 ## Steps
 
 - [x] Add dependency boundary checks for AWS and Azure SDK artifacts.
-- [x] Verify AWS appears only in `blob-helper-storage-s3`.
-- [x] Verify Azure appears only in `blob-helper-storage-azure`.
+- [x] Verify AWS appears only in `dedup4j-storage-s3`.
+- [x] Verify Azure appears only in `dedup4j-storage-azure`.
 - [x] Document how to run external provider contract tests.
 - [x] Run `./mvnw test -Dtest=ProviderDependencyBoundaryTest`.
 

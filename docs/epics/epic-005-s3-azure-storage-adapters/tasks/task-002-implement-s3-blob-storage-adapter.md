@@ -10,8 +10,8 @@ Implement `BlobStorage` with AWS S3 or S3-compatible object storage.
 
 ## Files
 
-- Create: `blob-helper-storage-s3/src/main/java/com/edem/blobhelper/storage/s3/S3BlobStorage.java`
-- Create: `blob-helper-storage-s3/src/test/java/com/edem/blobhelper/storage/s3/S3BlobStorageContractTest.java`
+- Create: `dedup4j-storage-s3/src/main/java/com/edem/dedup4j/storage/s3/S3BlobStorage.java`
+- Create: `dedup4j-storage-s3/src/test/java/com/edem/dedup4j/storage/s3/S3BlobStorageContractTest.java`
 
 ## Steps
 
@@ -24,5 +24,5 @@ Implement `BlobStorage` with AWS S3 or S3-compatible object storage.
 ## Acceptance
 
 - [x] S3 round trip satisfies the `BlobStorage` contract.
-- [x] Provider exceptions are mapped to Blob Helper domain exceptions.
+- [x] Provider exceptions are mapped to dedup4j domain exceptions.
 - [x] Normal unit tests do not require real AWS credentials.

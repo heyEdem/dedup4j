@@ -3,14 +3,14 @@
 ## Naming Conventions
 
 - Files: Java source files use PascalCase class names matching filenames.
-- Classes/types: PascalCase, e.g. `BlobHelperApplication`, `CoreModuleSmokeTest`.
+- Classes/types: PascalCase, e.g. `Dedup4jApplication`, `CoreModuleSmokeTest`.
 - Functions/methods: lowerCamelCase, e.g. `main`, `contextLoads`, `coreModuleTestsRunInExpectedPackage`.
 - Variables: lowerCamelCase where present.
 - Docs: ADR files use `ADR-###-kebab-case-title.md`; implementation plans use `PLAN-###-kebab-case-title.md`; epic tasks use `task-###-kebab-case-title.md`.
 
 ## Folder Conventions
 
-- Maven modules live at repository root, e.g. `blob-helper-core`.
+- Maven modules live at repository root, e.g. `dedup4j-core`.
 - Java production code follows `src/main/java`.
 - Java tests follow `src/test/java`.
 - Project planning docs live under `docs/`.
@@ -22,15 +22,22 @@
 
 - Error handling: not enough implemented code to determine project-specific error handling.
 - Async: not present in current implementation.
-- Provider dependency injection: starter-owned auto-configurations activate on `blob-helper.storage.provider`, bind settings independently, and back off their entire default graph for an application `BlobStorage`. Individual provider properties and clients also use missing-bean conditions. Final validation counts storage beans by type rather than bean name.
+- Provider dependency injection: starter-owned auto-configurations activate on `dedup4j.storage.provider`, bind settings independently, and back off their entire default graph for an application `BlobStorage`. Individual provider properties and clients also use missing-bean conditions. Final validation counts storage beans by type rather than bean name.
 - S3 lifecycle: Spring owns client-bean cleanup; the auto-configured storage adapter disables inferred destruction to avoid closing the same client twice.
 - Validation: constructors reject null or blank required text and invalid negative sizes before state crosses a module boundary.
 - Testing: current tests are JUnit Jupiter tests with package-private test classes.
 - Dependency boundaries: reusable modules pair classpath-level package scanning with Maven Enforcer rules so both loaded classes and direct/transitive artifact coordinates are guarded.
 - JPA entities: use field access, a protected no-argument constructor, explicit snake_case column names, constructor validation for required metadata, portable lifecycle callbacks for timestamps, and standard `@Version` optimistic locking.
 - JPA repositories: wrap a caller-owned `EntityManager`, return `Optional` for lookup methods, and apply `LockModeType.PESSIMISTIC_WRITE` for mutation workflows that must hold a row lock through the caller's transaction.
-- JPA create-or-retain mutation: flush a new identity insert inside the operation, classify SQL state `23505` as a duplicate-key race, restart the failed resource-local transaction, then reload the identity row with a pessimistic lock and increment exactly once; storage adapters remain outside this database boundary.
+- JPA create-or-retain mutation: flush a new identity insert inside the operation and classify SQL state `23505` as `DuplicateContentIdentityException`. The transaction owner rolls back before reloading and retaining the winner; JPA production code never restarts transactions or clears the persistence context.
+- Metadata schema naming: dedup4j uses `blob_helper_asset_content`, with `uk_blob_helper_asset_content_identity` and `idx_blob_helper_asset_content_*` constraint/index names.
 - Service facade boundaries: application-facing starter services return only core models, delegate transaction-scoped metadata mutations to JPA services, and leave logical asset ownership with consuming applications.
+- Friendly upload facade: adapt common Spring/file-system/byte-array/stream inputs into one validated `StoreBlobCommand` path; enforce the configured size limit before advanced-service delegation and leave URLs, logical records, and provider SDK access to the application.
+- Ordered partial-success batches: process `MultipartFile[]` sequentially through the single-item facade, preserve every source index, represent runtime failures as sealed outcomes, and expose typed immutable success/failure views without claiming atomicity.
+- Stable locations: expose provider, bucket/container, and object key as a validated `BlobLocation`; treat it as storage identity rather than an access URL or presigning result.
+- Spring transaction ownership: expose one transactional decorator bean and construct its raw delegate internally. Use `REQUIRES_NEW` for public operations and recover duplicate identity races only after rollback, without replaying upload input or storage IO.
+- Schema lifecycle: package versioned Liquibase resources under `db/blob-helper`, use dedicated migration tracking tables, guard mutation with `initialize-schema`, and validate mapped columns before JPA initialization.
+- Local publication: finish streaming into a same-directory temporary file before replacing the destination; prefer atomic moves and preserve existing content on stream failure. Keep concurrency handling in the storage adapter rather than adding global locks to the service.
 - Operational logging: use SLF4J key/value-style messages at service decision boundaries, include content ID/provider/object key/decision context, expose only a short explicit hash prefix, and attach the original exception to failed physical-delete events.
 - Planned dashboard boundaries: instance-side management remains optional and read-only; dashboard-side registration, polling, persistence, and UI remain in the separate dashboard application. Dashboard timestamps use UTC, and successful operations are aggregated rather than persisted as raw events.
 
@@ -40,8 +47,8 @@
 - Test naming: descriptive lowerCamelCase methods, e.g. `coreModuleTestsRunInExpectedPackage`.
 - Test helpers: none observed.
 - Run all current tests with `./mvnw test`.
-- Run core tests with `./mvnw -pl blob-helper-core test`.
-- Run JPA mapping tests with `./mvnw -pl blob-helper-jpa test`; they use a real Hibernate persistence unit backed by in-memory H2.
+- Run core tests with `./mvnw -pl dedup4j-core test`.
+- Run JPA mapping tests with `./mvnw -pl dedup4j-jpa test`; they use a real Hibernate persistence unit backed by in-memory H2.
 - Name dependency boundary tests `*BoundaryTest` so they can be run together with `./mvnw test -Dtest='*BoundaryTest'`.
 - Name dashboard integration tests descriptively around registration, polling isolation, counter-reset handling, and seven-day failure retention; keep them credential-free with in-process HTTP endpoints and temporary SQLite databases.
 

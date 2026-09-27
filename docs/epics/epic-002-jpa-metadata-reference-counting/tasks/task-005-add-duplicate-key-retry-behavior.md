@@ -10,15 +10,15 @@ Handle concurrent new-content races by reloading the existing row and incrementi
 
 ## Files
 
-- Create: `blob-helper-jpa/src/main/java/com/edem/blobhelper/jpa/AssetContentMutationService.java`
-- Create: `blob-helper-jpa/src/test/java/com/edem/blobhelper/jpa/AssetContentMutationServiceTest.java`
+- Create: `dedup4j-jpa/src/main/java/com/edem/dedup4j/jpa/AssetContentMutationService.java`
+- Create: `dedup4j-jpa/src/test/java/com/edem/dedup4j/jpa/AssetContentMutationServiceTest.java`
 
 ## Steps
 
 - [x] Add create-or-retain method keyed by content identity.
 - [x] Catch duplicate-key failures from concurrent inserts.
 - [x] Reload the existing content row and increment `ref_count`.
-- [x] Run `./mvnw -pl blob-helper-jpa -Dtest=AssetContentMutationServiceTest test`.
+- [x] Run `./mvnw -pl dedup4j-jpa -Dtest=AssetContentMutationServiceTest test`.
 
 ## Acceptance
 

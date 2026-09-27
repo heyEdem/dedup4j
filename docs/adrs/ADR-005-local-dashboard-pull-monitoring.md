@@ -6,15 +6,15 @@
 
 ## Context
 
-Blob Helper needs an operational view for developers and operators. The view
+dedup4j needs an operational view for developers and operators. The view
 should resemble a lightweight management console, support multiple local
 instances, demonstrate deduplication savings over time, and remain independent
 of consuming application databases and provider credentials.
 
 ## Decision
 
-Add a separate `blob-helper-dashboard` Spring Boot application and an optional
-`blob-helper-spring-boot-management` module. Blob Helper instances opt in with
+Add a separate `dedup4j-dashboard` Spring Boot application and an optional
+`dedup4j-spring-boot-management` module. dedup4j instances opt in with
 `application.yaml`, self-register with the local dashboard, and expose local
 read-only management endpoints. The dashboard polls those endpoints and stores
 instance registrations, aggregate metric snapshots, and seven days of failure
@@ -38,13 +38,13 @@ push collection, and repair controls are deferred features.
 
 | Concern | Owner |
 |---------|-------|
-| Read-only instance management API | `blob-helper-spring-boot-management` |
-| Instance self-registration client | `blob-helper-spring-boot-management` |
-| Registration, polling, normalization, and SQLite persistence | `blob-helper-dashboard` |
-| Dashboard REST API and static UI | `blob-helper-dashboard` |
+| Read-only instance management API | `dedup4j-spring-boot-management` |
+| Instance self-registration client | `dedup4j-spring-boot-management` |
+| Registration, polling, normalization, and SQLite persistence | `dedup4j-dashboard` |
+| Dashboard REST API and static UI | `dedup4j-dashboard` |
 | Blob bytes and provider credentials | Consuming application/provider configuration |
 
-**Explicitly excluded layers:** `blob-helper-core`, storage adapters, and the
+**Explicitly excluded layers:** `dedup4j-core`, storage adapters, and the
 consuming application’s logical asset controllers.
 
 ## Consequences
