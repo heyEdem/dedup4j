@@ -62,6 +62,16 @@ abstract class AbstractHistorySchemaTest {
         assertThat(datasetId).isNotNull();
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"dedup4j_history_dataset.created_at", "dedup4j_upload_event.recorded_at",
+            "dedup4j_failure_event.recorded_at"})
+    void timestampsCarryTheirTimeZone(String column) {
+        String[] parts = column.split("\\.");
+        assertThat(jdbc.queryForObject("select lower(data_type) from information_schema.columns"
+                        + " where lower(table_name) = ? and lower(column_name) = ?", String.class, parts[0], parts[1]))
+                .isEqualTo("timestamp with time zone");
+    }
+
     @Test
     void secondDatasetRowRejected() {
         assertThatThrownBy(() -> jdbc.update(
