@@ -18,6 +18,8 @@ import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.storage.local.LocalBlobStorage;
 import com.edem.dedup4j.storage.local.LocalBlobStorageProperties;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -42,10 +44,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -125,8 +130,34 @@ class UploadHistoryRecordingTest {
             assertTotals(history(context).totals(), 0, 0, 0, 0, 0);
             assertThat(count(context, "dedup4j.uploads")).isZero();
             List<FailureRecord> failures = history(context).recentFailures(Instant.EPOCH, 10);
-            assertThat(failures).singleElement()
-                    .extracting(FailureRecord::operation).isEqualTo("upload");
+            assertThat(failures).singleElement().satisfies(failure -> {
+                assertThat(failure.operation()).isEqualTo("upload");
+                assertThat(failure.contentHash()).isEqualTo(sha256(CONTENT));
+            });
+        });
+    }
+
+    @Test
+    void meterFailureAfterCommitDoesNotFailTheUpload() {
+        runner().run(context -> {
+            context.getBean(SimpleMeterRegistry.class).config().meterFilter(new MeterFilter() {
+                @Override
+                public Meter.Id map(Meter.Id id) {
+                    if (id.getName().equals("dedup4j.uploads")) {
+                        throw new IllegalStateException("meter registry unavailable");
+                    }
+                    return id;
+                }
+            });
+
+            List<ILoggingEvent> warnings = captureWarnings(() -> service(context).store(command()));
+
+            assertTotals(history(context).totals(), 1, 0, 1, N, 0);
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).isEmpty();
+            assertThat(warnings).singleElement().satisfies(event -> {
+                assertThat(event.getLevel()).isEqualTo(Level.WARN);
+                assertThat(event.getFormattedMessage()).contains("event=metrics.upload.unrecorded");
+            });
         });
     }
 
@@ -187,8 +218,10 @@ class UploadHistoryRecordingTest {
             Throwable thrown = catchThrowable(() -> service(context).release(reference.assetContentId()));
 
             assertThat(thrown).isSameAs(storage.deleteFailure);
-            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).singleElement()
-                    .extracting(FailureRecord::operation).isEqualTo("delete");
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).singleElement().satisfies(failure -> {
+                assertThat(failure.operation()).isEqualTo("delete");
+                assertThat(failure.objectKey()).isEqualTo(reference.objectKey());
+            });
         });
     }
 
@@ -250,6 +283,10 @@ class UploadHistoryRecordingTest {
     private static long count(ApplicationContext context, String name) {
         Counter counter = context.getBean(SimpleMeterRegistry.class).find(name).counter();
         return counter == null ? 0 : (long) counter.count();
+    }
+
+    private static String sha256(byte[] bytes) throws NoSuchAlgorithmException {
+        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
     }
 
     private static StoreBlobCommand command() {

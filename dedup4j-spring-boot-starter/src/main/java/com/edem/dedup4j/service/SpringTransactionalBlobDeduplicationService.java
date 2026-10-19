@@ -24,6 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -44,6 +45,7 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     private final AssetContentRepository repository;
     private final ReferenceCountService referenceCountService;
     private final TransactionTemplate transactions;
+    private final TransactionTemplate readOnly;
     private final UploadHistory history;
     private final Dedup4jMetrics metrics;
 
@@ -74,30 +76,33 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
                 Objects.requireNonNull(transactionManager, "transactionManager must not be null")
         );
         this.transactions.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.readOnly = new TransactionTemplate(transactionManager);
+        this.readOnly.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.readOnly.setReadOnly(true);
         this.history = Objects.requireNonNull(history, "history must not be null");
         this.metrics = Objects.requireNonNull(metrics, "metrics must not be null");
     }
 
     @Override
     public BlobReference store(StoreBlobCommand command) {
-        String contentHash = null;
+        AtomicReference<String> contentHash = new AtomicReference<>();
         try {
             try {
-                return requiredResult(() -> recordCompleted(storeOutcome(command)));
+                return requiredResult(() -> recordCompleted(storeOutcome(command, contentHash)));
             } catch (DuplicateContentIdentityException race) {
-                contentHash = race.getContentHash();
+                contentHash.set(race.getContentHash());
                 // This request wrote to storage before losing the insert race.
                 return requiredResult(() -> recordCompleted(new StoreOutcome(retainWinner(race), true)));
             }
         } catch (RuntimeException failure) {
-            recordGuarded(UPLOAD, contentHash, null, failure);
+            recordGuarded(UPLOAD, contentHash.get(), null, failure);
             throw failure;
         }
     }
 
-    private StoreOutcome storeOutcome(StoreBlobCommand command) {
+    private StoreOutcome storeOutcome(StoreBlobCommand command, AtomicReference<String> contentHash) {
         if (delegate instanceof DefaultBlobDeduplicationService service) {
-            return service.storeWithOutcome(command);
+            return service.storeWithOutcome(command, hash -> contentHash.set(hash.hash()));
         }
         BlobReference reference = delegate.store(command);
         return new StoreOutcome(reference, !reference.duplicate());
@@ -117,7 +122,18 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                metrics.recordUpload(contentHash.sizeBytes(), reference.duplicate(), outcome.physicalWrite());
+                // The upload has committed; a meter failure must not turn it into a failed upload.
+                try {
+                    metrics.recordUpload(contentHash.sizeBytes(), reference.duplicate(), outcome.physicalWrite());
+                } catch (RuntimeException meterFailure) {
+                    LOGGER.warn(
+                            "event=metrics.upload.unrecorded contentId={} errorType={} failureMessage={}",
+                            reference.assetContentId(),
+                            meterFailure.getClass().getSimpleName(),
+                            meterFailure.getMessage(),
+                            meterFailure
+                    );
+                }
             }
         });
         return reference;
@@ -143,8 +159,7 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
             transactions.executeWithoutResult(status -> delegate.release(assetContentId));
         } catch (RuntimeException failure) {
             if (failure instanceof BlobStorageException) {
-                // BlobStorageException carries no structured object key.
-                recordGuarded(DELETE, null, null, failure);
+                recordGuarded(DELETE, null, objectKeyOf(assetContentId, failure), failure);
             }
             throw failure;
         }
@@ -160,6 +175,28 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
         return requiredResult(() -> delegate.location(assetContentId));
     }
 
+    /**
+     * BlobStorageException carries no object key, so it is read from the content row, which the
+     * rolled-back release left in place. Runs after the release transaction has ended.
+     */
+    private String objectKeyOf(UUID assetContentId, RuntimeException failure) {
+        try {
+            return readOnly.execute(status -> repository.findById(assetContentId)
+                    .map(AssetContent::getObjectKey)
+                    .orElse(null));
+        } catch (RuntimeException lookupFailure) {
+            LOGGER.warn(
+                    "event=history.failure.key.unresolved contentId={} errorType={} failureMessage={}",
+                    assetContentId,
+                    lookupFailure.getClass().getSimpleName(),
+                    lookupFailure.getMessage(),
+                    lookupFailure
+            );
+            suppress(failure, lookupFailure);
+            return null;
+        }
+    }
+
     /** Runs after the failed transaction has ended, so it never waits on that transaction's locks. */
     private void recordGuarded(String operation, String contentHash, String objectKey, RuntimeException failure) {
         try {
@@ -172,9 +209,13 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
                     recordingFailure.getMessage(),
                     recordingFailure
             );
-            if (recordingFailure != failure) {
-                failure.addSuppressed(recordingFailure);
-            }
+            suppress(failure, recordingFailure);
+        }
+    }
+
+    private static void suppress(RuntimeException failure, RuntimeException secondary) {
+        if (secondary != failure) {
+            failure.addSuppressed(secondary);
         }
     }
 
