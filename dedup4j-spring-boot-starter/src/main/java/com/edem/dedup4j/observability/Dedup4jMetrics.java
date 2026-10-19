@@ -15,11 +15,11 @@ import java.util.function.Supplier;
  */
 public final class Dedup4jMetrics {
 
-    private static final String UPLOADS = "dedup4j.uploads";
-    private static final String DUPLICATES = "dedup4j.duplicates";
-    private static final String SKIPPED_PHYSICAL_WRITES = "dedup4j.skipped.physical.writes";
-    private static final String ACCEPTED_BYTES = "dedup4j.bytes.accepted";
-    private static final String AVOIDED_BYTES = "dedup4j.bytes.avoided";
+    public static final String UPLOADS = "dedup4j.uploads";
+    public static final String DUPLICATES = "dedup4j.duplicates";
+    public static final String SKIPPED_PHYSICAL_WRITES = "dedup4j.skipped.physical.writes";
+    public static final String ACCEPTED_BYTES = "dedup4j.bytes.accepted";
+    public static final String AVOIDED_BYTES = "dedup4j.bytes.avoided";
     private static final String HASHING = "dedup4j.hashing";
     private static final String STORAGE_WRITES = "dedup4j.storage.writes";
     private static final String DELETE_FAILURES = "dedup4j.storage.delete.failures";

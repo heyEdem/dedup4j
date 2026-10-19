@@ -22,6 +22,9 @@ public class Dedup4jProperties {
     @NestedConfigurationProperty
     private final Persistence persistence = new Persistence();
 
+    @NestedConfigurationProperty
+    private final History history = new History();
+
     public Storage getStorage() {
         return storage;
     }
@@ -33,6 +36,23 @@ public class Dedup4jProperties {
 
     public Persistence getPersistence() {
         return persistence;
+    }
+
+    public History getHistory() {
+        return history;
+    }
+
+    public static class History {
+
+        private boolean enabled = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
     }
 
     public static class Persistence {
