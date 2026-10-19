@@ -189,6 +189,52 @@ class DatasetPollingTest {
     }
 
     @Test
+    void replicasWriteOneSnapshotPerDatasetPerCycle() {
+        String[] body = {metrics("ds-1", 10, 600, 6)};
+        register("orders-a", ignored -> body[0], NO_FAILURES);
+        register("orders-b", ignored -> body[0], NO_FAILURES);
+
+        InstancePollingService polling = service(NOW);
+        polling.pollAll();
+        body[0] = metrics("ds-1", 15, 600, 6);
+        polling.pollAll();
+
+        assertThat(snapshots.findAll()).extracting(MetricSnapshotRepository.Snapshot::uploads).containsExactly(0L, 5L);
+        assertThat(instances.findAll()).allSatisfy(instance -> assertThat(instance.status()).isEqualTo("HEALTHY"));
+    }
+
+    @Test
+    void malformedFailureIsSkippedAndCursorAdvances() {
+        List<String> queries = new CopyOnWriteArrayList<>();
+        Function<String, String> pages = paged(List.of(
+                failure(1, NOW.minusSeconds(60)),
+                "{\"sequenceNo\":2,\"id\":\"" + new UUID(0, 2) + "\",\"occurredAt\":\"yesterday\",\"operation\":\"store\",\"message\":\"bad time\"}",
+                "{\"sequenceNo\":3,\"id\":\"not-a-uuid\",\"occurredAt\":\"" + NOW.minusSeconds(50) + "\",\"operation\":\"store\",\"message\":\"bad id\"}",
+                failure(4, NOW.minusSeconds(40))));
+        register("orders", metrics("ds-1", 10, 600, 6), query -> { queries.add(query); return pages.apply(query); });
+
+        service(NOW).pollAll();
+        assertThat(countByOrigin("application")).isEqualTo(2);
+        assertThat(failures.cursor("ds-1")).isEqualTo(4);
+
+        service(NOW.plusSeconds(30)).pollAll();
+        assertThat(queries).containsExactly("afterSequence=0&limit=100", "afterSequence=4&limit=100");
+    }
+
+    @Test
+    void applicationFailureIsAttributedToItsOriginInstance() {
+        register("orders-a", metrics("ds-1", 10, 600, 6), query -> "[" + failure(1, NOW.minusSeconds(60)).replace("\"orders-a\"", "\"orders-b\"") + "]");
+        UUID unreachable = UUID.randomUUID();
+        instances.save(unreachable, "gone", "http://127.0.0.1:1/gone/v1", NOW);
+
+        service(NOW).pollAll();
+
+        assertThat(dashboard.failures(NOW.minusSeconds(3_600))).extracting("operation", "originInstanceId")
+                .containsExactlyInAnyOrder(org.assertj.core.groups.Tuple.tuple("store", "orders-b"),
+                        org.assertj.core.groups.Tuple.tuple("poll", unreachable.toString()));
+    }
+
+    @Test
     void legacyDatabaseUpgradeKeepsHistory() {
         JdbcTemplate legacy = jdbc("legacy.sqlite");
         createPreDatasetSchema(legacy);

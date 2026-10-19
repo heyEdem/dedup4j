@@ -59,7 +59,7 @@ public class DashboardController {
     @GetMapping("/failures")
     public List<DashboardView.Failure> failures(@RequestParam(name = "since", required = false) Instant since) {
         Instant boundary = since == null ? Instant.now().minus(7, ChronoUnit.DAYS) : since;
-        return failures.findSince(boundary).stream().map(f -> new DashboardView.Failure(f.id(), f.instanceId(), f.occurredAt(), f.operation(), f.message())).toList();
+        return failures.findSince(boundary).stream().map(f -> new DashboardView.Failure(f.id(), f.instanceId(), f.occurredAt(), f.operation(), f.message(), f.originInstanceId())).toList();
     }
 
     /** An instance row shows its dataset's figures, flagged when another registered instance reports the same dataset. */

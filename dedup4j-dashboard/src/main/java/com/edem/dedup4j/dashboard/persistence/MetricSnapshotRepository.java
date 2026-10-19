@@ -17,8 +17,8 @@ public class MetricSnapshotRepository {
     /** The instance's history: its current dataset's rows plus the rows of its legacy {@code instance:<id>} pseudo-dataset. */
     public List<Snapshot> findHistory(UUID instanceId, String datasetId) {
         String legacy = "instance:" + instanceId;
-        return jdbc.query("SELECT * FROM metric_snapshot WHERE dataset_id IN (?, ?) ORDER BY observed_at", mapper(), datasetId == null ? legacy : datasetId, legacy);
+        return jdbc.query("SELECT * FROM metric_snapshot WHERE dataset_id IN (?, ?) ORDER BY observed_at, id", mapper(), datasetId == null ? legacy : datasetId, legacy);
     }
-    public List<Snapshot> findAll() { return jdbc.query("SELECT * FROM metric_snapshot ORDER BY observed_at", mapper()); }
+    public List<Snapshot> findAll() { return jdbc.query("SELECT * FROM metric_snapshot ORDER BY observed_at, id", mapper()); }
     private RowMapper<Snapshot> mapper() { return (r,n) -> new Snapshot(UUID.fromString(r.getString("instance_id")), r.getString("dataset_id"), Instant.parse(r.getString("observed_at")), r.getLong("logical_bytes"), r.getLong("physical_bytes"), r.getLong("avoided_bytes"), r.getLong("uploads"), r.getLong("duplicates"), r.getLong("skipped_physical_writes"), r.getLong("content_count")); }
 }

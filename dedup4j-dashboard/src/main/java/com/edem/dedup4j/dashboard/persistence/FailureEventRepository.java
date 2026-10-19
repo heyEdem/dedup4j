@@ -13,7 +13,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class FailureEventRepository {
-    public record Failure(UUID id, UUID instanceId, Instant occurredAt, String operation, String message) {}
+    /** {@code originInstanceId} is where the failure happened: the application's instance id, or the polled instance for poll rows. */
+    public record Failure(UUID id, UUID instanceId, Instant occurredAt, String operation, String message, String originInstanceId) {
+        public Failure(UUID id, UUID instanceId, Instant occurredAt, String operation, String message) {
+            this(id, instanceId, occurredAt, operation, message, instanceId.toString());
+        }
+    }
     public record ApplicationFailure(UUID sourceFailureId, String datasetId, UUID instanceId, String originInstanceId,
                                      Instant occurredAt, String operation, String message) {}
     private final JdbcTemplate jdbc;
@@ -26,7 +31,7 @@ public class FailureEventRepository {
                 UUID.randomUUID().toString(), f.instanceId().toString(), f.occurredAt().toString(), f.operation(), f.message(), f.datasetId(),
                 f.sourceFailureId() == null ? null : f.sourceFailureId().toString(), f.originInstanceId()) == 1;
     }
-    public List<Failure> findSince(Instant since) { return jdbc.query("SELECT * FROM failure_event WHERE julianday(occurred_at) >= julianday(?) ORDER BY occurred_at DESC", (r,n) -> new Failure(UUID.fromString(r.getString("id")), UUID.fromString(r.getString("instance_id")), Instant.parse(r.getString("occurred_at")), r.getString("operation"), r.getString("message")), since.toString()); }
+    public List<Failure> findSince(Instant since) { return jdbc.query("SELECT * FROM failure_event WHERE julianday(occurred_at) >= julianday(?) ORDER BY occurred_at DESC", (r,n) -> new Failure(UUID.fromString(r.getString("id")), UUID.fromString(r.getString("instance_id")), Instant.parse(r.getString("occurred_at")), r.getString("operation"), r.getString("message"), r.getString("origin_instance_id") == null ? r.getString("instance_id") : r.getString("origin_instance_id")), since.toString()); }
     public int deleteOlderThan(Instant cutoff) { return jdbc.update("DELETE FROM failure_event WHERE julianday(occurred_at) < julianday(?)", cutoff.toString()); }
     /** The highest application failure sequence number already ingested for the dataset; 0 when none. */
     public long cursor(String datasetId) { return jdbc.queryForList("SELECT last_sequence_no FROM failure_cursor WHERE dataset_id=?", Long.class, datasetId).stream().findFirst().orElse(0L); }

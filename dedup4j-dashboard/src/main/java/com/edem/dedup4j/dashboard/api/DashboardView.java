@@ -19,5 +19,6 @@ public final class DashboardView {
     public record History(UUID instanceId, List<MetricPoint> points) { }
     public record MetricPoint(Instant observedAt, long logicalBytes, long physicalBytes, long avoidedBytes,
                               long uploads, long duplicates, long skippedPhysicalWrites, long contentCount) { }
-    public record Failure(UUID id, UUID instanceId, Instant occurredAt, String operation, String message) { }
+    /** {@code instanceId} is the polled instance; {@code originInstanceId} is where the failure happened. */
+    public record Failure(UUID id, UUID instanceId, Instant occurredAt, String operation, String message, String originInstanceId) { }
 }

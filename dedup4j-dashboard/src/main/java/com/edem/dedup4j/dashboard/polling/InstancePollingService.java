@@ -54,12 +54,15 @@ public class InstancePollingService {
 
     @Scheduled(fixedDelayString = "${dedup4j.dashboard.polling-interval:30s}")
     public void pollAll() {
-        Set<String> failuresIngested = new HashSet<>();
-        for (InstanceRepository.Instance instance : instances.findAll()) poll(instance, failuresIngested);
+        Cycle cycle = new Cycle(new HashSet<>(), new HashSet<>());
+        for (InstanceRepository.Instance instance : instances.findAll()) poll(instance, cycle);
         failures.deleteOlderThan(clock.instant().minus(properties.failureRetention()));
     }
 
-    private void poll(InstanceRepository.Instance instance, Set<String> failuresIngested) {
+    /** Datasets already given a snapshot and already asked for failures this cycle; one replica of each is enough. */
+    private record Cycle(Set<String> snapshotted, Set<String> failuresIngested) {}
+
+    private void poll(InstanceRepository.Instance instance, Cycle cycle) {
         Instant now = clock.instant();
         String base = instance.url().replaceAll("/$", "");
         String datasetId;
@@ -75,8 +78,11 @@ public class InstancePollingService {
             var current = new MetricDeltaCalculator.Cumulative(uploads, metrics.path("duplicates").asLong(), skipped,
                     metrics.path("acceptedBytes").asLong(), metrics.path("avoidedBytes").asLong(), metrics.path("physicalBytes").asLong());
             long contentCount = metrics.path("contentCount").asLong();
-            MetricDeltaCalculator.Delta delta = new MetricDeltaCalculator().calculate(current, previous.put(datasetId, current));
-            snapshots.save(new MetricSnapshotRepository.Snapshot(instance.id(), datasetId, now, delta.logicalBytes(), delta.physicalBytes(), delta.avoidedBytes(), delta.uploads(), delta.duplicates(), delta.skippedPhysicalWrites(), contentCount));
+            // The baseline only moves with a stored snapshot, so a skipped replica reading never drops part of a delta.
+            if (cycle.snapshotted().add(datasetId)) {
+                MetricDeltaCalculator.Delta delta = new MetricDeltaCalculator().calculate(current, previous.put(datasetId, current));
+                snapshots.save(new MetricSnapshotRepository.Snapshot(instance.id(), datasetId, now, delta.logicalBytes(), delta.physicalBytes(), delta.avoidedBytes(), delta.uploads(), delta.duplicates(), delta.skippedPhysicalWrites(), contentCount));
+            }
             totals.save(new DatasetTotalsRepository.DatasetTotals(datasetId, now, current.uploads(), current.duplicates(), physicalWrites,
                     current.acceptedBytes(), current.avoidedBytes(), contentCount, current.physicalBytes(),
                     metrics.hasNonNull("totalsScope") ? text(metrics, "totalsScope") : null));
@@ -88,10 +94,10 @@ public class InstancePollingService {
             log.warn("Dashboard poll failed for {}: {}", instance.id(), message);
             return;
         }
-        if (failuresIngested.contains(datasetId)) return;
+        if (cycle.failuresIngested().contains(datasetId)) return;
         try {
             ingestFailures(instance, base, datasetId, now);
-            failuresIngested.add(datasetId);
+            cycle.failuresIngested().add(datasetId);
         } catch (Exception error) {
             // Another healthy replica of the dataset may still serve its failures this cycle.
             log.warn("Dashboard failure ingestion failed for {}: {}", instance.id(), error.getMessage());
@@ -125,7 +131,16 @@ public class InstancePollingService {
         }
     }
 
+    /** A malformed item is logged and skipped, so it can never hold the cursor back. */
     private void store(InstanceRepository.Instance instance, String datasetId, JsonNode item, Instant cutoff) {
+        try {
+            storeItem(instance, datasetId, item, cutoff);
+        } catch (RuntimeException error) {
+            log.warn("Dashboard skipped malformed failure from {} for dataset {}: {}", instance.id(), datasetId, error.getMessage());
+        }
+    }
+
+    private void storeItem(InstanceRepository.Instance instance, String datasetId, JsonNode item, Instant cutoff) {
         Instant occurredAt = Instant.parse(item.get("occurredAt").asString());
         if (occurredAt.isBefore(cutoff)) return;
         // An item without an id cannot be deduplicated; it is stored like a poll failure, under a fresh row id.
