@@ -158,6 +158,13 @@
 - **Initialization:** Built as a Maven child of root `dedup4j`; production code depends on the provider-neutral core/JPA modules and transitively aggregates the local, S3, and Azure adapter modules. Starter-owned provider configurations are registered through `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`, enable property binding independently, and run before the final validator. They construct clients without performing storage IO.
 - **Non-obvious logic:** Reconciliation is disabled by default, physical deletion on zero references is enabled by default, and the starter has no REST controllers or direct provider SDK declarations. The auto-configured public service owns `REQUIRES_NEW` metadata transactions; callers constructing the raw delegate remain responsible for its transactions. Provider validation runs after singleton creation; supported selections are `local`, `s3`, and `azure`, including when supplying custom storage. A custom `BlobStorage` suppresses all default provider beans, so unused clients do not demand cloud settings. Spring manages S3 client shutdown and disables inferred destruction on its storage wrapper. Upload streams are buffered once so hashing and storage can consume equivalent byte sequences; duplicate matches reuse the persisted object key and content ID. `GenericStarterDependencyTest` proves all adapter classes are available from the starter test classpath while management/dashboard classes remain absent, and `ProviderDependencyBoundaryTest` proves SDK declarations stay in adapter POMs.
 
+#### Persistent upload history
+
+- **Entry points:** `dedup4j-jpa` `com.edem.dedup4j.historystore` (`HistoryDataset`, `UploadEvent`, `FailureEvent`, `UploadLedgerRepository`, `FailureLogRepository`, `LedgerTotals`, `UploadContribution`); starter `com.edem.dedup4j.history` (`UploadHistory`, `JpaUploadHistory`, `DisabledUploadHistory`, `HistoryTotals`, `FailureRecord`, `H2AppendOnlyTrigger`) and `autoconfigure.history` (`Dedup4jHistoryAutoConfiguration`, `HistoryDatabaseGuard`).
+- **Schema:** `classpath:db/dedup4j/history/db.changelog-history.yaml` creates `dedup4j_history_dataset`, `dedup4j_upload_event` and `dedup4j_failure_event`; PostgreSQL row and `TRUNCATE` triggers, H2 row triggers plus FK references blocking `TRUNCATE`. `initialize-schema: never` deployments apply it themselves.
+- **Behavior:** Entities are immutable and repositories expose only append and read methods; corrections are compensating rows. Each upload appends a ledger row under the dataset row lock just before commit; failures get a gapless `sequence_no`. `dedup4j.history.enabled` (default true) and `dedup4j.history.instance-id` configure it; other databases fail startup. `SpringTransactionalBlobDeduplicationService` records history and emits Micrometer meters only after commit; `StoreOutcome` carries the physical-write flag.
+- **Management/dashboards:** `/metrics` adds `datasetId`, `totalsScope`, `physicalWrites`; `/info` adds `datasetId`; `/failures?afterSequence=&limit=` (ascending, default 100, max 500) via `UploadHistoryFailureSource`. The standalone dashboard adds `DatasetTotalsRepository` and a per-dataset `failure_cursor` (10 pages x 100 per cycle); failure rows have origin `application` or `poll`.
+
 ### dedup4j-storage-local
 
 - **Entry point:** `dedup4j-storage-local/pom.xml`
@@ -234,6 +241,8 @@ Implemented starter properties:
 | Property | Default | Purpose |
 |---|---|---|
 | `dedup4j.storage.provider` | None (required) | Selects `s3`, `azure`, or `local`; required even for application-provided storage. |
+| `dedup4j.history.enabled` | `true` | Durable append-only upload history; PostgreSQL and H2 only, set `false` on other databases. |
+| `dedup4j.history.instance-id` | `dedup4j.management.instance-id`, then host name | Attribution label on history rows. |
 | `dedup4j.persistence.initialize-schema` | `embedded` | Initialize embedded databases only; `always` explicitly allows external initialization; `never` validates pre-existing schema without dedup4j DDL. |
 | `dedup4j.storage.key-prefix` | Empty | Prefix for generated object keys. |
 | `dedup4j.storage.local.root-directory` | `blob-helper-storage` | Filesystem root for auto-configured local storage. |

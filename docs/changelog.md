@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-19 — Persistent append-only upload history
+
+- Added durable, append-only upload and failure history (`dedup4j_history_dataset`, `dedup4j_upload_event`, `dedup4j_failure_event`) in the `dedup4j-jpa` `historystore` package and the starter `history` package, with PostgreSQL and H2 changesets at `classpath:db/dedup4j/history/db.changelog-history.yaml`. Enabled by default (`dedup4j.history.enabled`); PostgreSQL and H2 only, other databases fail startup unless disabled. Totals start at zero with no backfill.
+- Behavior changes: totals are all-time and count only completed uploads (failed uploads are no longer counted). Micrometer upload meters now increment only after commit, and `dedup4j.skipped.physical.writes` counts uploads without a storage write. The legacy 4-argument `SpringTransactionalBlobDeduplicationService` constructor and a bare `DefaultBlobDeduplicationService` no longer emit upload meters.
+- Management: `/metrics` adds `datasetId`, `totalsScope`, `physicalWrites`; `/info` adds `datasetId`; `/failures` gains `afterSequence` and `limit` (ascending, default 100, max 500).
+- Dashboards: embedded overview field `physicalUploads` renamed `physicalWrites`. Standalone Overview `physicalUploads` now means physical writes (previously summed skipped writes). "Bytes avoided" relabelled "Storage avoided". The standalone dashboard counts each dataset once and ingests failures per dataset via `failure_cursor` (10 pages of 100 per cycle); older instances without `datasetId` are their own dataset with best-effort `since` ingestion. SQLite failure rows have origin `application` or `poll`, both kept 7 days.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, `dedup4j-dashboard`, and project documentation.
+
 ## 2026-09-07 — Reconcile feature branch with Spring Boot 4 main
 
 - Resolved the documentation conflicts while preserving the Boot 4.1.1/Jackson 3 migration and the PLAN-011/012/013 implementation history.

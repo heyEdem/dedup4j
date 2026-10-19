@@ -94,3 +94,10 @@
 
 **Tradeoffs:** Boot 4 is a major upgrade; consumers and future integrations must use the Boot 4-compatible auto-configuration and JSON module layout.
 **Alternatives considered:** Remaining on Spring Boot 3.5 was rejected because it would defer migration cost and leave the project on the older framework line while the public API is still forming.
+
+## Durable append-only history replaces in-memory totals
+
+**Date:** 2026-10-19
+**Why:** In-memory counters reset on restart, differ per replica, and counted failed uploads. A database-backed, append-only ledger committed with each upload gives shared all-time totals and a gapless failure sequence that dashboards can page without gaps.
+**Tradeoffs:** History runs only on PostgreSQL and H2, where append-only triggers are implemented; other databases fail startup unless `dedup4j.history.enabled=false`. Uploads serialize on the dataset row lock for a few statements at commit, negligible at thousands per day. Totals start at zero with no backfill, and mistakes are fixed only by compensating rows.
+**Alternatives considered:** Keeping in-memory totals was rejected as non-durable. Mutable summary rows were rejected because they allow silent edits. Supporting every database without enforcement was rejected because append-only must be enforced in the database.
