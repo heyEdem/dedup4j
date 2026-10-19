@@ -18,8 +18,6 @@ public class Dedup4jProperties {
     @NestedConfigurationProperty
     private final Deduplication deduplication = new Deduplication();
 
-    @NestedConfigurationProperty
-    private final Cleanup cleanup = new Cleanup();
 
     @NestedConfigurationProperty
     private final Persistence persistence = new Persistence();
@@ -32,9 +30,6 @@ public class Dedup4jProperties {
         return deduplication;
     }
 
-    public Cleanup getCleanup() {
-        return cleanup;
-    }
 
     public Persistence getPersistence() {
         return persistence;
@@ -189,17 +184,7 @@ public class Dedup4jProperties {
 
     public static class Deduplication {
 
-        private String hashAlgorithm = "SHA-256";
         private DataSize maxUploadSize = DataSize.ofMegabytes(25);
-        private boolean strictContentTypeValidation;
-
-        public String getHashAlgorithm() {
-            return hashAlgorithm;
-        }
-
-        public void setHashAlgorithm(String hashAlgorithm) {
-            this.hashAlgorithm = hashAlgorithm;
-        }
 
         public DataSize getMaxUploadSize() {
             return maxUploadSize;
@@ -208,35 +193,6 @@ public class Dedup4jProperties {
         public void setMaxUploadSize(DataSize maxUploadSize) {
             this.maxUploadSize = maxUploadSize;
         }
-
-        public boolean isStrictContentTypeValidation() {
-            return strictContentTypeValidation;
-        }
-
-        public void setStrictContentTypeValidation(boolean strictContentTypeValidation) {
-            this.strictContentTypeValidation = strictContentTypeValidation;
-        }
     }
 
-    public static class Cleanup {
-
-        private boolean deletePhysicalOnZeroReferences = true;
-        private boolean reconciliationEnabled;
-
-        public boolean isDeletePhysicalOnZeroReferences() {
-            return deletePhysicalOnZeroReferences;
-        }
-
-        public void setDeletePhysicalOnZeroReferences(boolean deletePhysicalOnZeroReferences) {
-            this.deletePhysicalOnZeroReferences = deletePhysicalOnZeroReferences;
-        }
-
-        public boolean isReconciliationEnabled() {
-            return reconciliationEnabled;
-        }
-
-        public void setReconciliationEnabled(boolean reconciliationEnabled) {
-            this.reconciliationEnabled = reconciliationEnabled;
-        }
-    }
 }

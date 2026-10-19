@@ -12,21 +12,16 @@ import java.net.URI;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Dedup4jPropertiesTest {
 
     @Test
-    void bindsStorageDeduplicationAndCleanupProperties() {
+    void bindsStorageAndDeduplicationProperties() {
         MapConfigurationPropertySource source = new MapConfigurationPropertySource(Map.of(
                 "dedup4j.storage.provider", "s3",
                 "dedup4j.storage.key-prefix", "uploads",
-                "dedup4j.deduplication.hash-algorithm", "SHA-256",
-                "dedup4j.deduplication.max-upload-size", "64MB",
-                "dedup4j.deduplication.strict-content-type-validation", "true",
-                "dedup4j.cleanup.delete-physical-on-zero-references", "false",
-                "dedup4j.cleanup.reconciliation-enabled", "true"
+                "dedup4j.deduplication.max-upload-size", "64MB"
         ));
 
         Dedup4jProperties properties = new Binder(source)
@@ -35,18 +30,12 @@ class Dedup4jPropertiesTest {
 
         assertEquals("s3", properties.getStorage().getProvider());
         assertEquals("uploads", properties.getStorage().getKeyPrefix());
-        assertEquals("SHA-256", properties.getDeduplication().getHashAlgorithm());
         assertEquals(DataSize.ofMegabytes(64), properties.getDeduplication().getMaxUploadSize());
-        assertTrue(properties.getDeduplication().isStrictContentTypeValidation());
-        assertFalse(properties.getCleanup().isDeletePhysicalOnZeroReferences());
-        assertTrue(properties.getCleanup().isReconciliationEnabled());
     }
 
     @Test
-    void disablesReconciliationByDefault() {
-        Dedup4jProperties properties = new Dedup4jProperties();
-
-        assertFalse(properties.getCleanup().isReconciliationEnabled());
+    void defaultsMaxUploadSizeTo25Megabytes() {
+        assertEquals(DataSize.ofMegabytes(25), new Dedup4jProperties().getDeduplication().getMaxUploadSize());
     }
 
     @Test
