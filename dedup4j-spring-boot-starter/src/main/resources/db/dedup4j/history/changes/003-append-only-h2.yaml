@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: history-003-append-only-h2
+      author: dedup4j
+      dbms: h2
+      changes:
+        - sql:
+            sql: CREATE TRIGGER dedup4j_history_dataset_no_row_change BEFORE UPDATE, DELETE ON dedup4j_history_dataset FOR EACH ROW CALL "com.edem.dedup4j.history.H2AppendOnlyTrigger"
+        - sql:
+            sql: CREATE TRIGGER dedup4j_upload_event_no_row_change BEFORE UPDATE, DELETE ON dedup4j_upload_event FOR EACH ROW CALL "com.edem.dedup4j.history.H2AppendOnlyTrigger"
+        - sql:
+            sql: CREATE TRIGGER dedup4j_failure_event_no_row_change BEFORE UPDATE, DELETE ON dedup4j_failure_event FOR EACH ROW CALL "com.edem.dedup4j.history.H2AppendOnlyTrigger"
