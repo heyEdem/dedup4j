@@ -242,7 +242,7 @@ Implemented starter properties:
 |---|---|---|
 | `dedup4j.storage.provider` | None (required) | Selects `s3`, `azure`, or `local`; required even for application-provided storage. |
 | `dedup4j.history.enabled` | `true` | Durable append-only upload history; PostgreSQL and H2 only, set `false` on other databases. |
-| `dedup4j.history.instance-id` | `dedup4j.management.instance-id`, then host name | Attribution label on history rows. |
+| `dedup4j.history.instance-id` | `dedup4j.management.instance-id`, then one random UUID per JVM shared with the management API (`DefaultInstanceId`) | Attribution label on history rows. |
 | `dedup4j.persistence.initialize-schema` | `embedded` | Initialize embedded databases only; `always` explicitly allows external initialization; `never` validates pre-existing schema without dedup4j DDL. |
 | `dedup4j.storage.key-prefix` | Empty | Prefix for generated object keys. |
 | `dedup4j.storage.local.root-directory` | `blob-helper-storage` | Filesystem root for auto-configured local storage. |
