@@ -16,6 +16,10 @@ import org.springframework.boot.transaction.autoconfigure.TransactionAutoConfigu
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import com.edem.dedup4j.history.HistoryTotals;
+import com.edem.dedup4j.observability.Dedup4jMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -32,6 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class Dedup4jHistoryAutoConfigurationTest {
 
@@ -59,9 +64,22 @@ class Dedup4jHistoryAutoConfigurationTest {
     @Test
     void historyDisabledUsesCountersAndSkipsChangelog() {
         runner.withUserConfiguration(H2Configuration.class)
+                .withBean(SimpleMeterRegistry.class, SimpleMeterRegistry::new)
                 .withPropertyValues("dedup4j.history.enabled=false")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
+                    Dedup4jMetrics metrics = new Dedup4jMetrics(context.getBean(SimpleMeterRegistry.class));
+                    metrics.recordUpload(10, false);
+                    metrics.recordUpload(20, false);
+                    metrics.recordUpload(30, true);
+                    HistoryTotals totals = context.getBean(UploadHistory.class).totals();
+                    assertThat(totals.scope()).isEqualTo("since-start");
+                    assertThat(totals.datasetId()).isNull();
+                    assertThat(totals.uploads()).isEqualTo(3);
+                    assertThat(totals.duplicates()).isEqualTo(1);
+                    assertThat(totals.physicalWrites()).isEqualTo(2);
+                    assertThat(totals.logicalBytes()).isEqualTo(60);
+                    assertThat(totals.avoidedBytes()).isEqualTo(30);
                     assertThat(context.getBean(UploadHistory.class)).isInstanceOf(DisabledUploadHistory.class);
                     assertThat(context.getBeansOfType(SpringLiquibase.class)).doesNotContainKey("dedup4jHistoryLiquibase");
                     assertThat(new JdbcTemplate(context.getBean(DataSource.class)).queryForObject(
@@ -78,6 +96,28 @@ class Dedup4jHistoryAutoConfigurationTest {
                         .getFailure()
                         .hasMessageContaining("dedup4j history requires PostgreSQL or H2")
                         .hasMessageContaining("dedup4j.history.enabled=false"));
+    }
+
+    @Test
+    void unsupportedDatabaseIsRejectedBeforeAnyMigrationRuns() {
+        runner.withUserConfiguration(MySqlConfiguration.class)
+                .withPropertyValues("dedup4j.persistence.initialize-schema=always")
+                .run(context -> {
+                    assertThat(context).hasFailed()
+                            .getFailure()
+                            .hasMessageContaining("dedup4j history requires PostgreSQL or H2");
+                    assertThat(new JdbcTemplate(MySqlConfiguration.DELEGATE.get()).queryForObject(
+                            "select count(*) from information_schema.tables where table_name like 'DEDUP4J%'",
+                            Integer.class)).isZero();
+                });
+    }
+
+    @Test
+    void recordUploadOutsideTransactionFailsFast() {
+        runner.withUserConfiguration(H2Configuration.class).run(context ->
+                assertThatThrownBy(() -> context.getBean(UploadHistory.class).recordUpload(
+                        UploadContribution.completed(UUID.randomUUID(), "SHA-256", "hash", 10, false, true)))
+                        .isInstanceOf(IllegalTransactionStateException.class));
     }
 
     @Test
@@ -182,9 +222,13 @@ class Dedup4jHistoryAutoConfigurationTest {
 
     @Configuration(proxyBeanMethods = false)
     static class MySqlConfiguration {
+        static final java.util.concurrent.atomic.AtomicReference<DataSource> DELEGATE =
+                new java.util.concurrent.atomic.AtomicReference<>();
+
         @Bean
         DataSource dataSource() {
             DataSource delegate = h2();
+            DELEGATE.set(delegate);
             return (DataSource) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{DataSource.class},
                     (proxy, method, args) -> {
                         try {

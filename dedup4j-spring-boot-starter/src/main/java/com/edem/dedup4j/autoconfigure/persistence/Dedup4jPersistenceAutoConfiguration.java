@@ -47,6 +47,7 @@ public class Dedup4jPersistenceAutoConfiguration {
 
     private static final String LIQUIBASE_BEAN = "dedup4jLiquibase";
     private static final String HISTORY_LIQUIBASE_BEAN = "dedup4jHistoryLiquibase";
+    private static final String HISTORY_GUARD_BEAN = "dedup4jHistoryDatabaseGuard";
     private static final String VALIDATOR_BEAN = "dedup4jSchemaValidator";
 
     @Bean(name = LIQUIBASE_BEAN)
@@ -127,6 +128,10 @@ public class Dedup4jPersistenceAutoConfiguration {
         return beanFactory -> {
             String[] liquibaseNames = beanFactory.getBeanNamesForType(SpringLiquibase.class, false, false);
             addDependsOn(beanFactory, VALIDATOR_BEAN, liquibaseNames);
+            // Nothing is migrated before the history guard has accepted the database.
+            if (beanFactory.containsBeanDefinition(HISTORY_GUARD_BEAN)) {
+                addDependsOn(beanFactory, LIQUIBASE_BEAN, new String[]{HISTORY_GUARD_BEAN});
+            }
             for (String emfName : beanFactory.getBeanNamesForType(EntityManagerFactory.class, false, false)) {
                 addDependsOn(beanFactory, emfName, new String[]{VALIDATOR_BEAN});
             }

@@ -24,6 +24,7 @@ public final class JpaUploadHistory implements UploadHistory {
     private final String instanceId;
     private final Clock clock;
     private final TransactionTemplate newTransaction;
+    private final TransactionTemplate mandatory;
     private final TransactionTemplate readOnly;
 
     public JpaUploadHistory(
@@ -39,13 +40,16 @@ public final class JpaUploadHistory implements UploadHistory {
         Objects.requireNonNull(transactionManager, "transactionManager must not be null");
         this.newTransaction = new TransactionTemplate(transactionManager);
         this.newTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.mandatory = new TransactionTemplate(transactionManager);
+        this.mandatory.setPropagationBehavior(TransactionDefinition.PROPAGATION_MANDATORY);
         this.readOnly = new TransactionTemplate(transactionManager);
         this.readOnly.setReadOnly(true);
     }
 
     @Override
     public void recordUpload(UploadContribution contribution) {
-        ledger.append(contribution, instanceId, now());
+        Instant recordedAt = now();
+        mandatory.executeWithoutResult(status -> ledger.append(contribution, instanceId, recordedAt));
     }
 
     @Override

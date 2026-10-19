@@ -8,10 +8,18 @@ import java.util.List;
 /** Persistent record of completed uploads and of upload/delete failures. */
 public interface UploadHistory {
 
-    /** Appends one ledger row inside the caller's transaction. */
+    /**
+     * Appends one ledger row. Joins and requires the caller's transaction (fails with
+     * {@code IllegalTransactionStateException} otherwise) and holds the dataset lock until
+     * that transaction commits.
+     */
     void recordUpload(UploadContribution contribution);
 
-    /** Appends a failure row in its own {@code REQUIRES_NEW} transaction. */
+    /**
+     * Appends a failure row, committing in its own {@code REQUIRES_NEW} transaction. It needs
+     * the dataset lock, so call it only after any transaction that called
+     * {@link #recordUpload} has completed; otherwise it waits on that lock (a hang on PostgreSQL).
+     */
     void recordFailure(String operation, String contentHash, String objectKey, Throwable failure);
 
     HistoryTotals totals();
