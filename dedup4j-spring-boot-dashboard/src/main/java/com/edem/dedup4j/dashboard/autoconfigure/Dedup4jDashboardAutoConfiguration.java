@@ -27,9 +27,10 @@ public class Dedup4jDashboardAutoConfiguration {
     EmbeddedDashboardSnapshotService embeddedDashboardSnapshotService(
             ObjectProvider<MeterRegistry> meterRegistry,
             ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
+            ObjectProvider<com.edem.dedup4j.history.UploadHistory> uploadHistory,
             Dedup4jProperties dedup4jProperties,
             Dedup4jManagementProperties managementProperties) {
-        return new EmbeddedDashboardSnapshotService(meterRegistry, contentRepository, dedup4jProperties, managementProperties);
+        return new EmbeddedDashboardSnapshotService(meterRegistry, contentRepository, uploadHistory, dedup4jProperties, managementProperties);
     }
 
     @Bean
