@@ -198,9 +198,20 @@ and the management API share one random id generated at each application
 start, so failures are attributed to the id the management API reports. Totals
 never group by instance.
 
-With `dedup4j.persistence.initialize-schema: never`, deployments must apply
-`classpath:db/dedup4j/history/db.changelog-history.yaml` themselves; startup
-fails naming that path if the history tables are missing.
+The history changelog runs automatically only when
+`dedup4j.persistence.initialize-schema` is `always`, or `embedded` (the
+default) on an in-memory H2 database (`jdbc:h2:mem:`). On PostgreSQL, or an
+H2 file or server database, it is **not** applied under `embedded` or
+`never`. Existing
+deployments upgrading to this version must apply
+`classpath:db/dedup4j/history/db.changelog-history.yaml` themselves (or set
+`initialize-schema: always`); otherwise startup fails with a message naming
+that path.
+
+Upgrade order: upgrade the standalone dashboard before, or together with, the
+applications it polls. An older dashboard polling upgraded applications
+multiplies trends by the replica count and, after each dashboard restart,
+re-adds the all-time totals as a single delta.
 
 History tables (`dedup4j_history_dataset`, `dedup4j_upload_event`,
 `dedup4j_failure_event`) are append-only. PostgreSQL uses row and `TRUNCATE`
@@ -216,7 +227,7 @@ deletes history. Totals start at zero, with no backfill from existing content.
 | New upload | An upload whose outcome was new content (uploads - duplicates). It measures outcomes, not physical storage writes. |
 | Physical write | An upload where this request performed a storage put. In an insert race both requests can write, and one recovers as a duplicate; that request is a duplicate and also a physical write. |
 | Skipped physical writes | uploads - physical writes. |
-| Storage avoided (`avoidedBytes`) | Bytes that did not become an additional stored copy: the sum of the sizes of duplicate outcomes. It measures capacity saved, not upload traffic saved. |
+| Storage avoided (`avoidedBytes`) | Bytes that did not become an additional stored copy: the sum of the sizes of duplicate outcomes. A duplicate that lost an insert race still counts, even though its bytes were sent to storage once, because the same key was overwritten rather than duplicated. It measures capacity saved, not upload traffic saved. |
 
 Cost: each upload serializes on the dataset row lock for the few statements
 between the ledger insert and commit. This is negligible at thousands of
