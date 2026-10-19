@@ -135,4 +135,104 @@
         </plugins>
     </build>
 
+    <profiles>
+        <!--
+            Maven Central release build. Inactive by default.
+            Dry run (never uploads):  ./mvnw -Prelease clean deploy
+            Upload for manual review: ./mvnw -Prelease -Dcentral.skipUpload=false clean deploy
+        -->
+        <profile>
+            <id>release</id>
+            <properties>
+                <!-- Safe default: build the Central bundle locally, never upload it. -->
+                <central.skipUpload>true</central.skipUpload>
+                <!-- maven-deploy-plugin is replaced by the Central plugin; never let it run. -->
+                <maven.deploy.skip>true</maven.deploy.skip>
+                <release.enforcer.skip>false</release.enforcer.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>${maven-enforcer.version}</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-release-versions</id>
+                                <phase>validate</phase>
+                                <goals><goal>enforce</goal></goals>
+                                <configuration>
+                                    <skip>${release.enforcer.skip}</skip>
+                                    <rules>
+                                        <requireReleaseVersion>
+                                            <message>Release builds must not use a SNAPSHOT project version.</message>
+                                        </requireReleaseVersion>
+                                        <requireReleaseDeps>
+                                            <message>Release builds must not depend on SNAPSHOT artifacts.</message>
+                                        </requireReleaseDeps>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.4.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals><goal>jar-no-fork</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals><goal>jar</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals><goal>sign</goal></goals>
+                                <configuration>
+                                    <!-- Passphrase only from MAVEN_GPG_PASSPHRASE (or gpg-agent); fail on insecure sources. -->
+                                    <bestPractices>true</bestPractices>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
+                        <!-- Required: binds the Central publish goal to the deploy phase. -->
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>validated</waitUntil>
+                            <skipUpload>${central.skipUpload}</skipUpload>
+                            <!-- Exact artifactId match; the standalone app ships via GitHub Releases. -->
+                            <excludeArtifacts>
+                                <excludeArtifact>dedup4j-dashboard</excludeArtifact>
+                            </excludeArtifacts>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
