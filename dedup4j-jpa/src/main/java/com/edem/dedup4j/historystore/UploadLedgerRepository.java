@@ -13,6 +13,11 @@ import java.util.UUID;
  * <p>The entity manager and its transaction belong to the caller. {@link #append} locks the
  * single dataset row, which is held until the caller commits, so each row is built on the
  * latest committed one and no sequence number can be skipped.</p>
+ *
+ * <p>The gapless-sequence guarantee assumes the caller's transaction runs at READ COMMITTED (the
+ * default on PostgreSQL and H2, and pinned by the starter's transactional service). Under
+ * REPEATABLE READ the read after waiting on the lock reuses a stale snapshot, so a concurrent append
+ * fails on the primary key rather than miscounting.</p>
  */
 public final class UploadLedgerRepository {
 

@@ -11,6 +11,10 @@ import java.util.UUID;
 /**
  * Insert-only access to the failure log. Sequence assignment and commit both happen under the
  * dataset row lock, so paging by {@code sequence_no} can never skip a row.
+ *
+ * <p>This assumes the caller's transaction runs at READ COMMITTED (the default on PostgreSQL and H2,
+ * and pinned by the starter's {@code JpaUploadHistory}). Under REPEATABLE READ a concurrent append
+ * fails on the primary key rather than miscounting.</p>
  */
 public final class FailureLogRepository {
 
