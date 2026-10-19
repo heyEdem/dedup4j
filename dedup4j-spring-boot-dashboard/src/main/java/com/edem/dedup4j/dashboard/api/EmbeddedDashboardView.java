@@ -8,9 +8,9 @@ public final class EmbeddedDashboardView {
     private EmbeddedDashboardView() { }
 
     public record Overview(long instanceCount, long healthyInstanceCount, long uploads, long duplicates,
-                           long physicalUploads, long logicalBytes, long physicalBytes, long avoidedBytes,
+                           long physicalWrites, long logicalBytes, long physicalBytes, long avoidedBytes,
                            double duplicateRate, long newUploads, long contentCount,
-                           List<TrendPoint> trend) { }
+                           List<TrendPoint> trend, String totalsScope) { }
     public record TrendPoint(Instant observedAt, long logicalBytes, long physicalBytes, long avoidedBytes,
                              long uploads, long duplicates) { }
     public record Instance(UUID instanceId, String instanceName, String advertisedUrl, String status,

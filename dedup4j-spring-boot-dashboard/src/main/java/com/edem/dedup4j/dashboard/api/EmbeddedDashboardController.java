@@ -34,8 +34,8 @@ public class EmbeddedDashboardController {
     public EmbeddedDashboardView.Overview overview() {
         var snapshot = snapshots.current();
         return new EmbeddedDashboardView.Overview(1, 1, snapshot.uploads(), snapshot.duplicates(),
-                snapshot.physicalUploads(), snapshot.logicalBytes(), snapshot.physicalBytes(), snapshot.avoidedBytes(),
-                snapshot.duplicateRate(), snapshot.newUploads(), snapshot.contentCount(), List.of());
+                snapshot.physicalWrites(), snapshot.logicalBytes(), snapshot.physicalBytes(), snapshot.avoidedBytes(),
+                snapshot.duplicateRate(), snapshot.newUploads(), snapshot.contentCount(), List.of(), snapshot.totalsScope());
     }
 
     @GetMapping("/instances/status")

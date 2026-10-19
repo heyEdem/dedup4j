@@ -10,6 +10,8 @@ import com.edem.dedup4j.core.hash.Sha256ContentHasher;
 import com.edem.dedup4j.core.key.HashObjectKeyStrategy;
 import com.edem.dedup4j.core.key.ObjectKeyStrategy;
 import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.history.DisabledUploadHistory;
+import com.edem.dedup4j.history.UploadHistory;
 import com.edem.dedup4j.jpa.AssetContentMutationService;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
@@ -126,7 +128,8 @@ public class Dedup4jServiceAutoConfiguration {
             ContentHasher contentHasher,
             ObjectKeyStrategy objectKeyStrategy,
             Dedup4jMetrics metrics,
-            PlatformTransactionManager transactionManager
+            PlatformTransactionManager transactionManager,
+            ObjectProvider<UploadHistory> history
     ) {
         BlobDeduplicationService delegate = new DefaultBlobDeduplicationService(
                 repository,
@@ -138,7 +141,12 @@ public class Dedup4jServiceAutoConfiguration {
                 metrics
         );
         return new SpringTransactionalBlobDeduplicationService(
-                delegate, repository, referenceCountService, transactionManager
+                delegate,
+                repository,
+                referenceCountService,
+                transactionManager,
+                history.getIfAvailable(DisabledUploadHistory::new),
+                metrics
         );
     }
 

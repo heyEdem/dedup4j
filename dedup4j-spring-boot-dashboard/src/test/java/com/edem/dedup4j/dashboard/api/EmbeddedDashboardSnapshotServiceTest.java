@@ -16,7 +16,7 @@ class EmbeddedDashboardSnapshotServiceTest {
         registry.counter("dedup4j.uploads").increment(15);
         registry.counter("dedup4j.duplicates").increment(4);
         registry.counter("dedup4j.bytes.accepted").increment(1024);
-        var service = new EmbeddedDashboardSnapshotService(single(MeterRegistry.class, registry), empty( com.edem.dedup4j.jpa.AssetContentRepository.class), properties(), management());
+        var service = new EmbeddedDashboardSnapshotService(single(MeterRegistry.class, registry), empty( com.edem.dedup4j.jpa.AssetContentRepository.class), empty(com.edem.dedup4j.history.UploadHistory.class), properties(), management());
 
         var snapshot = service.current();
 
@@ -32,7 +32,7 @@ class EmbeddedDashboardSnapshotServiceTest {
         var registry = new SimpleMeterRegistry();
         registry.counter("dedup4j.uploads").increment(2);
         registry.counter("dedup4j.duplicates").increment(5);
-        var snapshot = new EmbeddedDashboardSnapshotService(single(MeterRegistry.class, registry), empty(com.edem.dedup4j.jpa.AssetContentRepository.class), properties(), management()).current();
+        var snapshot = new EmbeddedDashboardSnapshotService(single(MeterRegistry.class, registry), empty(com.edem.dedup4j.jpa.AssetContentRepository.class), empty(com.edem.dedup4j.history.UploadHistory.class), properties(), management()).current();
         assertThat(snapshot.newUploads()).isZero();
     }
 

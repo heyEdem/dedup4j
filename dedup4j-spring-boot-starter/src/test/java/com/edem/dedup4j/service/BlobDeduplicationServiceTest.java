@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -89,7 +90,7 @@ class BlobDeduplicationServiceTest {
 
     @Test
     void storesNewContent() {
-        BlobReference reference = service.store(new StoreBlobCommand(
+        StoreOutcome outcome = service.storeWithOutcome(new StoreBlobCommand(
                 new ByteArrayInputStream(CONTENT),
                 "report.txt",
                 "text/plain",
@@ -97,6 +98,8 @@ class BlobDeduplicationServiceTest {
                 Map.of("source", "unit-test")
         ));
 
+        BlobReference reference = outcome.reference();
+        assertTrue(outcome.physicalWrite());
         assertFalse(reference.duplicate());
         assertEquals("sha-256", reference.contentHash().algorithm());
         assertEquals(CONTENT.length, reference.contentHash().sizeBytes());
@@ -108,9 +111,7 @@ class BlobDeduplicationServiceTest {
         assertEquals(reference.location(), service.location(reference.assetContentId()));
 
         assertEquals(1, storage.putCount.get());
-        assertEquals(1.0, metricsRegistry.get("dedup4j.uploads").counter().count());
-        assertEquals((double) CONTENT.length,
-                metricsRegistry.get("dedup4j.bytes.accepted").counter().count());
+        assertNull(metricsRegistry.find("dedup4j.uploads").counter());
 
         Long rowCount = entityManager.createQuery(
                         "select count(content) from AssetContent content", Long.class)
@@ -133,7 +134,7 @@ class BlobDeduplicationServiceTest {
                 Map.of("source", "first-upload")
         ));
 
-        BlobReference duplicate = service.store(new StoreBlobCommand(
+        StoreOutcome duplicateOutcome = service.storeWithOutcome(new StoreBlobCommand(
                 new ByteArrayInputStream(CONTENT),
                 "copy.txt",
                 "text/plain",
@@ -141,17 +142,14 @@ class BlobDeduplicationServiceTest {
                 Map.of("source", "duplicate-upload")
         ));
 
+        BlobReference duplicate = duplicateOutcome.reference();
+        assertFalse(duplicateOutcome.physicalWrite());
         assertTrue(duplicate.duplicate());
         assertEquals(original.assetContentId(), duplicate.assetContentId());
         assertEquals(original.contentHash(), duplicate.contentHash());
         assertEquals(original.location(), duplicate.location());
         assertEquals(1, storage.putCount.get());
-        assertEquals(2.0, metricsRegistry.get("dedup4j.uploads").counter().count());
-        assertEquals(1.0, metricsRegistry.get("dedup4j.duplicates").counter().count());
-        assertEquals(1.0, metricsRegistry.get("dedup4j.skipped.physical.writes")
-                .counter().count());
-        assertEquals((double) CONTENT.length, metricsRegistry.get("dedup4j.bytes.avoided")
-                .counter().count());
+        assertNull(metricsRegistry.find("dedup4j.uploads").counter());
 
         AssetContent persisted = entityManager.find(AssetContent.class, original.assetContentId());
         assertEquals(2L, persisted.getRefCount());

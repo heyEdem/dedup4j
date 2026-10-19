@@ -15,11 +15,11 @@ import java.util.function.Supplier;
  */
 public final class Dedup4jMetrics {
 
-    private static final String UPLOADS = "dedup4j.uploads";
-    private static final String DUPLICATES = "dedup4j.duplicates";
-    private static final String SKIPPED_PHYSICAL_WRITES = "dedup4j.skipped.physical.writes";
-    private static final String ACCEPTED_BYTES = "dedup4j.bytes.accepted";
-    private static final String AVOIDED_BYTES = "dedup4j.bytes.avoided";
+    public static final String UPLOADS = "dedup4j.uploads";
+    public static final String DUPLICATES = "dedup4j.duplicates";
+    public static final String SKIPPED_PHYSICAL_WRITES = "dedup4j.skipped.physical.writes";
+    public static final String ACCEPTED_BYTES = "dedup4j.bytes.accepted";
+    public static final String AVOIDED_BYTES = "dedup4j.bytes.avoided";
     private static final String HASHING = "dedup4j.hashing";
     private static final String STORAGE_WRITES = "dedup4j.storage.writes";
     private static final String DELETE_FAILURES = "dedup4j.storage.delete.failures";
@@ -31,7 +31,8 @@ public final class Dedup4jMetrics {
         this.registry = registry;
     }
 
-    public void recordUpload(long bytes, boolean duplicate) {
+    /** Call only after the upload's transaction has committed. */
+    public void recordUpload(long bytes, boolean duplicate, boolean physicalWrite) {
         if (registry == null) {
             return;
         }
@@ -39,8 +40,10 @@ public final class Dedup4jMetrics {
         registry.counter(ACCEPTED_BYTES).increment(bytes);
         if (duplicate) {
             registry.counter(DUPLICATES).increment();
-            registry.counter(SKIPPED_PHYSICAL_WRITES).increment();
             registry.counter(AVOIDED_BYTES).increment(bytes);
+        }
+        if (!physicalWrite) {
+            registry.counter(SKIPPED_PHYSICAL_WRITES).increment();
         }
     }
 

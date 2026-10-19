@@ -1,0 +1,234 @@
+databaseChangeLog:
+  - changeSet:
+      id: history-001-create-history-tables
+      author: dedup4j
+      changes:
+        - createTable:
+            tableName: dedup4j_history_dataset
+            columns:
+              - column:
+                  name: id
+                  type: SMALLINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_dedup4j_history_dataset
+              - column:
+                  name: dataset_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE dedup4j_history_dataset ADD CONSTRAINT ck_dedup4j_history_dataset_single CHECK (id = 1)
+        - insert:
+            tableName: dedup4j_history_dataset
+            dbms: postgresql
+            columns:
+              - column: {name: id, valueNumeric: 1}
+              - column: {name: dataset_id, valueComputed: gen_random_uuid()}
+              - column: {name: created_at, valueComputed: CURRENT_TIMESTAMP}
+        - insert:
+            tableName: dedup4j_history_dataset
+            dbms: h2
+            columns:
+              - column: {name: id, valueNumeric: 1}
+              - column: {name: dataset_id, valueComputed: RANDOM_UUID()}
+              - column: {name: created_at, valueComputed: CURRENT_TIMESTAMP}
+        - createTable:
+            tableName: dedup4j_upload_event
+            columns:
+              - column:
+                  name: sequence_no
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_dedup4j_upload_event
+              - column:
+                  name: dataset_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: instance_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recorded_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: asset_content_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hash_algorithm
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_hash
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: upload_delta
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duplicate_delta
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: physical_write_delta
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: logical_bytes_delta
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avoided_bytes_delta
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_uploads
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_duplicates
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_physical_writes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_logical_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_avoided_bytes
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: compensates_sequence_no
+                  type: BIGINT
+        - createTable:
+            tableName: dedup4j_failure_event
+            columns:
+              - column:
+                  name: sequence_no
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_dedup4j_failure_event
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dataset_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: instance_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recorded_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: operation
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_hash
+                  type: VARCHAR(128)
+              - column:
+                  name: object_key
+                  type: VARCHAR(1024)
+              - column:
+                  name: message
+                  type: VARCHAR(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: compensates_failure_id
+                  type: UUID
+        - addUniqueConstraint:
+            tableName: dedup4j_failure_event
+            columnNames: id
+            constraintName: uk_dedup4j_failure_event_id
+        - addUniqueConstraint:
+            tableName: dedup4j_history_dataset
+            columnNames: dataset_id
+            constraintName: uk_dedup4j_history_dataset_dataset_id
+        - addForeignKeyConstraint:
+            baseTableName: dedup4j_upload_event
+            baseColumnNames: dataset_id
+            referencedTableName: dedup4j_history_dataset
+            referencedColumnNames: dataset_id
+            constraintName: fk_dedup4j_upload_event_dataset
+        - addForeignKeyConstraint:
+            baseTableName: dedup4j_upload_event
+            baseColumnNames: compensates_sequence_no
+            referencedTableName: dedup4j_upload_event
+            referencedColumnNames: sequence_no
+            constraintName: fk_dedup4j_upload_event_compensates
+        - addForeignKeyConstraint:
+            baseTableName: dedup4j_failure_event
+            baseColumnNames: dataset_id
+            referencedTableName: dedup4j_history_dataset
+            referencedColumnNames: dataset_id
+            constraintName: fk_dedup4j_failure_event_dataset
+        - addForeignKeyConstraint:
+            baseTableName: dedup4j_failure_event
+            baseColumnNames: compensates_failure_id
+            referencedTableName: dedup4j_failure_event
+            referencedColumnNames: id
+            constraintName: fk_dedup4j_failure_event_compensates
+        - createIndex:
+            tableName: dedup4j_failure_event
+            indexName: idx_dedup4j_failure_event_recorded_at_id
+            columns:
+              - column:
+                  name: recorded_at
+              - column:
+                  name: id
+        - createIndex:
+            tableName: dedup4j_upload_event
+            indexName: idx_dedup4j_upload_event_asset_content
+            columns:
+              - column:
+                  name: asset_content_id

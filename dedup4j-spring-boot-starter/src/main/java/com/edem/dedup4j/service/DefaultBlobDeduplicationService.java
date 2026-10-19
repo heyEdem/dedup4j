@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * Default service facade over metadata and provider-neutral storage
@@ -96,7 +97,24 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
 
     @Override
     public BlobReference store(StoreBlobCommand command) {
+        return storeWithOutcome(command).reference();
+    }
+
+    /**
+     * Stores like {@link #store} and also reports whether this request wrote to storage.
+     * Records no upload meters; the transactional wrapper records them after commit.
+     */
+    public StoreOutcome storeWithOutcome(StoreBlobCommand command) {
+        return storeWithOutcome(command, contentHash -> { });
+    }
+
+    /**
+     * Like {@link #storeWithOutcome(StoreBlobCommand)}; {@code hashed} receives the content hash
+     * as soon as it is computed, so a caller can still report it if the store then fails.
+     */
+    public StoreOutcome storeWithOutcome(StoreBlobCommand command, Consumer<ContentHash> hashed) {
         Objects.requireNonNull(command, "command must not be null");
+        Objects.requireNonNull(hashed, "hashed must not be null");
 
         byte[] bytes = readAll(command.content());
         if (bytes.length != command.sizeBytes()) {
@@ -106,23 +124,16 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
             );
         }
         ContentHash contentHash = hash(bytes);
-        return repository.findByIdentity(
+        hashed.accept(contentHash);
+        StoreOutcome outcome = repository.findByIdentity(
                         contentHash.algorithm(),
                         contentHash.hash(),
                         contentHash.sizeBytes()
                 )
-                .map(existing -> {
-                    metrics.recordUpload(contentHash.sizeBytes(), true);
-                    BlobReference reference = retainDuplicate(existing);
-                    logUpload(reference);
-                    return reference;
-                })
-                .orElseGet(() -> {
-                    metrics.recordUpload(contentHash.sizeBytes(), false);
-                    BlobReference reference = storeNewContent(command, contentHash, bytes);
-                    logUpload(reference);
-                    return reference;
-                });
+                .map(existing -> new StoreOutcome(retainDuplicate(existing), false))
+                .orElseGet(() -> new StoreOutcome(storeNewContent(command, contentHash, bytes), true));
+        logUpload(outcome.reference());
+        return outcome;
     }
 
     private BlobReference retainDuplicate(AssetContent existing) {

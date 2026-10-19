@@ -24,7 +24,7 @@ class EmbeddedDashboardControllerTest {
     void servesReadOnlyDashboardViews() throws Exception {
         var management = new Dedup4jManagementProperties();
         var props = new Dedup4jDashboardProperties();
-        var service = new EmbeddedDashboardSnapshotService(empty(MeterRegistry.class), empty(AssetContentRepository.class), new Dedup4jProperties(), management);
+        var service = new EmbeddedDashboardSnapshotService(empty(MeterRegistry.class), empty(AssetContentRepository.class), empty(com.edem.dedup4j.history.UploadHistory.class), new Dedup4jProperties(), management);
         var controller = new EmbeddedDashboardController(service, props, since -> List.of());
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
                 .setMessageConverters(new JacksonJsonHttpMessageConverter(JsonMapper.builder().build())).build();

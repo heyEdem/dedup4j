@@ -78,7 +78,7 @@ class Dedup4jServiceAutoConfigurationTest {
     void usesApplicationMeterRegistryWhenPresent() {
         runner.withUserConfiguration(MeterRegistryOverride.class).run(context -> {
             Dedup4jMetrics metrics = context.getBean(Dedup4jMetrics.class);
-            metrics.recordUpload(7, false);
+            metrics.recordUpload(7, false, true);
             assertEquals(1.0, context.getBean(MeterRegistry.class)
                     .get("dedup4j.uploads").counter().count());
         });

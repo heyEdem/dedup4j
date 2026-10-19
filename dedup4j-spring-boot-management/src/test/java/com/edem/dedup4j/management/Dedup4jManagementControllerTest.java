@@ -1,5 +1,8 @@
 package com.edem.dedup4j.management;
 
+import com.edem.dedup4j.history.DefaultInstanceId;
+import com.edem.dedup4j.history.DisabledUploadHistory;
+import com.edem.dedup4j.history.UploadHistory;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -7,7 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,8 +35,43 @@ class Dedup4jManagementControllerTest {
     }
 
     @Test
+    void historyFailureSourceIsRegisteredWhenEnabled() {
+        contextRunner.withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local")
+                .withBean(UploadHistory.class, DisabledUploadHistory::new)
+                .run(context -> assertThat(context.getBean(Dedup4jManagementSnapshot.FailureSource.class))
+                        .isInstanceOf(UploadHistoryFailureSource.class));
+    }
+
+    @Test
+    void userFailureSourceWins() {
+        Dedup4jManagementSnapshot.FailureSource user = since -> List.<Dedup4jManagementSnapshot.Failure>of();
+        contextRunner.withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local")
+                .withBean(UploadHistory.class, DisabledUploadHistory::new)
+                .withBean(Dedup4jManagementSnapshot.FailureSource.class, () -> user)
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(UploadHistoryFailureSource.class);
+                    assertThat(context.getBean(Dedup4jManagementSnapshot.FailureSource.class)).isSameAs(user);
+                });
+    }
+
+    @Test
+    void defaultInstanceIdIsSharedWithHistory() {
+        assertThat(new Dedup4jManagementProperties().getInstanceId()).isEqualTo(DefaultInstanceId.value());
+    }
+
+    @Test
+    void failureKeepsItsOriginalFourArgumentConstructor() {
+        UUID id = UUID.randomUUID();
+        Instant at = Instant.parse("2026-10-19T00:00:00Z");
+
+        var failure = new Dedup4jManagementSnapshot.Failure(id, at, "upload", "boom");
+
+        assertThat(failure).isEqualTo(new Dedup4jManagementSnapshot.Failure(id, at, "upload", "boom", null, null, null, 0));
+    }
+
+    @Test
     void metricsResponseContainsProviderNeutralCounters() {
-        Dedup4jManagementSnapshot.Metrics metrics = new Dedup4jManagementSnapshot.Metrics(4, 2, 2, 100, 50, 3, 75);
+        Dedup4jManagementSnapshot.Metrics metrics = new Dedup4jManagementSnapshot.Metrics("ds", "all-time", 4, 2, 2, 2, 100, 50, 3, 75);
         assertThat(metrics.uploads()).isEqualTo(4);
         assertThat(metrics.acceptedBytes()).isEqualTo(100);
         assertThat(metrics.avoidedBytes()).isEqualTo(50);

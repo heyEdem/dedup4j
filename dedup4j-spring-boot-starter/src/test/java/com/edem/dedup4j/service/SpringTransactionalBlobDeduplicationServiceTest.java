@@ -14,9 +14,12 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -255,9 +258,20 @@ class SpringTransactionalBlobDeduplicationServiceTest {
             beginCount.incrementAndGet();
             events.add("begin");
             propagations.add(definition.getPropagationBehavior());
+            TransactionSynchronizationManager.initSynchronization();
             return new DefaultTransactionStatus("test", new Object(), true, false, false, false, false, null);
         }
-        @Override public void commit(TransactionStatus status) { commitCount.incrementAndGet(); events.add("commit"); }
-        @Override public void rollback(TransactionStatus status) { rollbackCount.incrementAndGet(); events.add("rollback"); }
+        @Override public void commit(TransactionStatus status) {
+            commitCount.incrementAndGet();
+            events.add("commit");
+            List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
+            TransactionSynchronizationManager.clearSynchronization();
+            synchronizations.forEach(TransactionSynchronization::afterCommit);
+        }
+        @Override public void rollback(TransactionStatus status) {
+            rollbackCount.incrementAndGet();
+            events.add("rollback");
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 }

@@ -1,15 +1,15 @@
 package com.edem.dedup4j.management;
 
+import com.edem.dedup4j.history.DefaultInstanceId;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.UUID;
 
 @ConfigurationProperties(prefix = "dedup4j.management")
 public class Dedup4jManagementProperties {
 
     private boolean enabled;
     private String basePath = "/dedup4j/management";
-    private String instanceId = UUID.randomUUID().toString();
+    /** Defaults to the id history rows use when no instance id is configured. */
+    private String instanceId = DefaultInstanceId.value();
     private String instanceName = "dedup4j";
 
     public boolean isEnabled() { return enabled; }

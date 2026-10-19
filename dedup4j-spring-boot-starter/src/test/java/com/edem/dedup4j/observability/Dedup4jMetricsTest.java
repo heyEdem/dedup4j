@@ -12,8 +12,8 @@ class Dedup4jMetricsTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         Dedup4jMetrics metrics = new Dedup4jMetrics(registry);
 
-        metrics.recordUpload(10L, false);
-        metrics.recordUpload(10L, true);
+        metrics.recordUpload(10L, false, true);
+        metrics.recordUpload(10L, true, false);
 
         assertThat(registry.get("dedup4j.uploads").counter().count()).isEqualTo(2.0);
         assertThat(registry.get("dedup4j.duplicates").counter().count()).isEqualTo(1.0);
@@ -21,6 +21,19 @@ class Dedup4jMetricsTest {
                 .isEqualTo(1.0);
         assertThat(registry.get("dedup4j.bytes.accepted").counter().count()).isEqualTo(20.0);
         assertThat(registry.get("dedup4j.bytes.avoided").counter().count()).isEqualTo(10.0);
+    }
+
+    @Test
+    void duplicateThatWroteToStorageIsNotASkippedPhysicalWrite() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        Dedup4jMetrics metrics = new Dedup4jMetrics(registry);
+
+        metrics.recordUpload(10L, true, true);
+
+        assertThat(registry.get("dedup4j.uploads").counter().count()).isEqualTo(1.0);
+        assertThat(registry.get("dedup4j.duplicates").counter().count()).isEqualTo(1.0);
+        assertThat(registry.get("dedup4j.bytes.avoided").counter().count()).isEqualTo(10.0);
+        assertThat(registry.find("dedup4j.skipped.physical.writes").counter()).isNull();
     }
 
     @Test
@@ -46,7 +59,7 @@ class Dedup4jMetricsTest {
 
         assertThat(metrics.recordHashing(() -> "hash")).isEqualTo("hash");
         assertThat(metrics.recordStorageWrite(() -> "stored")).isEqualTo("stored");
-        metrics.recordUpload(10L, true);
+        metrics.recordUpload(10L, true, false);
         metrics.recordDeleteFailure();
         metrics.recordRepair();
     }

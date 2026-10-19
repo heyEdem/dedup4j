@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/dedup4j/history/changes/001-create-history-tables.yaml
+  - include:
+      file: db/dedup4j/history/changes/002-append-only-postgresql.yaml
+  - include:
+      file: db/dedup4j/history/changes/003-append-only-h2.yaml

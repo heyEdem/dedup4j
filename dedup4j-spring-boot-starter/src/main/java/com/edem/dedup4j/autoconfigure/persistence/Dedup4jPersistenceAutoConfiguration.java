@@ -2,6 +2,7 @@ package com.edem.dedup4j.autoconfigure.persistence;
 
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.jpa.AssetContent;
+import com.edem.dedup4j.historystore.UploadEvent;
 import jakarta.persistence.EntityManagerFactory;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -11,7 +12,6 @@ import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.SchemaManagement;
 import org.springframework.boot.jdbc.SchemaManagementProvider;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
@@ -28,7 +28,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnResource;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -43,13 +46,14 @@ import java.util.List;
 public class Dedup4jPersistenceAutoConfiguration {
 
     private static final String LIQUIBASE_BEAN = "dedup4jLiquibase";
+    private static final String HISTORY_LIQUIBASE_BEAN = "dedup4jHistoryLiquibase";
+    private static final String HISTORY_GUARD_BEAN = "dedup4jHistoryDatabaseGuard";
     private static final String VALIDATOR_BEAN = "dedup4jSchemaValidator";
 
     @Bean(name = LIQUIBASE_BEAN)
     SpringLiquibase dedup4jLiquibase(DataSource dataSource, Dedup4jProperties properties) {
         SchemaInitialization mode = properties.getPersistence().getInitializeSchema();
-        boolean shouldInitialize = mode == SchemaInitialization.ALWAYS
-                || (mode == SchemaInitialization.EMBEDDED && EmbeddedDatabaseConnection.isEmbedded(dataSource));
+        boolean shouldInitialize = mode.shouldInitialize(dataSource);
 
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
@@ -112,8 +116,11 @@ public class Dedup4jPersistenceAutoConfiguration {
 
     @Bean(name = VALIDATOR_BEAN)
     Dedup4jSchemaValidator dedup4jSchemaValidator(DataSource dataSource,
-                                                        Dedup4jProperties properties) {
-        return new Dedup4jSchemaValidator(dataSource, properties);
+                                                        Dedup4jProperties properties,
+                                                        ListableBeanFactory beanFactory) {
+        // The history tables are probed only when the history auto-configuration is in the context.
+        boolean historyActive = beanFactory.containsBeanDefinition(HISTORY_LIQUIBASE_BEAN);
+        return new Dedup4jSchemaValidator(dataSource, properties, historyActive);
     }
 
     @Bean
@@ -121,6 +128,10 @@ public class Dedup4jPersistenceAutoConfiguration {
         return beanFactory -> {
             String[] liquibaseNames = beanFactory.getBeanNamesForType(SpringLiquibase.class, false, false);
             addDependsOn(beanFactory, VALIDATOR_BEAN, liquibaseNames);
+            // Nothing is migrated before the history guard has accepted the database.
+            if (beanFactory.containsBeanDefinition(HISTORY_GUARD_BEAN)) {
+                addDependsOn(beanFactory, LIQUIBASE_BEAN, new String[]{HISTORY_GUARD_BEAN});
+            }
             for (String emfName : beanFactory.getBeanNamesForType(EntityManagerFactory.class, false, false)) {
                 addDependsOn(beanFactory, emfName, new String[]{VALIDATOR_BEAN});
             }
@@ -133,9 +144,15 @@ public class Dedup4jPersistenceAutoConfiguration {
     }
 
     static final class Dedup4jEntityPackageAppender
-            implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware {
+            implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware, EnvironmentAware {
 
         private BeanFactory beanFactory;
+        private boolean historyEnabled = true;
+
+        @Override
+        public void setEnvironment(Environment environment) {
+            historyEnabled = environment.getProperty("dedup4j.history.enabled", Boolean.class, true);
+        }
 
         @Override
         public void setBeanFactory(BeanFactory beanFactory) {
@@ -145,15 +162,20 @@ public class Dedup4jPersistenceAutoConfiguration {
         @Override
         public void postProcessBeanDefinitionRegistry(
                 org.springframework.beans.factory.support.BeanDefinitionRegistry registry) {
+            List<String> own = new ArrayList<>();
+            own.add(AssetContent.class.getPackageName());
+            if (historyEnabled) {
+                own.add(UploadEvent.class.getPackageName());
+            }
             if (registry.containsBeanDefinition(EntityScanPackages.class.getName())) {
-                EntityScanPackages.register(registry, AssetContent.class.getPackageName());
+                EntityScanPackages.register(registry, own);
                 return;
             }
             List<String> packages = new ArrayList<>();
             if (beanFactory != null && AutoConfigurationPackages.has(beanFactory)) {
                 packages.addAll(AutoConfigurationPackages.get(beanFactory));
             }
-            packages.add(AssetContent.class.getPackageName());
+            packages.addAll(own);
             EntityScanPackages.register(registry, packages);
         }
 

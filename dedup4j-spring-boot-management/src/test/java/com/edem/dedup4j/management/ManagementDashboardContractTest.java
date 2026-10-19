@@ -23,7 +23,7 @@ class ManagementDashboardContractTest {
             var info = controller.info();
             var health = controller.health();
             var metrics = controller.metrics();
-            var failures = controller.failures(Instant.EPOCH);
+            var failures = controller.failures(Instant.EPOCH, null, null);
 
             assertThat(info.instanceName()).isEqualTo("orders");
             assertThat(info.provider()).isEqualTo("local");

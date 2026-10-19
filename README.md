@@ -184,6 +184,67 @@ dedup4j:
 UI/API. Use the separate `dedup4j-dashboard` application when you need
 multi-instance polling and SQLite history.
 
+## Persistent Upload History
+
+Upload totals are durable and shared by every instance using the same database.
+History is **on by default** (`dedup4j.history.enabled=true`) and runs only on
+**PostgreSQL and H2**. Any other database fails startup; set
+`dedup4j.history.enabled=false` there, and the dashboards then show "since
+application start" counters instead of all-time totals.
+
+`dedup4j.history.instance-id` labels history rows for attribution only. It
+defaults to `dedup4j.management.instance-id`. When neither is set, history rows
+and the management API share one random id generated at each application
+start, so failures are attributed to the id the management API reports. Totals
+never group by instance.
+
+The history changelog runs automatically only when
+`dedup4j.persistence.initialize-schema` is `always`, or `embedded` (the
+default) on an in-memory H2 database (`jdbc:h2:mem:`). On PostgreSQL, or an
+H2 file or server database, it is **not** applied under `embedded` or
+`never`. Existing
+deployments upgrading to this version must apply
+`classpath:db/dedup4j/history/db.changelog-history.yaml` themselves (or set
+`initialize-schema: always`); otherwise startup fails with a message naming
+that path.
+
+Upgrade order: upgrade the standalone dashboard before, or together with, the
+applications it polls. An older dashboard polling upgraded applications
+multiplies trends by the replica count and, after each dashboard restart,
+re-adds the all-time totals as a single delta.
+
+History tables (`dedup4j_history_dataset`, `dedup4j_upload_event`,
+`dedup4j_failure_event`) are append-only. PostgreSQL uses row and `TRUNCATE`
+triggers. H2 uses row triggers (`com.edem.dedup4j.history.H2AppendOnlyTrigger`;
+H2 is an optional dependency of the starter) and foreign-key references that
+block `TRUNCATE`. Corrections are compensating rows only; nothing updates or
+deletes history. Totals start at zero, with no backfill from existing content.
+
+| Term | Meaning |
+|---|---|
+| Upload | An upload request that completed successfully. Failed uploads are not counted. |
+| Duplicate | An upload whose outcome was existing content. |
+| New upload | An upload whose outcome was new content (uploads - duplicates). It measures outcomes, not physical storage writes. |
+| Physical write | An upload where this request performed a storage put. In an insert race both requests can write, and one recovers as a duplicate; that request is a duplicate and also a physical write. |
+| Skipped physical writes | uploads - physical writes. |
+| Storage avoided (`avoidedBytes`) | Bytes that did not become an additional stored copy: the sum of the sizes of duplicate outcomes. A duplicate that lost an insert race still counts, even though its bytes were sent to storage once, because the same key was overwritten rather than duplicated. It measures capacity saved, not upload traffic saved. |
+
+Cost: each upload serializes on the dataset row lock for the few statements
+between the ledger insert and commit. This is negligible at thousands of
+uploads per day.
+
+Management `/metrics` adds `datasetId`, `totalsScope`, and `physicalWrites`;
+`/info` adds `datasetId`; `/failures?afterSequence=&limit=` pages failures
+ascending by sequence (default 100, maximum 500), while `?since=` remains the
+descending display query.
+
+The standalone dashboard counts each dataset once (only datasets currently
+reported by a registered instance), starts from a zero-delta baseline after a
+restart, and ingests failures per dataset through a cursor, attributed to the
+originating instance. Older instances that do not report a `datasetId` are
+treated as their own dataset (`instance:<id>`) with best-effort failure
+ingestion through `since`.
+
 ## High-Level Flow
 
 ```text

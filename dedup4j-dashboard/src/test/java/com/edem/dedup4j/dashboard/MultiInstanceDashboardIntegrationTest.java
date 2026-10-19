@@ -2,6 +2,7 @@ package com.edem.dedup4j.dashboard;
 
 import com.edem.dedup4j.dashboard.api.DashboardController;
 import com.edem.dedup4j.dashboard.persistence.DashboardDatabase;
+import com.edem.dedup4j.dashboard.persistence.DatasetTotalsRepository;
 import com.edem.dedup4j.dashboard.persistence.FailureEventRepository;
 import com.edem.dedup4j.dashboard.persistence.InstanceRepository;
 import com.edem.dedup4j.dashboard.persistence.MetricSnapshotRepository;
@@ -44,6 +45,8 @@ class MultiInstanceDashboardIntegrationTest {
     void setUp() throws Exception {
         managementServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         managementServer.createContext("/orders/v1/metrics", exchange -> respond(exchange, ordersMetrics));
+        managementServer.createContext("/orders/v1/failures", exchange -> respond(exchange, "[]"));
+        managementServer.createContext("/billing/v1/failures", exchange -> respond(exchange, "[]"));
         managementServer.createContext("/billing/v1/metrics", exchange -> {
             if (!billingAvailable.get()) {
                 exchange.close();
@@ -59,9 +62,10 @@ class MultiInstanceDashboardIntegrationTest {
         instances = new InstanceRepository(jdbc);
         MetricSnapshotRepository snapshots = new MetricSnapshotRepository(jdbc);
         failures = new FailureEventRepository(jdbc);
-        polling = new InstancePollingService(instances, snapshots, failures,
+        DatasetTotalsRepository totals = new DatasetTotalsRepository(jdbc);
+        polling = new InstancePollingService(instances, snapshots, failures, totals,
                 new DashboardDatabaseProperties(null, Duration.ofSeconds(30), Duration.ofDays(7)));
-        dashboard = new DashboardController(instances, snapshots, failures);
+        dashboard = new DashboardController(instances, snapshots, failures, totals);
 
         ordersId = UUID.randomUUID();
         billingId = UUID.randomUUID();
