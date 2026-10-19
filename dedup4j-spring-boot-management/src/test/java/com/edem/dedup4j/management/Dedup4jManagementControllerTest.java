@@ -1,5 +1,7 @@
 package com.edem.dedup4j.management;
 
+import com.edem.dedup4j.history.DisabledUploadHistory;
+import com.edem.dedup4j.history.UploadHistory;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +29,26 @@ class Dedup4jManagementControllerTest {
                         "dedup4j.management.enabled=true",
                         "dedup4j.storage.provider=local")
                 .run(context -> assertThat(context).hasSingleBean(Dedup4jManagementController.class));
+    }
+
+    @Test
+    void historyFailureSourceIsRegisteredWhenEnabled() {
+        contextRunner.withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local")
+                .withBean(UploadHistory.class, DisabledUploadHistory::new)
+                .run(context -> assertThat(context.getBean(Dedup4jManagementSnapshot.FailureSource.class))
+                        .isInstanceOf(UploadHistoryFailureSource.class));
+    }
+
+    @Test
+    void userFailureSourceWins() {
+        Dedup4jManagementSnapshot.FailureSource user = since -> List.<Dedup4jManagementSnapshot.Failure>of();
+        contextRunner.withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local")
+                .withBean(UploadHistory.class, DisabledUploadHistory::new)
+                .withBean(Dedup4jManagementSnapshot.FailureSource.class, () -> user)
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(UploadHistoryFailureSource.class);
+                    assertThat(context.getBean(Dedup4jManagementSnapshot.FailureSource.class)).isSameAs(user);
+                });
     }
 
     @Test
