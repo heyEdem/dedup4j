@@ -11,6 +11,12 @@
     <artifactId>dedup4j-dashboard</artifactId>
     <name>dedup4j Standalone Dashboard</name>
     <description>Standalone fleet dashboard application for dedup4j. Distributed via GitHub Releases, not Maven Central.</description>
+    <properties>
+        <!-- Standalone executable app: distributed via GitHub Releases, never Maven Central. -->
+        <maven.source.skip>true</maven.source.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <gpg.skip>true</gpg.skip>
+    </properties>
     <dependencies>
         <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
@@ -39,4 +45,21 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <configuration>
+                            <!-- Literal, not a property: no command-line flag can re-include this module. -->
+                            <skipPublishing>true</skipPublishing>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
