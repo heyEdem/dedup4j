@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,6 +51,16 @@ class Dedup4jManagementControllerTest {
                     assertThat(context).doesNotHaveBean(UploadHistoryFailureSource.class);
                     assertThat(context.getBean(Dedup4jManagementSnapshot.FailureSource.class)).isSameAs(user);
                 });
+    }
+
+    @Test
+    void failureKeepsItsOriginalFourArgumentConstructor() {
+        UUID id = UUID.randomUUID();
+        Instant at = Instant.parse("2026-10-19T00:00:00Z");
+
+        var failure = new Dedup4jManagementSnapshot.Failure(id, at, "upload", "boom");
+
+        assertThat(failure).isEqualTo(new Dedup4jManagementSnapshot.Failure(id, at, "upload", "boom", null, null, null, 0));
     }
 
     @Test

@@ -40,13 +40,21 @@ public record Dedup4jManagementSnapshot(
             String contentHash,
             String objectKey,
             long sequenceNo
-    ) { }
+    ) {
+        /** The original shape, kept for custom {@link FailureSource}s; the attribution fields are unknown and unsequenced. */
+        public Failure(UUID id, Instant occurredAt, String operation, String message) {
+            this(id, occurredAt, operation, message, null, null, null, 0);
+        }
+    }
 
     @FunctionalInterface
     public interface FailureSource {
         List<Failure> recentFailures(Instant since);
 
-        /** Ascending by sequence number; the default offers no paging support. */
+        /**
+         * Ascending by sequence number. The default empty list means the source has no sequence paging support;
+         * only {@link #recentFailures} serves its failures.
+         */
         default List<Failure> failuresAfter(long afterSequence, int limit) {
             return List.of();
         }
