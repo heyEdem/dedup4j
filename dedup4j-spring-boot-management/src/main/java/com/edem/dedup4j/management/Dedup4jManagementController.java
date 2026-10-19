@@ -3,7 +3,8 @@ package com.edem.dedup4j.management;
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
-import io.micrometer.core.instrument.MeterRegistry;
+import com.edem.dedup4j.history.HistoryTotals;
+import com.edem.dedup4j.history.UploadHistory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,22 +19,25 @@ import java.util.UUID;
 @RequestMapping("${dedup4j.management.base-path:/dedup4j/management}/v1")
 public class Dedup4jManagementController {
 
+    private static final int DEFAULT_LIMIT = 100;
+    private static final int MAX_LIMIT = 500;
+
     private final Dedup4jManagementProperties managementProperties;
     private final Dedup4jProperties dedup4jProperties;
-    private final MeterRegistry meterRegistry;
+    private final UploadHistory uploadHistory;
     private final AssetContentRepository contentRepository;
     private final Dedup4jManagementSnapshot.FailureSource failureSource;
 
     public Dedup4jManagementController(
             Dedup4jManagementProperties managementProperties,
             Dedup4jProperties dedup4jProperties,
-            ObjectProvider<MeterRegistry> meterRegistry,
+            ObjectProvider<UploadHistory> uploadHistory,
             ObjectProvider<AssetContentRepository> contentRepository,
             ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource
     ) {
         this.managementProperties = managementProperties;
         this.dedup4jProperties = dedup4jProperties;
-        this.meterRegistry = meterRegistry.getIfAvailable();
+        this.uploadHistory = uploadHistory.getIfAvailable();
         this.contentRepository = contentRepository.getIfAvailable();
         this.failureSource = failureSource.getIfAvailable(() -> since -> List.of());
     }
@@ -43,7 +47,8 @@ public class Dedup4jManagementController {
         return new Dedup4jManagementSnapshot.Info(
                 managementProperties.getInstanceId(),
                 managementProperties.getInstanceName(),
-                provider());
+                provider(),
+                totals().datasetId());
     }
 
     @GetMapping("/health")
@@ -54,32 +59,42 @@ public class Dedup4jManagementController {
     @GetMapping("/metrics")
     public Dedup4jManagementSnapshot.Metrics metrics() {
         List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll();
+        HistoryTotals totals = totals();
         return new Dedup4jManagementSnapshot.Metrics(
-                counter("dedup4j.uploads"),
-                counter("dedup4j.duplicates"),
-                counter("dedup4j.skipped.physical.writes"),
-                counter("dedup4j.bytes.accepted"),
-                counter("dedup4j.bytes.avoided"),
+                totals.datasetId(),
+                totals.scope(),
+                totals.uploads(),
+                totals.duplicates(),
+                totals.physicalWrites(),
+                totals.skippedPhysicalWrites(),
+                totals.logicalBytes(),
+                totals.avoidedBytes(),
                 contents.size(),
                 contents.stream().mapToLong(AssetContent::getSizeBytes).sum());
     }
 
     @GetMapping("/failures")
     public List<Dedup4jManagementSnapshot.Failure> failures(
-            @RequestParam(name = "since", required = false) Instant since
+            @RequestParam(name = "since", required = false) Instant since,
+            @RequestParam(name = "afterSequence", required = false) Long afterSequence,
+            @RequestParam(name = "limit", required = false) Integer limit
     ) {
-        return failureSource.recentFailures(since);
+        int pageSize = limit == null ? DEFAULT_LIMIT : Math.max(1, Math.min(limit, MAX_LIMIT));
+        if (afterSequence != null) {
+            return failureSource.failuresAfter(Math.max(0, afterSequence), pageSize);
+        }
+        List<Dedup4jManagementSnapshot.Failure> recent = failureSource.recentFailures(since);
+        return recent.size() > pageSize ? recent.subList(0, pageSize) : recent;
+    }
+
+    private HistoryTotals totals() {
+        return uploadHistory == null
+                ? new HistoryTotals("since-start", null, 0, 0, 0, 0, 0)
+                : uploadHistory.totals();
     }
 
     private String provider() {
         String provider = dedup4jProperties.getStorage().getProvider();
         return provider == null || provider.isBlank() ? "unknown" : provider;
-    }
-
-    private long counter(String name) {
-        if (meterRegistry == null || meterRegistry.find(name).counter() == null) {
-            return 0L;
-        }
-        return Math.round(meterRegistry.find(name).counter().count());
     }
 }

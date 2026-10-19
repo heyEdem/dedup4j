@@ -30,7 +30,7 @@ class Dedup4jManagementControllerTest {
 
     @Test
     void metricsResponseContainsProviderNeutralCounters() {
-        Dedup4jManagementSnapshot.Metrics metrics = new Dedup4jManagementSnapshot.Metrics(4, 2, 2, 100, 50, 3, 75);
+        Dedup4jManagementSnapshot.Metrics metrics = new Dedup4jManagementSnapshot.Metrics("ds", "all-time", 4, 2, 2, 2, 100, 50, 3, 75);
         assertThat(metrics.uploads()).isEqualTo(4);
         assertThat(metrics.acceptedBytes()).isEqualTo(100);
         assertThat(metrics.avoidedBytes()).isEqualTo(50);
