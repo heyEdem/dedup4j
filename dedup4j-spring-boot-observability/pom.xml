@@ -9,8 +9,8 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>dedup4j-spring-boot-observability</artifactId>
-    <name>dedup4j-spring-boot-observability</name>
-    <description>Optional aggregate starter for dedup4j management and embedded dashboard.</description>
+    <name>dedup4j Spring Boot Observability Starter</name>
+    <description>Optional aggregate starter that adds the dedup4j management API and embedded dashboard.</description>
     <dependencies>
         <dependency>
             <groupId>io.github.heyedem</groupId>

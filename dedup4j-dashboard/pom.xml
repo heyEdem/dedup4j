@@ -9,8 +9,8 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>dedup4j-dashboard</artifactId>
-    <name>dedup4j-dashboard</name>
-    <description>Standalone local dashboard for dedup4j.</description>
+    <name>dedup4j Standalone Dashboard</name>
+    <description>Standalone fleet dashboard application for dedup4j. Distributed via GitHub Releases, not Maven Central.</description>
     <dependencies>
         <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>

@@ -10,8 +10,8 @@
     </parent>
 
     <artifactId>dedup4j-core</artifactId>
-    <name>dedup4j-core</name>
-    <description>Provider-neutral core contracts for dedup4j.</description>
+    <name>dedup4j Core</name>
+    <description>Provider-neutral core of dedup4j: content identity, deduplication contracts, and the blob storage SPI.</description>
 
     <dependencies>
         <dependency>

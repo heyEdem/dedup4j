@@ -11,8 +11,8 @@
     </parent>
 
     <artifactId>dedup4j-spring-boot-starter</artifactId>
-    <name>dedup4j-spring-boot-starter</name>
-    <description>Spring Boot properties and service integration for dedup4j.</description>
+    <name>dedup4j Spring Boot Starter</name>
+    <description>Spring Boot starter for dedup4j: auto-configuration, the BlobStore facade, Liquibase schema migrations, and all storage providers.</description>
 
     <dependencies>
         <dependency>

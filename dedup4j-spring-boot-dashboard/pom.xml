@@ -9,8 +9,8 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>dedup4j-spring-boot-dashboard</artifactId>
-    <name>dedup4j-spring-boot-dashboard</name>
-    <description>Optional embedded read-only dedup4j dashboard.</description>
+    <name>dedup4j Spring Boot Embedded Dashboard</name>
+    <description>Optional embedded read-only dedup4j dashboard served from a Spring Boot application.</description>
     <dependencies>
         <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-jpa</artifactId><version>${project.version}</version></dependency>

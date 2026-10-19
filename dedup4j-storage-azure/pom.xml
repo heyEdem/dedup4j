@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>dedup4j-storage-azure</artifactId>
-    <name>dedup4j-storage-azure</name>
+    <name>dedup4j Azure Blob Storage</name>
     <description>Azure Blob Storage adapter for dedup4j.</description>
 
     <properties>

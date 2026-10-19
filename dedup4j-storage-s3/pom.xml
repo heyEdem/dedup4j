@@ -11,8 +11,8 @@
     </parent>
 
     <artifactId>dedup4j-storage-s3</artifactId>
-    <name>dedup4j-storage-s3</name>
-    <description>AWS S3 storage adapter for dedup4j.</description>
+    <name>dedup4j AWS S3 Storage</name>
+    <description>AWS S3 and S3-compatible blob storage adapter for dedup4j.</description>
 
     <properties>
         <aws.sdk.version>2.54.4</aws.sdk.version>
