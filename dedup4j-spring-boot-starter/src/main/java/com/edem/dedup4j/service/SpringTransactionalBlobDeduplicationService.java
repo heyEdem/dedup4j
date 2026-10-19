@@ -16,6 +16,7 @@ import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.InvalidIsolationLevelException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -24,6 +25,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -45,6 +47,8 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     private final AssetContentRepository repository;
     private final ReferenceCountService referenceCountService;
     private final TransactionTemplate transactions;
+    private final AtomicBoolean appendIsolationUnsupported = new AtomicBoolean();
+    private volatile TransactionTemplate appends;
     private final TransactionTemplate readOnly;
     private final UploadHistory history;
     private final Dedup4jMetrics metrics;
@@ -76,14 +80,19 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
                 Objects.requireNonNull(transactionManager, "transactionManager must not be null")
         );
         this.transactions.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        // The history ledger's gapless sequence needs each statement to see rows committed while it waited
-        // on the dataset lock; repeatable read would reuse a sequence number and fail the upload.
-        this.transactions.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
         this.readOnly = new TransactionTemplate(transactionManager);
         this.readOnly.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.readOnly.setReadOnly(true);
         this.history = Objects.requireNonNull(history, "history must not be null");
         this.metrics = Objects.requireNonNull(metrics, "metrics must not be null");
+        this.appends = transactions;
+        if (history.persistent()) {
+            // The history ledger's gapless sequence needs each statement to see rows committed while it waited
+            // on the dataset lock; repeatable read would reuse a sequence number and fail the upload.
+            this.appends = new TransactionTemplate(transactionManager);
+            this.appends.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            this.appends.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        }
     }
 
     @Override
@@ -91,11 +100,11 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
         AtomicReference<String> contentHash = new AtomicReference<>();
         try {
             try {
-                return requiredResult(() -> recordCompleted(storeOutcome(command, contentHash)));
+                return appendResult(() -> recordCompleted(storeOutcome(command, contentHash)));
             } catch (DuplicateContentIdentityException race) {
                 contentHash.set(race.getContentHash());
                 // This request wrote to storage before losing the insert race.
-                return requiredResult(() -> recordCompleted(new StoreOutcome(retainWinner(race), true)));
+                return appendResult(() -> recordCompleted(new StoreOutcome(retainWinner(race), true)));
             }
         } catch (RuntimeException failure) {
             recordGuarded(UPLOAD, contentHash.get(), null, failure);
@@ -224,5 +233,35 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
 
     private <T> T requiredResult(Supplier<T> action) {
         return Objects.requireNonNull(transactions.execute(status -> action.get()));
+    }
+
+    /**
+     * Runs a history append at READ COMMITTED. A transaction manager that rejects custom isolation
+     * (JTA without allowCustomIsolationLevels, a plain JPA dialect) does so at begin, before the action
+     * runs; the append then falls back, once and for good, to the database's default isolation.
+     */
+    private <T> T appendResult(Supplier<T> action) {
+        TransactionTemplate template = appends;
+        AtomicBoolean started = new AtomicBoolean();
+        try {
+            return Objects.requireNonNull(template.execute(status -> {
+                started.set(true);
+                return action.get();
+            }));
+        } catch (InvalidIsolationLevelException unsupported) {
+            if (started.get() || template == transactions) {
+                throw unsupported;
+            }
+            appends = transactions;
+            if (appendIsolationUnsupported.compareAndSet(false, true)) {
+                LOGGER.warn(
+                        "event=history.isolation.unsupported errorType={} failureMessage={} "
+                                + "detail=\"history appends now rely on the database's default isolation\"",
+                        unsupported.getClass().getSimpleName(),
+                        unsupported.getMessage()
+                );
+            }
+            return requiredResult(action);
+        }
     }
 }

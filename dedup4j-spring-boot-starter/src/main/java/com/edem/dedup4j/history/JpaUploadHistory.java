@@ -5,6 +5,9 @@ import com.edem.dedup4j.historystore.FailureLogRepository;
 import com.edem.dedup4j.historystore.LedgerTotals;
 import com.edem.dedup4j.historystore.UploadContribution;
 import com.edem.dedup4j.historystore.UploadLedgerRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.InvalidIsolationLevelException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -14,16 +17,21 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class JpaUploadHistory implements UploadHistory {
 
     static final int MAX_MESSAGE_LENGTH = 1000;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JpaUploadHistory.class);
 
     private final UploadLedgerRepository ledger;
     private final FailureLogRepository failures;
     private final String instanceId;
     private final Clock clock;
     private final TransactionTemplate newTransaction;
+    private final TransactionTemplate defaultIsolation;
+    private final AtomicBoolean isolationUnsupported = new AtomicBoolean();
+    private volatile TransactionTemplate failureAppends;
     private final TransactionTemplate mandatory;
     private final TransactionTemplate readOnly;
 
@@ -42,6 +50,9 @@ public final class JpaUploadHistory implements UploadHistory {
         this.newTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         // Gapless sequence assignment needs a fresh snapshot after waiting on the dataset lock.
         this.newTransaction.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        this.defaultIsolation = new TransactionTemplate(transactionManager);
+        this.defaultIsolation.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.failureAppends = newTransaction;
         this.mandatory = new TransactionTemplate(transactionManager);
         this.mandatory.setPropagationBehavior(TransactionDefinition.PROPAGATION_MANDATORY);
         this.readOnly = new TransactionTemplate(transactionManager);
@@ -63,8 +74,36 @@ public final class JpaUploadHistory implements UploadHistory {
         }
         String bounded = message;
         Instant recordedAt = now();
-        newTransaction.executeWithoutResult(status ->
-                failures.append(instanceId, recordedAt, operation, contentHash, objectKey, bounded));
+        appendFailure(() -> failures.append(instanceId, recordedAt, operation, contentHash, objectKey, bounded));
+    }
+
+    /**
+     * A transaction manager that rejects custom isolation does so at begin, before the append runs;
+     * failure appends then fall back, once and for good, to the database's default isolation.
+     */
+    private void appendFailure(Runnable append) {
+        TransactionTemplate template = failureAppends;
+        AtomicBoolean started = new AtomicBoolean();
+        try {
+            template.executeWithoutResult(status -> {
+                started.set(true);
+                append.run();
+            });
+        } catch (InvalidIsolationLevelException unsupported) {
+            if (started.get() || template == defaultIsolation) {
+                throw unsupported;
+            }
+            failureAppends = defaultIsolation;
+            if (isolationUnsupported.compareAndSet(false, true)) {
+                LOGGER.warn(
+                        "event=history.isolation.unsupported errorType={} failureMessage={} "
+                                + "detail=\"history appends now rely on the database's default isolation\"",
+                        unsupported.getClass().getSimpleName(),
+                        unsupported.getMessage()
+                );
+            }
+            defaultIsolation.executeWithoutResult(status -> append.run());
+        }
     }
 
     @Override
