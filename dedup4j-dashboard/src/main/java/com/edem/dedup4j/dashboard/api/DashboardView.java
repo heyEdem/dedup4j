@@ -14,7 +14,8 @@ public final class DashboardView {
     public record Instance(UUID instanceId, String instanceName, String advertisedUrl, String status,
                             Instant registeredAt, Instant lastSeenAt, Instant lastFailureAt, String lastFailureMessage,
                             long uploads, long newUploads, long duplicates, double duplicateRate,
-                            long contentCount, long physicalBytes, long avoidedBytes) { }
+                            long contentCount, long physicalBytes, long avoidedBytes,
+                            String datasetId, boolean sharedDataset) { }
     public record History(UUID instanceId, List<MetricPoint> points) { }
     public record MetricPoint(Instant observedAt, long logicalBytes, long physicalBytes, long avoidedBytes,
                               long uploads, long duplicates, long skippedPhysicalWrites, long contentCount) { }

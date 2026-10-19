@@ -83,6 +83,7 @@ a { color: inherit; text-decoration: none; }
 .instance-row, .failure-row { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 14px; padding: 16px 4px; }
 .instance-name, .failure-message { font-weight: 700; }
 .instance-url, .failure-meta { color: var(--muted); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 3px; }
+.dataset-badge { border: 1px solid var(--line-strong); border-radius: 3px; color: var(--muted); font: 400 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; margin-left: 6px; padding: 1px 5px; text-transform: uppercase; vertical-align: middle; }
 .status-badge { font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
 .status-badge::before { background: var(--muted); border-radius: 50%; content: ''; display: inline-block; height: 6px; margin-right: 7px; width: 6px; }
 .status-badge.healthy::before { background: var(--good); box-shadow: 0 0 8px var(--good); }

@@ -1,6 +1,7 @@
 package com.edem.dedup4j.dashboard.api;
 
 import com.edem.dedup4j.dashboard.persistence.DashboardDatabase;
+import com.edem.dedup4j.dashboard.persistence.DatasetTotalsRepository;
 import com.edem.dedup4j.dashboard.persistence.FailureEventRepository;
 import com.edem.dedup4j.dashboard.persistence.InstanceRepository;
 import com.edem.dedup4j.dashboard.persistence.MetricSnapshotRepository;
@@ -25,13 +26,18 @@ class DashboardControllerTest {
         JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:sqlite:" + tempDir.resolve("dashboard.sqlite"), null, null));
         new DashboardDatabase(jdbc);
         instance = UUID.randomUUID();
-        new InstanceRepository(jdbc).save(instance, "orders", "http://127.0.0.1:8081", now);
+        InstanceRepository instances = new InstanceRepository(jdbc);
+        instances.save(instance, "orders", "http://127.0.0.1:8081", now);
+        instances.markHealthy(instance, now, "ds-1");
         MetricSnapshotRepository snapshots = new MetricSnapshotRepository(jdbc);
-        snapshots.save(new MetricSnapshotRepository.Snapshot(instance, now, 1_000, 600, 400, 10, 4, 4, 1));
-        snapshots.save(new MetricSnapshotRepository.Snapshot(instance, now.plusSeconds(30), 500, 300, 200, 5, 2, 2, 1));
+        snapshots.save(new MetricSnapshotRepository.Snapshot(instance, "ds-1", now, 1_000, 600, 400, 10, 4, 4, 1));
+        snapshots.save(new MetricSnapshotRepository.Snapshot(instance, "ds-1", now.plusSeconds(30), 500, 300, 200, 5, 2, 2, 1));
+        DatasetTotalsRepository totals = new DatasetTotalsRepository(jdbc);
+        totals.save(new DatasetTotalsRepository.DatasetTotals("ds-1", now.plusSeconds(30), 15, 6, 9, 1_500, 600, 1, 900, "all-time"));
+        totals.save(new DatasetTotalsRepository.DatasetTotals("ds-retired", now, 99, 9, 90, 9_900, 900, 9, 9_000, "all-time"));
         FailureEventRepository failures = new FailureEventRepository(jdbc);
         failures.save(new FailureEventRepository.Failure(UUID.randomUUID(), instance, now.minusSeconds(7 * 24 * 3600), "poll", "boundary"));
-        controller = new DashboardController(new InstanceRepository(jdbc), snapshots, failures);
+        controller = new DashboardController(instances, snapshots, failures, totals);
     }
 
     @Test
@@ -49,9 +55,11 @@ class DashboardControllerTest {
     }
 
     @Test
-    void overviewAggregatesStoredIntervals() {
+    void overviewSumsTotalsOfRegisteredDatasets() {
         var overview = controller.overview();
         assertThat(overview.instanceCount()).isEqualTo(1);
+        assertThat(overview.physicalUploads()).isEqualTo(9);
+        assertThat(overview.trend()).extracting(DashboardView.TrendPoint::uploads).containsExactly(10L, 5L);
         assertThat(overview.uploads()).isEqualTo(15);
         assertThat(overview.logicalBytes()).isEqualTo(1_500);
         assertThat(overview.avoidedBytes()).isEqualTo(600);
@@ -75,15 +83,28 @@ class DashboardControllerTest {
     }
 
     @Test
-    void instanceStatusIncludesAggregatedObservabilityMetrics() {
+    void instanceStatusShowsItsDatasetTotals() {
         var view = controller.instanceStatus().getFirst();
 
+        assertThat(view.datasetId()).isEqualTo("ds-1");
+        assertThat(view.sharedDataset()).isFalse();
         assertThat(view.uploads()).isEqualTo(15);
         assertThat(view.newUploads()).isEqualTo(9);
         assertThat(view.duplicates()).isEqualTo(6);
         assertThat(view.contentCount()).isEqualTo(1);
         assertThat(view.physicalBytes()).isEqualTo(900);
         assertThat(view.avoidedBytes()).isEqualTo(600);
+    }
+
+    @Test
+    void storageAvoidedLabelCarriesItsDefinition() throws Exception {
+        String html = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/index.html"));
+        String script = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dashboard.js"));
+
+        assertThat(html).contains("Storage avoided")
+                .contains("title=\"Bytes that did not become an additional stored copy")
+                .doesNotContainIgnoringCase("bytes avoided");
+        assertThat(script).contains("sharedDataset").contains("shared dataset");
     }
 
     @Test
