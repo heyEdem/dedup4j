@@ -1,6 +1,7 @@
 package com.edem.dedup4j.autoconfigure.history;
 
 import com.edem.dedup4j.autoconfigure.persistence.Dedup4jPersistenceAutoConfiguration;
+import com.edem.dedup4j.history.DefaultInstanceId;
 import com.edem.dedup4j.history.DisabledUploadHistory;
 import com.edem.dedup4j.history.FailureRecord;
 import com.edem.dedup4j.history.JpaUploadHistory;
@@ -127,6 +128,34 @@ class Dedup4jHistoryAutoConfigurationTest {
                 .run(context -> assertThat(context).hasFailed()
                         .getFailure()
                         .hasMessageContaining("classpath:db/dedup4j/history/db.changelog-history.yaml"));
+    }
+
+    @Test
+    void instanceIdDefaultsToTheSharedProcessId() {
+        assertThat(recordedInstanceId(runner)).isEqualTo(DefaultInstanceId.value());
+    }
+
+    @Test
+    void instanceIdFallsBackToTheManagementInstanceId() {
+        assertThat(recordedInstanceId(runner.withPropertyValues("dedup4j.management.instance-id=management-id")))
+                .isEqualTo("management-id");
+    }
+
+    @Test
+    void historyInstanceIdWins() {
+        assertThat(recordedInstanceId(runner.withPropertyValues(
+                "dedup4j.management.instance-id=management-id", "dedup4j.history.instance-id=history-id")))
+                .isEqualTo("history-id");
+    }
+
+    private static String recordedInstanceId(ApplicationContextRunner runner) {
+        java.util.concurrent.atomic.AtomicReference<String> instanceId = new java.util.concurrent.atomic.AtomicReference<>();
+        runner.withUserConfiguration(H2Configuration.class).run(context -> {
+            UploadHistory history = context.getBean(UploadHistory.class);
+            history.recordFailure("upload", null, null, new RuntimeException("boom"));
+            instanceId.set(history.failuresAfter(0, 1).getFirst().instanceId());
+        });
+        return instanceId.get();
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.edem.dedup4j.autoconfigure.history;
 import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.autoconfigure.persistence.Dedup4jPersistenceAutoConfiguration;
 import com.edem.dedup4j.autoconfigure.persistence.SchemaInitialization;
+import com.edem.dedup4j.history.DefaultInstanceId;
 import com.edem.dedup4j.history.DisabledUploadHistory;
 import com.edem.dedup4j.history.JpaUploadHistory;
 import com.edem.dedup4j.history.UploadHistory;
@@ -28,8 +29,6 @@ import org.springframework.orm.jpa.SharedEntityManagerCreator;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Clock;
 
 @AutoConfiguration(after = {Dedup4jPersistenceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
@@ -81,18 +80,9 @@ public class Dedup4jHistoryAutoConfiguration {
             return new JpaUploadHistory(
                     new UploadLedgerRepository(entityManager),
                     new FailureLogRepository(entityManager),
-                    instanceId == null || instanceId.isBlank() ? hostName() : instanceId,
+                    instanceId == null || instanceId.isBlank() ? DefaultInstanceId.value() : instanceId,
                     transactionManager,
                     clock.getIfAvailable(Clock::systemUTC));
-        }
-
-        private static String hostName() {
-            try {
-                return InetAddress.getLocalHost().getHostName();
-            }
-            catch (UnknownHostException e) {
-                return "unknown";
-            }
         }
     }
 

@@ -193,8 +193,10 @@ History is **on by default** (`dedup4j.history.enabled=true`) and runs only on
 application start" counters instead of all-time totals.
 
 `dedup4j.history.instance-id` labels history rows for attribution only. It
-defaults to `dedup4j.management.instance-id`, then the host name. Totals never
-group by instance.
+defaults to `dedup4j.management.instance-id`. When neither is set, history rows
+and the management API share one random id generated at each application
+start, so failures are attributed to the id the management API reports. Totals
+never group by instance.
 
 With `dedup4j.persistence.initialize-schema: never`, deployments must apply
 `classpath:db/dedup4j/history/db.changelog-history.yaml` themselves; startup

@@ -1,5 +1,6 @@
 package com.edem.dedup4j.management;
 
+import com.edem.dedup4j.history.DefaultInstanceId;
 import com.edem.dedup4j.history.DisabledUploadHistory;
 import com.edem.dedup4j.history.UploadHistory;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,11 @@ class Dedup4jManagementControllerTest {
                     assertThat(context).doesNotHaveBean(UploadHistoryFailureSource.class);
                     assertThat(context.getBean(Dedup4jManagementSnapshot.FailureSource.class)).isSameAs(user);
                 });
+    }
+
+    @Test
+    void defaultInstanceIdIsSharedWithHistory() {
+        assertThat(new Dedup4jManagementProperties().getInstanceId()).isEqualTo(DefaultInstanceId.value());
     }
 
     @Test
