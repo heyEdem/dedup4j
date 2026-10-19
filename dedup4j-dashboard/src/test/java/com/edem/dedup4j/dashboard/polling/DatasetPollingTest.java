@@ -26,6 +26,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
@@ -210,15 +211,39 @@ class DatasetPollingTest {
                 failure(1, NOW.minusSeconds(60)),
                 "{\"sequenceNo\":2,\"id\":\"" + new UUID(0, 2) + "\",\"occurredAt\":\"yesterday\",\"operation\":\"store\",\"message\":\"bad time\"}",
                 "{\"sequenceNo\":3,\"id\":\"not-a-uuid\",\"occurredAt\":\"" + NOW.minusSeconds(50) + "\",\"operation\":\"store\",\"message\":\"bad id\"}",
-                failure(4, NOW.minusSeconds(40))));
+                "{\"sequenceNo\":4,\"id\":\"" + new UUID(0, 4) + "\",\"operation\":\"store\",\"message\":\"no time\"}",
+                "{\"sequenceNo\":5,\"id\":\"" + new UUID(0, 5) + "\",\"occurredAt\":{\"at\":1},\"operation\":\"store\",\"message\":\"object time\"}",
+                failure(6, NOW.minusSeconds(40))));
         register("orders", metrics("ds-1", 10, 600, 6), query -> { queries.add(query); return pages.apply(query); });
 
         service(NOW).pollAll();
         assertThat(countByOrigin("application")).isEqualTo(2);
-        assertThat(failures.cursor("ds-1")).isEqualTo(4);
+        assertThat(failures.cursor("ds-1")).isEqualTo(6);
 
         service(NOW.plusSeconds(30)).pollAll();
-        assertThat(queries).containsExactly("afterSequence=0&limit=100", "afterSequence=4&limit=100");
+        assertThat(queries).containsExactly("afterSequence=0&limit=100", "afterSequence=6&limit=100");
+    }
+
+    @Test
+    void transientStoreErrorKeepsCursorAndRetriesPage() {
+        failures = new FailureEventRepository(jdbc) {
+            private boolean failed;
+            @Override
+            public boolean saveApplication(ApplicationFailure failure) {
+                if (!failed) { failed = true; throw new CannotAcquireLockException("database is locked"); }
+                return super.saveApplication(failure);
+            }
+        };
+        register("orders", metrics("ds-1", 10, 600, 6), paged(List.of(
+                failure(1, NOW.minusSeconds(60)), failure(2, NOW.minusSeconds(30)))));
+
+        service(NOW).pollAll();
+        assertThat(countByOrigin("application")).isZero();
+        assertThat(failures.cursor("ds-1")).isZero();
+
+        service(NOW.plusSeconds(30)).pollAll();
+        assertThat(countByOrigin("application")).isEqualTo(2);
+        assertThat(failures.cursor("ds-1")).isEqualTo(2);
     }
 
     @Test

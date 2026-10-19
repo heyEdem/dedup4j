@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -131,10 +132,15 @@ public class InstancePollingService {
         }
     }
 
-    /** A malformed item is logged and skipped, so it can never hold the cursor back. */
+    /**
+     * A malformed item is logged and skipped, so it can never hold the cursor back. A database error propagates
+     * instead: the cursor is not saved and the page is retried next cycle (insert-or-ignore absorbs repeats).
+     */
     private void store(InstanceRepository.Instance instance, String datasetId, JsonNode item, Instant cutoff) {
         try {
             storeItem(instance, datasetId, item, cutoff);
+        } catch (DataAccessException error) {
+            throw error;
         } catch (RuntimeException error) {
             log.warn("Dashboard skipped malformed failure from {} for dataset {}: {}", instance.id(), datasetId, error.getMessage());
         }
