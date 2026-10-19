@@ -130,6 +130,25 @@ class DatasetPollingTest {
     }
 
     @Test
+    void olderAndHistoryDisabledInstancesAreEachSummedOnceAndLabelledSinceStart() {
+        register("orders-a", metrics("ds-1", 10, 600, 6), NO_FAILURES);
+        register("orders-b", metrics("ds-1", 10, 600, 6), NO_FAILURES);
+        UUID older = register("older", oldMetrics(7, 2, 2, 700, 200, 500, 5), NO_FAILURES);
+        UUID disabled = register("disabled", metrics(null, "since-start", 3, 300, 3), NO_FAILURES);
+
+        service(NOW).pollAll();
+        service(NOW.plusSeconds(30)).pollAll();
+
+        var overview = dashboard.overview();
+        assertThat(overview.uploads()).isEqualTo(10 + 7 + 3);
+        assertThat(overview.contentCount()).isEqualTo(6 + 5 + 3);
+        assertThat(overview.physicalBytes()).isEqualTo(600 + 500 + 300);
+        assertThat(overview.totalsScope()).isEqualTo("mixed");
+        assertThat(dashboard.instanceStatus()).filteredOn(row -> row.instanceId().equals(older) || row.instanceId().equals(disabled))
+                .hasSize(2).allSatisfy(row -> assertThat(row.totalsScope()).isEqualTo("since-start"));
+    }
+
+    @Test
     void upgradedInstanceCountsOnlyItsCurrentDataset() {
         String[] body = {oldMetrics(10, 4, 4, 1_000, 400, 600, 6)};
         register("orders", ignored -> body[0], NO_FAILURES);
@@ -367,8 +386,12 @@ class DatasetPollingTest {
 
     /** The current management {@code /metrics} shape; a null dataset id is serialized as an explicit null. */
     private static String metrics(String datasetId, long uploads, long physicalBytes, long contentCount) {
+        return metrics(datasetId, "all-time", uploads, physicalBytes, contentCount);
+    }
+
+    private static String metrics(String datasetId, String totalsScope, long uploads, long physicalBytes, long contentCount) {
         return "{\"datasetId\":" + (datasetId == null ? "null" : "\"" + datasetId + "\"")
-                + ",\"totalsScope\":\"all-time\",\"uploads\":" + uploads + ",\"duplicates\":4,\"physicalWrites\":"
+                + ",\"totalsScope\":\"" + totalsScope + "\",\"uploads\":" + uploads + ",\"duplicates\":4,\"physicalWrites\":"
                 + (uploads - 4) + ",\"skippedPhysicalWrites\":4,\"acceptedBytes\":1000,\"avoidedBytes\":400"
                 + ",\"contentCount\":" + contentCount + ",\"physicalBytes\":" + physicalBytes + "}";
     }

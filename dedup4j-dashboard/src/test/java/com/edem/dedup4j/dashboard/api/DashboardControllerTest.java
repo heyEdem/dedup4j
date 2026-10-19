@@ -19,6 +19,8 @@ class DashboardControllerTest {
     @TempDir java.nio.file.Path tempDir;
     private DashboardController controller;
     private UUID instance;
+    private InstanceRepository instances;
+    private DatasetTotalsRepository totals;
     private final Instant now = Instant.parse("2026-08-31T00:00:00Z");
 
     @BeforeEach
@@ -26,13 +28,13 @@ class DashboardControllerTest {
         JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:sqlite:" + tempDir.resolve("dashboard.sqlite"), null, null));
         new DashboardDatabase(jdbc);
         instance = UUID.randomUUID();
-        InstanceRepository instances = new InstanceRepository(jdbc);
+        instances = new InstanceRepository(jdbc);
         instances.save(instance, "orders", "http://127.0.0.1:8081", now);
         instances.markHealthy(instance, now, "ds-1");
         MetricSnapshotRepository snapshots = new MetricSnapshotRepository(jdbc);
         snapshots.save(new MetricSnapshotRepository.Snapshot(instance, "ds-1", now, 1_000, 600, 400, 10, 4, 4, 1));
         snapshots.save(new MetricSnapshotRepository.Snapshot(instance, "ds-1", now.plusSeconds(30), 500, 300, 200, 5, 2, 2, 1));
-        DatasetTotalsRepository totals = new DatasetTotalsRepository(jdbc);
+        totals = new DatasetTotalsRepository(jdbc);
         totals.save(new DatasetTotalsRepository.DatasetTotals("ds-1", now.plusSeconds(30), 15, 6, 9, 1_500, 600, 1, 900, "all-time"));
         totals.save(new DatasetTotalsRepository.DatasetTotals("ds-retired", now, 99, 9, 90, 9_900, 900, 9, 9_000, "all-time"));
         FailureEventRepository failures = new FailureEventRepository(jdbc);
@@ -66,6 +68,38 @@ class DashboardControllerTest {
         assertThat(overview.newUploads()).isEqualTo(9);
         assertThat(overview.contentCount()).isEqualTo(1);
         assertThat(overview.duplicateRate()).isEqualTo(6d / 15d);
+        assertThat(overview.totalsScope()).isEqualTo("all-time");
+    }
+
+    @Test
+    void totalsScopeIsMixedWhenSomeDatasetsCountSinceStart() {
+        UUID older = UUID.randomUUID();
+        instances.save(older, "older", "http://127.0.0.1:8082", now);
+        instances.markHealthy(older, now, "instance:" + older);
+        // An older instance reports no totalsScope; its counters reset on restart.
+        totals.save(new DatasetTotalsRepository.DatasetTotals("instance:" + older, now, 3, 1, 2, 300, 100, 2, 200, null));
+
+        assertThat(controller.overview().totalsScope()).isEqualTo("mixed");
+        assertThat(controller.instanceStatus()).extracting(DashboardView.Instance::instanceName, DashboardView.Instance::totalsScope)
+                .containsExactlyInAnyOrder(org.assertj.core.groups.Tuple.tuple("orders", "all-time"),
+                        org.assertj.core.groups.Tuple.tuple("older", "since-start"));
+    }
+
+    @Test
+    void totalsScopeIsSinceStartWhenNoDatasetIsAllTime() {
+        totals.save(new DatasetTotalsRepository.DatasetTotals("ds-1", now.plusSeconds(60), 15, 6, 9, 1_500, 600, 1, 900, "since-start"));
+
+        assertThat(controller.overview().totalsScope()).isEqualTo("since-start");
+    }
+
+    @Test
+    void totalsScopeIsAbsentWithoutDatasets(@TempDir java.nio.file.Path empty) {
+        JdbcTemplate jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:sqlite:" + empty.resolve("empty.sqlite"), null, null));
+        new DashboardDatabase(jdbc);
+        var bare = new DashboardController(new InstanceRepository(jdbc), new MetricSnapshotRepository(jdbc),
+                new FailureEventRepository(jdbc), new DatasetTotalsRepository(jdbc));
+
+        assertThat(bare.overview().totalsScope()).isNull();
     }
 
     @Test
@@ -105,6 +139,16 @@ class DashboardControllerTest {
                 .contains("title=\"Bytes that did not become an additional stored copy")
                 .doesNotContainIgnoringCase("bytes avoided");
         assertThat(script).contains("sharedDataset").contains("shared dataset");
+    }
+
+    @Test
+    void totalsScopeIsCaptioned() throws Exception {
+        String html = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/index.html"));
+        String script = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/static/js/dashboard.js"));
+
+        assertThat(html).contains("id=\"totals-scope\"");
+        assertThat(script).contains("totalsScope").contains("'all time'").contains("'since application start'")
+                .contains("'some datasets since application start'");
     }
 
     @Test

@@ -41,7 +41,18 @@ public class DashboardController {
         long avoided = datasets.stream().mapToLong(DatasetTotalsRepository.DatasetTotals::avoidedBytes).sum();
         long contentCount = datasets.stream().mapToLong(DatasetTotalsRepository.DatasetTotals::contentCount).sum();
         var trend = snapshots.findAll().stream().map(s -> new DashboardView.TrendPoint(s.observedAt(), s.logicalBytes(), s.physicalBytes(), s.avoidedBytes(), s.uploads(), s.duplicates())).toList();
-        return new DashboardView.Overview(registered.size(), registered.stream().filter(i -> "HEALTHY".equals(i.status())).count(), uploads, duplicates, physicalWrites, logical, physical, avoided, uploads == 0 ? 0 : (double) duplicates / uploads, uploads - duplicates, contentCount, trend);
+        return new DashboardView.Overview(registered.size(), registered.stream().filter(i -> "HEALTHY".equals(i.status())).count(), uploads, duplicates, physicalWrites, logical, physical, avoided, uploads == 0 ? 0 : (double) duplicates / uploads, uploads - duplicates, contentCount, trend, scope(datasets));
+    }
+
+    /** {@code all-time}, {@code since-start} or {@code mixed} over the counted datasets; null when there are none. */
+    private static String scope(List<DatasetTotalsRepository.DatasetTotals> datasets) {
+        var scopes = datasets.stream().map(DashboardController::scope).distinct().toList();
+        return scopes.isEmpty() ? null : scopes.size() == 1 ? scopes.getFirst() : "mixed";
+    }
+
+    /** Instances that report no {@code totalsScope} predate persistent history: their counters reset on restart. */
+    private static String scope(DatasetTotalsRepository.DatasetTotals totals) {
+        return "all-time".equals(totals.totalsScope()) ? "all-time" : "since-start";
     }
 
     @GetMapping("/instances/status")
@@ -72,6 +83,6 @@ public class DashboardController {
         return new DashboardView.Instance(i.id(), i.name(), i.url(), i.status(), i.registeredAt(), i.lastSeenAt(), i.lastFailureAt(), i.lastFailureMessage(),
                 uploads, uploads - duplicates, duplicates, uploads == 0 ? 0 : (double) duplicates / uploads,
                 totals == null ? 0 : totals.contentCount(), totals == null ? 0 : totals.physicalBytes(), totals == null ? 0 : totals.avoidedBytes(),
-                i.datasetId(), shared);
+                i.datasetId(), shared, totals == null ? null : scope(totals));
     }
 }
