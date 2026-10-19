@@ -57,8 +57,8 @@ public class Dedup4jHistoryAutoConfiguration {
             SpringLiquibase liquibase = new SpringLiquibase();
             liquibase.setDataSource(dataSource);
             liquibase.setChangeLog(HISTORY_CHANGELOG);
-            liquibase.setDatabaseChangeLogTable("DEDUP4J_DATABASE_CHANGELOG");
-            liquibase.setDatabaseChangeLogLockTable("DEDUP4J_DATABASE_CHANGELOG_LOCK");
+            liquibase.setDatabaseChangeLogTable("DEDUP4J_HISTORY_DATABASE_CHANGELOG");
+            liquibase.setDatabaseChangeLogLockTable("DEDUP4J_HISTORY_DATABASE_CHANGELOG_LOCK");
             liquibase.setShouldRun(properties.getPersistence().getInitializeSchema().shouldInitialize(dataSource));
             return liquibase;
         }

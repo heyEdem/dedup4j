@@ -307,7 +307,7 @@ for entity scanning, and these entities must be registered only when history is 
       `DisabledUploadHistory`
     - `SpringLiquibase dedup4jHistoryLiquibase`:
       - changelog `classpath:db/dedup4j/history/db.changelog-history.yaml`
-      - same tracking tables as `dedup4jLiquibase`
+      - own tracking tables (`dedup4j_history_database_changelog[_lock]`)
       - same `initialize-schema` gating
       - `@DependsOn("dedup4jLiquibase")`
   - **Instance id:** the property `dedup4j.history.instance-id`. It defaults to

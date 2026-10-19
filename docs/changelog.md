@@ -11,6 +11,7 @@
 - Isolation: history appends (the store transaction and the failure append) request READ COMMITTED when the transaction manager supports custom isolation, so they stay gapless when the database defaults to REPEATABLE READ. A manager that rejects it (`JtaTransactionManager` without `allowCustomIsolationLevels`, `JpaTransactionManager` with a plain `DefaultJpaDialect`) logs one `event=history.isolation.unsupported` WARN and appends at the database's default isolation from then on. Retain, release, get and location, and deployments with history disabled, never request a custom isolation level.
 - Instance id: with no instance id configured, history rows now use the same per-start random id as the management API (`DefaultInstanceId`; previously the host name). Set `dedup4j.management.instance-id` for an id that is stable across restarts.
 - The unreleased history changeset changed during development. Development databases that already ran an earlier version of it must be recreated.
+- Fix: the history changelog now uses its own tracking tables (`DEDUP4J_HISTORY_DATABASE_CHANGELOG` and `_LOCK`) instead of sharing `DEDUP4J_DATABASE_CHANGELOG`, which failed startup on H2 with `DATABASE_TO_LOWER=TRUE`.
 - Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, `dedup4j-dashboard`, and project documentation.
 
 ## 2026-09-07 — Reconcile feature branch with Spring Boot 4 main

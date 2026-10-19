@@ -210,6 +210,52 @@ class Dedup4jHistoryAutoConfigurationTest {
         });
     }
 
+    @Test
+    void historyStartsOnH2WithLowerCaseIdentifiers() {
+        runner.withUserConfiguration(LowerCaseH2Configuration.class)
+                .withPropertyValues("dedup4j.persistence.initialize-schema=always")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBean(UploadHistory.class).totals().scope()).isEqualTo("all-time");
+                });
+    }
+
+    @Test
+    void historyAndAssetMigrationsUseDistinctTrackingTables() {
+        runner.withUserConfiguration(H2Configuration.class)
+                .withPropertyValues("dedup4j.persistence.initialize-schema=always")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    JdbcTemplate jdbc = new JdbcTemplate(context.getBean(DataSource.class));
+                    List<String> asset = jdbc.queryForList(
+                            "select id from DEDUP4J_DATABASE_CHANGELOG", String.class);
+                    List<String> history = jdbc.queryForList(
+                            "select id from DEDUP4J_HISTORY_DATABASE_CHANGELOG", String.class);
+                    assertThat(asset).containsExactly("001-create-asset-content");
+                    assertThat(history).isNotEmpty().doesNotContain("001-create-asset-content");
+                    assertThat(jdbc.queryForObject(
+                            "select count(*) from DEDUP4J_HISTORY_DATABASE_CHANGELOG_LOCK", Integer.class))
+                            .isNotNull();
+                });
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class LowerCaseH2Configuration {
+        @Bean
+        DataSource dataSource() {
+            JdbcDataSource dataSource = new JdbcDataSource();
+            dataSource.setURL("jdbc:h2:mem:dedup4j-history-lower-" + DATABASE_SEQUENCE.incrementAndGet()
+                    + ";DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1");
+            dataSource.setUser("sa");
+            return dataSource;
+        }
+
+        @Bean
+        JdbcTemplate jdbcTemplate(DataSource dataSource) {
+            return new JdbcTemplate(dataSource);
+        }
+    }
+
     @Configuration(proxyBeanMethods = false)
     static class H2Configuration {
         @Bean
