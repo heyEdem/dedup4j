@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.edem</groupId>
+        <groupId>io.github.heyedem</groupId>
         <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
@@ -12,9 +12,9 @@
     <name>dedup4j-spring-boot-dashboard</name>
     <description>Optional embedded read-only dedup4j dashboard.</description>
     <dependencies>
-        <dependency><groupId>com.edem</groupId><artifactId>dedup4j-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.edem</groupId><artifactId>dedup4j-jpa</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.edem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-jpa</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jackson</artifactId></dependency>
         <dependency><groupId>org.springframework</groupId><artifactId>spring-webmvc</artifactId></dependency>

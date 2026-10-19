@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.edem</groupId>
+        <groupId>io.github.heyedem</groupId>
         <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
@@ -12,7 +12,7 @@
     <name>dedup4j-dashboard</name>
     <description>Standalone local dashboard for dedup4j.</description>
     <dependencies>
-        <dependency><groupId>com.edem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+        <dependency><groupId>io.github.heyedem</groupId><artifactId>dedup4j-spring-boot-management</artifactId><version>${project.version}</version><scope>test</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jackson</artifactId></dependency>
