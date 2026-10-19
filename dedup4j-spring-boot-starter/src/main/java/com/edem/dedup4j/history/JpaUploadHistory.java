@@ -40,6 +40,8 @@ public final class JpaUploadHistory implements UploadHistory {
         Objects.requireNonNull(transactionManager, "transactionManager must not be null");
         this.newTransaction = new TransactionTemplate(transactionManager);
         this.newTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        // Gapless sequence assignment needs a fresh snapshot after waiting on the dataset lock.
+        this.newTransaction.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
         this.mandatory = new TransactionTemplate(transactionManager);
         this.mandatory.setPropagationBehavior(TransactionDefinition.PROPAGATION_MANDATORY);
         this.readOnly = new TransactionTemplate(transactionManager);

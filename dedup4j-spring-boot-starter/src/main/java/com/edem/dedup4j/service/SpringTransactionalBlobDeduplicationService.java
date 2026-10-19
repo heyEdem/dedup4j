@@ -76,6 +76,9 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
                 Objects.requireNonNull(transactionManager, "transactionManager must not be null")
         );
         this.transactions.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        // The history ledger's gapless sequence needs each statement to see rows committed while it waited
+        // on the dataset lock; repeatable read would reuse a sequence number and fail the upload.
+        this.transactions.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
         this.readOnly = new TransactionTemplate(transactionManager);
         this.readOnly.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.readOnly.setReadOnly(true);
