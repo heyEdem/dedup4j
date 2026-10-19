@@ -31,7 +31,8 @@ public final class Dedup4jMetrics {
         this.registry = registry;
     }
 
-    public void recordUpload(long bytes, boolean duplicate) {
+    /** Call only after the upload's transaction has committed. */
+    public void recordUpload(long bytes, boolean duplicate, boolean physicalWrite) {
         if (registry == null) {
             return;
         }
@@ -39,8 +40,10 @@ public final class Dedup4jMetrics {
         registry.counter(ACCEPTED_BYTES).increment(bytes);
         if (duplicate) {
             registry.counter(DUPLICATES).increment();
-            registry.counter(SKIPPED_PHYSICAL_WRITES).increment();
             registry.counter(AVOIDED_BYTES).increment(bytes);
+        }
+        if (!physicalWrite) {
+            registry.counter(SKIPPED_PHYSICAL_WRITES).increment();
         }
     }
 

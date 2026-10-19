@@ -69,9 +69,9 @@ class Dedup4jHistoryAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     Dedup4jMetrics metrics = new Dedup4jMetrics(context.getBean(SimpleMeterRegistry.class));
-                    metrics.recordUpload(10, false);
-                    metrics.recordUpload(20, false);
-                    metrics.recordUpload(30, true);
+                    metrics.recordUpload(10, false, true);
+                    metrics.recordUpload(20, false, true);
+                    metrics.recordUpload(30, true, false);
                     HistoryTotals totals = context.getBean(UploadHistory.class).totals();
                     assertThat(totals.scope()).isEqualTo("since-start");
                     assertThat(totals.datasetId()).isNull();

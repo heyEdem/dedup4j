@@ -3,6 +3,9 @@ package com.edem.dedup4j.autoconfigure;
 import com.edem.dedup4j.core.model.BlobReference;
 import com.edem.dedup4j.core.model.StoreBlobCommand;
 import com.edem.dedup4j.core.storage.BlobResource;
+import com.edem.dedup4j.history.HistoryTotals;
+import com.edem.dedup4j.history.UploadHistory;
+import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.service.BlobDeduplicationService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
@@ -139,6 +142,11 @@ class Dedup4jContextStartTest {
                         assertThat(rowCount(context)).isEqualTo(1);
                         assertThat(refCount(context)).isEqualTo(2);
                         assertThat(regularFileCount(storageRoot)).isEqualTo(1);
+                        HistoryTotals totals = context.getBean(UploadHistory.class).totals();
+                        long size = CONTENT.getBytes(StandardCharsets.UTF_8).length;
+                        assertThat(List.of(totals.uploads(), totals.duplicates(), totals.physicalWrites(),
+                                totals.logicalBytes(), totals.avoidedBytes()))
+                                .containsExactly(2L, 1L, 2L, 2 * size, size);
                     } finally {
                         workers.shutdownNow();
                         workers.awaitTermination(10, TimeUnit.SECONDS);
@@ -211,8 +219,15 @@ class Dedup4jContextStartTest {
                     if (!(bean instanceof EntityManager)) {
                         return bean;
                     }
+                    ThreadLocal<Boolean> contentPersisted = ThreadLocal.withInitial(() -> false);
                     InvocationHandler handler = (proxy, method, args) -> {
-                        if (method.getName().equals("flush") && method.getParameterCount() == 0) {
+                        if (method.getName().equals("persist") && args[0] instanceof AssetContent) {
+                            contentPersisted.set(true);
+                        }
+                        // Gate only the content insert flush, not the history ledger flush.
+                        if (method.getName().equals("flush") && method.getParameterCount() == 0
+                                && contentPersisted.get()) {
+                            contentPersisted.set(false);
                             raceGate.recordFlush();
                             raceGate.awaitFlushPair();
                         }
