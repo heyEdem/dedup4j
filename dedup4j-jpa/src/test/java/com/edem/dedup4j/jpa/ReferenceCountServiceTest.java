@@ -124,6 +124,32 @@ class ReferenceCountServiceTest {
     }
 
     @Test
+    void lockedRetainSeesIncrementCommittedAfterUnlockedLookup() {
+        AssetContent content = persistContent();
+        entityManager.clear();
+
+        entityManager.getTransaction().begin();
+        new AssetContentRepository(entityManager).findByIdentity(
+                content.getHashAlgorithm(), content.getContentHash(), content.getSizeBytes()
+        ).orElseThrow();
+
+        EntityManager concurrent = entityManagerFactory.createEntityManager();
+        try {
+            concurrent.getTransaction().begin();
+            new ReferenceCountService(new AssetContentRepository(concurrent), storage).retain(content.getId());
+            concurrent.getTransaction().commit();
+        } finally {
+            concurrent.close();
+        }
+
+        service.retain(content.getId());
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+
+        assertEquals(3L, entityManager.find(AssetContent.class, content.getId()).getRefCount());
+    }
+
+    @Test
     void retainFailsWhenContentDoesNotExist() {
         entityManager.getTransaction().begin();
 
