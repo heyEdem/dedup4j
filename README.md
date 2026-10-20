@@ -1,15 +1,14 @@
 # dedup4j
 
-Rename status and consumer changes: [dedup4j migration guide](docs/dedup4j-migration.md). Persistence identifiers and local data defaults remain unchanged pending the compatibility decision.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.heyedem/dedup4j-spring-boot-starter)](https://central.sonatype.com/artifact/io.github.heyedem/dedup4j-spring-boot-starter)
 
-dedup4j is a reusable Spring Boot library for deduplicated object uploads.
-It stores identical file bytes once, while allowing each application to keep its
-own logical asset records.
+dedup4j is a Spring Boot library for deduplicated file storage. It stores
+identical bytes once, while each application keeps its own logical asset
+records. It ships adapters for the local filesystem, Amazon S3 (and
+S3-compatible stores such as MinIO) and Azure Blob Storage; any other store
+plugs in through the `BlobStorage` interface.
 
-The first target use case is image upload deduplication like the design
-described in the Medium article, but the project is storage-neutral. S3, Azure
-Blob Storage, local filesystem storage, MinIO, Google Cloud Storage, or any
-custom object store can be supported through the same storage adapter contract.
+**Documentation:** [dedup4j-docs.akato.dev](https://dedup4j-docs.akato.dev)
 
 ## Problem
 
@@ -266,6 +265,7 @@ Delete logical asset
 
 ## Documentation
 
+- [User documentation](https://dedup4j-docs.akato.dev)
 - [Project Specification](docs/SPECIFICATION.md)
 - [Task Index](docs/taskindex.md)
 - [Docs Index](docs/README.md)
