@@ -23,7 +23,7 @@
             <id>heyEdem</id>
             <name>Augustine Akato</name>
             <email>akatoaugustine@gmail.com</email>
-            <url>https://augustineakato.dev</url>
+            <url>https://akato.dev</url>
         </developer>
     </developers>
     <scm child.scm.connection.inherit.append.path="false"
