@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.heyedem</groupId>
     <artifactId>dedup4j</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>dedup4j</name>
     <description>Content-addressed, deduplicated blob storage for Java and Spring Boot, with local filesystem, AWS S3, and Azure Blob Storage adapters.</description>
@@ -31,7 +31,7 @@
          child.scm.url.inherit.append.path="false">
         <connection>scm:git:https://github.com/heyEdem/dedup4j.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/heyEdem/dedup4j.git</developerConnection>
-        <tag>v0.1.0</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/heyEdem/dedup4j</url>
     </scm>
     <issueManagement>
@@ -51,7 +51,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- Reproducible builds: set to the release commit's timestamp in the release commit. -->
-        <project.build.outputTimestamp>2026-10-20T11:20:16Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-10-20T11:42:56Z</project.build.outputTimestamp>
     </properties>
 
     <modules>
