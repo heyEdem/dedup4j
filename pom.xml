@@ -19,10 +19,11 @@
         </license>
     </licenses>
     <developers>
-        <!-- PLACEHOLDER: Edem must add <name> (and optionally <email>) before the 0.1.0 release. -->
         <developer>
             <id>heyEdem</id>
-            <url>https://github.com/heyEdem</url>
+            <name>Augustine Akato</name>
+            <email>akatoaugustine@gmail.com</email>
+            <url>https://augustineakato.dev</url>
         </developer>
     </developers>
     <scm child.scm.connection.inherit.append.path="false"
