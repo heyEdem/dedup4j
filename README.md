@@ -53,9 +53,9 @@ For a consumer application, add the single starter dependency:
 
 ```xml
 <dependency>
-  <groupId>com.edem</groupId>
+  <groupId>io.github.heyedem</groupId>
   <artifactId>dedup4j-spring-boot-starter</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
@@ -69,7 +69,7 @@ pieces, add:
 
 ```xml
 <dependency>
-  <groupId>com.edem</groupId>
+  <groupId>io.github.heyedem</groupId>
   <artifactId>dedup4j-spring-boot-observability</artifactId>
   <version>${dedup4j.version}</version>
 </dependency>

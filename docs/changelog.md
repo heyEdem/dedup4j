@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-20 — 0.1.0, first Maven Central release
+
+- First public release, under groupId `io.github.heyedem`. Java packages stay `com.edem.dedup4j.*`.
+- Published: the `dedup4j` parent POM plus `dedup4j-core`, `dedup4j-jpa`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard` and `dedup4j-spring-boot-observability`, each with sources and Javadoc JARs and signed with key `1E7D14C37ABE8D6E5EDD0B05D0A31632E4C94CE3`.
+- Not published to Central: the standalone `dedup4j-dashboard` application, which ships on GitHub Releases.
+- Requires Java 21 or later; built and tested against Spring Boot 4.1.1. Licensed under Apache License 2.0.
+- Includes everything listed below, notably the persistent append-only upload history and its behaviour changes (2026-10-19).
+- Known limitation: the Azure adapter does not configure a managed identity or any other credential. Use `connection-string`, an `endpoint` carrying a SAS token, or your own `BlobContainerClient` bean. `dedup4j.storage.azure.account-name` is accepted but not used.
+- Modules affected: all published modules (coordinates and release metadata), `README.md`, and project documentation.
+
 ## 2026-10-19 — Persistent append-only upload history
 
 - Added durable, append-only upload and failure history (`dedup4j_history_dataset`, `dedup4j_upload_event`, `dedup4j_failure_event`) in the `dedup4j-jpa` `historystore` package and the starter `history` package, with PostgreSQL and H2 changesets at `classpath:db/dedup4j/history/db.changelog-history.yaml`. Enabled by default (`dedup4j.history.enabled`); PostgreSQL and H2 only, other databases fail startup unless disabled. Totals start at zero with no backfill.
