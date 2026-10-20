@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
@@ -40,6 +41,7 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultBlobDeduplicationService.class);
     private static final int HASH_PREFIX_LENGTH = 8;
+    public static final long DEFAULT_MAX_UPLOAD_SIZE = 25L * 1024 * 1024;
 
     private final AssetContentRepository repository;
     private final ReferenceCountService referenceCountService;
@@ -48,6 +50,7 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
     private final ContentHasher contentHasher;
     private final ObjectKeyStrategy objectKeyStrategy;
     private final Dedup4jMetrics metrics;
+    private final long maxUploadSize;
 
     public DefaultBlobDeduplicationService(
             AssetContentRepository repository,
@@ -64,7 +67,29 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
                 storage,
                 contentHasher,
                 objectKeyStrategy,
-                new Dedup4jMetrics(null)
+                new Dedup4jMetrics(null),
+                DEFAULT_MAX_UPLOAD_SIZE
+        );
+    }
+
+    public DefaultBlobDeduplicationService(
+            AssetContentRepository repository,
+            ReferenceCountService referenceCountService,
+            AssetContentMutationService mutationService,
+            BlobStorage storage,
+            ContentHasher contentHasher,
+            ObjectKeyStrategy objectKeyStrategy,
+            long maxUploadSize
+    ) {
+        this(
+                repository,
+                referenceCountService,
+                mutationService,
+                storage,
+                contentHasher,
+                objectKeyStrategy,
+                new Dedup4jMetrics(null),
+                maxUploadSize
         );
     }
 
@@ -76,6 +101,28 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
             ContentHasher contentHasher,
             ObjectKeyStrategy objectKeyStrategy,
             Dedup4jMetrics metrics
+    ) {
+        this(
+                repository,
+                referenceCountService,
+                mutationService,
+                storage,
+                contentHasher,
+                objectKeyStrategy,
+                metrics,
+                DEFAULT_MAX_UPLOAD_SIZE
+        );
+    }
+
+    public DefaultBlobDeduplicationService(
+            AssetContentRepository repository,
+            ReferenceCountService referenceCountService,
+            AssetContentMutationService mutationService,
+            BlobStorage storage,
+            ContentHasher contentHasher,
+            ObjectKeyStrategy objectKeyStrategy,
+            Dedup4jMetrics metrics,
+            long maxUploadSize
     ) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.referenceCountService = Objects.requireNonNull(
@@ -93,6 +140,14 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
                 "objectKeyStrategy must not be null"
         );
         this.metrics = Objects.requireNonNull(metrics, "metrics must not be null");
+        if (maxUploadSize < 0) {
+            throw new IllegalArgumentException("maxUploadSize must not be negative");
+        }
+        this.maxUploadSize = maxUploadSize;
+    }
+
+    public long maxUploadSize() {
+        return maxUploadSize;
     }
 
     @Override
@@ -116,7 +171,14 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         Objects.requireNonNull(command, "command must not be null");
         Objects.requireNonNull(hashed, "hashed must not be null");
 
-        byte[] bytes = readAll(command.content());
+        if (command.sizeBytes() > maxUploadSize) {
+            closeQuietly(command.content());
+            throw new BlobValidationException(
+                    "Upload size " + command.sizeBytes() + " exceeds maximum " + maxUploadSize
+            );
+        }
+
+        byte[] bytes = readAll(command.content(), maxUploadSize);
         if (bytes.length != command.sizeBytes()) {
             throw new BlobValidationException(
                     "Declared size " + command.sizeBytes()
@@ -254,12 +316,40 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         return hash.substring(0, Math.min(HASH_PREFIX_LENGTH, hash.length()));
     }
 
-    private static byte[] readAll(InputStream stream) {
+    private static byte[] readAll(InputStream stream, long maxUploadSize) {
         Objects.requireNonNull(stream, "content must not be null");
         try (stream) {
-            return stream.readAllBytes();
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            long totalRead = 0;
+            while (true) {
+                int toRead = (int) Math.min((long) buffer.length, maxUploadSize - totalRead + 1);
+                if (toRead <= 0) {
+                    throw new BlobValidationException("Upload size exceeds maximum " + maxUploadSize);
+                }
+                int read = stream.read(buffer, 0, toRead);
+                if (read == -1) {
+                    break;
+                }
+                if (totalRead + read > maxUploadSize) {
+                    throw new BlobValidationException("Upload size exceeds maximum " + maxUploadSize);
+                }
+                output.write(buffer, 0, read);
+                totalRead += read;
+            }
+            return output.toByteArray();
         } catch (IOException failure) {
             throw new IllegalStateException("Reading upload content failed", failure);
+        }
+    }
+
+    private static void closeQuietly(InputStream content) {
+        if (content != null) {
+            try {
+                content.close();
+            } catch (IOException ignored) {
+                // The size validation failure is the useful error for the caller.
+            }
         }
     }
 

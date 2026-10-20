@@ -129,7 +129,8 @@ public class Dedup4jServiceAutoConfiguration {
             ObjectKeyStrategy objectKeyStrategy,
             Dedup4jMetrics metrics,
             PlatformTransactionManager transactionManager,
-            ObjectProvider<UploadHistory> history
+            ObjectProvider<UploadHistory> history,
+            Dedup4jProperties properties
     ) {
         BlobDeduplicationService delegate = new DefaultBlobDeduplicationService(
                 repository,
@@ -138,7 +139,8 @@ public class Dedup4jServiceAutoConfiguration {
                 storage,
                 contentHasher,
                 objectKeyStrategy,
-                metrics
+                metrics,
+                properties.getDeduplication().getMaxUploadSize().toBytes()
         );
         return new SpringTransactionalBlobDeduplicationService(
                 delegate,
