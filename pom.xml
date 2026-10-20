@@ -1,26 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+         child.project.url.inherit.append.path="false">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.edem</groupId>
+    <groupId>io.github.heyedem</groupId>
     <artifactId>dedup4j</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>dedup4j</name>
-    <description>dedup4j</description>
-    <url/>
+    <description>Content-addressed, deduplicated blob storage for Java and Spring Boot, with local filesystem, AWS S3, and Azure Blob Storage adapters.</description>
+    <url>https://github.com/heyEdem/dedup4j</url>
+    <inceptionYear>2026</inceptionYear>
     <licenses>
-        <license/>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <id>heyEdem</id>
+            <name>Augustine Akato</name>
+            <email>akatoaugustine@gmail.com</email>
+            <url>https://akato.dev</url>
+        </developer>
     </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
+    <scm child.scm.connection.inherit.append.path="false"
+         child.scm.developerConnection.inherit.append.path="false"
+         child.scm.url.inherit.append.path="false">
+        <connection>scm:git:https://github.com/heyEdem/dedup4j.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/heyEdem/dedup4j.git</developerConnection>
+        <tag>v${project.version}</tag>
+        <url>https://github.com/heyEdem/dedup4j</url>
     </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/heyEdem/dedup4j/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/heyEdem/dedup4j/actions</url>
+    </ciManagement>
     <properties>
         <java.version>21</java.version>
         <junit.version>6.1.3</junit.version>
@@ -28,6 +49,9 @@
         <maven-enforcer.version>3.6.3</maven-enforcer.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Reproducible builds: set to the release commit's timestamp in the release commit. -->
+        <project.build.outputTimestamp>2026-10-19T00:00:00Z</project.build.outputTimestamp>
     </properties>
 
     <modules>
@@ -111,5 +135,105 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            Maven Central release build. Inactive by default.
+            Dry run (never uploads):  ./mvnw -Prelease clean deploy
+            Upload for manual review: ./mvnw -Prelease -Dcentral.skipUpload=false clean deploy
+        -->
+        <profile>
+            <id>release</id>
+            <properties>
+                <!-- Safe default: build the Central bundle locally, never upload it. -->
+                <central.skipUpload>true</central.skipUpload>
+                <!-- maven-deploy-plugin is replaced by the Central plugin; never let it run. -->
+                <maven.deploy.skip>true</maven.deploy.skip>
+                <release.enforcer.skip>false</release.enforcer.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>${maven-enforcer.version}</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-release-versions</id>
+                                <phase>validate</phase>
+                                <goals><goal>enforce</goal></goals>
+                                <configuration>
+                                    <skip>${release.enforcer.skip}</skip>
+                                    <rules>
+                                        <requireReleaseVersion>
+                                            <message>Release builds must not use a SNAPSHOT project version.</message>
+                                        </requireReleaseVersion>
+                                        <requireReleaseDeps>
+                                            <message>Release builds must not depend on SNAPSHOT artifacts.</message>
+                                        </requireReleaseDeps>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.4.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals><goal>jar-no-fork</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals><goal>jar</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals><goal>sign</goal></goals>
+                                <configuration>
+                                    <!-- Passphrase only from MAVEN_GPG_PASSPHRASE (or gpg-agent); fail on insecure sources. -->
+                                    <bestPractices>true</bestPractices>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
+                        <!-- Required: binds the Central publish goal to the deploy phase. -->
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>validated</waitUntil>
+                            <skipUpload>${central.skipUpload}</skipUpload>
+                            <!-- Exact artifactId match; the standalone app ships via GitHub Releases. -->
+                            <excludeArtifacts>
+                                <excludeArtifact>dedup4j-dashboard</excludeArtifact>
+                            </excludeArtifacts>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

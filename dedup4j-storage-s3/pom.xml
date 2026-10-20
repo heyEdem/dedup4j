@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.edem</groupId>
+        <groupId>io.github.heyedem</groupId>
         <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>dedup4j-storage-s3</artifactId>
-    <name>dedup4j-storage-s3</name>
-    <description>AWS S3 storage adapter for dedup4j.</description>
+    <name>dedup4j AWS S3 Storage</name>
+    <description>AWS S3 and S3-compatible blob storage adapter for dedup4j.</description>
 
     <properties>
         <aws.sdk.version>2.54.4</aws.sdk.version>
@@ -32,7 +32,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-core</artifactId>
             <version>${project.version}</version>
         </dependency>

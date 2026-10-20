@@ -5,38 +5,38 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.edem</groupId>
+        <groupId>io.github.heyedem</groupId>
         <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>dedup4j-spring-boot-starter</artifactId>
-    <name>dedup4j-spring-boot-starter</name>
-    <description>Spring Boot properties and service integration for dedup4j.</description>
+    <name>dedup4j Spring Boot Starter</name>
+    <description>Spring Boot starter for dedup4j: auto-configuration, the BlobStore facade, Liquibase schema migrations, and all storage providers.</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-jpa</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-storage-local</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-storage-s3</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-storage-azure</artifactId>
             <version>${project.version}</version>
         </dependency>

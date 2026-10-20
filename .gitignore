@@ -42,3 +42,13 @@ build/
 
 # macOS
 .DS_Store
+
+# Local SQLite/H2 databases, journals, and backups
+*.sqlite
+*.sqlite-*
+*.sqlite.backup*
+*.mv.db
+*.trace.db
+
+# Leftover runtime data from the pre-rename blob-helper-dashboard
+/blob-helper-dashboard/

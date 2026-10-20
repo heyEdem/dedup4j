@@ -5,18 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.edem</groupId>
+        <groupId>io.github.heyedem</groupId>
         <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>dedup4j-jpa</artifactId>
-    <name>dedup4j-jpa</name>
-    <description>Relational metadata persistence for dedup4j.</description>
+    <name>dedup4j JPA</name>
+    <description>JPA metadata entities and repositories for dedup4j content records and upload history.</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-core</artifactId>
             <version>${project.version}</version>
         </dependency>

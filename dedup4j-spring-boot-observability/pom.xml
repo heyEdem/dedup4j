@@ -4,21 +4,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.edem</groupId>
+        <groupId>io.github.heyedem</groupId>
         <artifactId>dedup4j</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>dedup4j-spring-boot-observability</artifactId>
-    <name>dedup4j-spring-boot-observability</name>
-    <description>Optional aggregate starter for dedup4j management and embedded dashboard.</description>
+    <name>dedup4j Spring Boot Observability Starter</name>
+    <description>Optional aggregate starter that adds the dedup4j management API and embedded dashboard.</description>
     <dependencies>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-spring-boot-management</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.edem</groupId>
+            <groupId>io.github.heyedem</groupId>
             <artifactId>dedup4j-spring-boot-dashboard</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -53,4 +53,32 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <properties>
+                <!-- No public classes: javadoc would fail, so package a static Javadoc JAR instead. -->
+                <maven.javadoc.skip>true</maven.javadoc.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>static-javadoc-jar</id>
+                                <phase>package</phase>
+                                <goals><goal>jar</goal></goals>
+                                <configuration>
+                                    <classifier>javadoc</classifier>
+                                    <classesDirectory>${project.basedir}/src/main/javadoc</classesDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
