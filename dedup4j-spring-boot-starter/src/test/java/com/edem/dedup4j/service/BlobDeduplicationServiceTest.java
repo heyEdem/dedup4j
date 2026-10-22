@@ -239,6 +239,52 @@ class BlobDeduplicationServiceTest {
         assertEquals(0L, rowCount);
     }
 
+    @Test
+    void storesUploadOfExactlyMaxUploadSize() {
+        DefaultBlobDeduplicationService limitedService = serviceWithMaxUploadSize(10L);
+
+        BlobReference reference = limitedService.store(new StoreBlobCommand(
+                new ByteArrayInputStream(new byte[10]),
+                "exact.bin",
+                "application/octet-stream",
+                10L,
+                Map.of()
+        ));
+
+        assertEquals(10L, reference.contentHash().sizeBytes());
+        assertEquals(1, storage.putCount.get());
+    }
+
+    @Test
+    void largestMaxUploadSizeStillAcceptsUploads() {
+        DefaultBlobDeduplicationService unlimitedService = serviceWithMaxUploadSize(Long.MAX_VALUE);
+
+        BlobReference reference = unlimitedService.store(new StoreBlobCommand(
+                new ByteArrayInputStream("small".getBytes(StandardCharsets.UTF_8)),
+                "small.txt",
+                "text/plain",
+                5L,
+                Map.of()
+        ));
+
+        assertEquals(5L, reference.contentHash().sizeBytes());
+        assertEquals(1, storage.putCount.get());
+    }
+
+    private DefaultBlobDeduplicationService serviceWithMaxUploadSize(long maxUploadSize) {
+        AssetContentRepository repository = new AssetContentRepository(entityManager);
+        return new DefaultBlobDeduplicationService(
+                repository,
+                new ReferenceCountService(repository, storage),
+                new AssetContentMutationService(entityManager),
+                storage,
+                new Sha256ContentHasher(),
+                new HashObjectKeyStrategy(""),
+                new Dedup4jMetrics(metricsRegistry),
+                maxUploadSize
+        );
+    }
+
     private static final class TrackingInputStream extends InputStream {
         private final byte[] data;
         private int index = 0;

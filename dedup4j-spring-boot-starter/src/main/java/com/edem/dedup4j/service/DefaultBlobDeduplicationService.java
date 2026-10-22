@@ -323,10 +323,8 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
             byte[] buffer = new byte[8192];
             long totalRead = 0;
             while (true) {
-                int toRead = (int) Math.min((long) buffer.length, maxUploadSize - totalRead + 1);
-                if (toRead <= 0) {
-                    throw new BlobValidationException("Upload size exceeds maximum " + maxUploadSize);
-                }
+                // Ask for at most one byte past the limit; adding after the min cannot overflow.
+                int toRead = (int) Math.min(buffer.length - 1L, maxUploadSize - totalRead) + 1;
                 int read = stream.read(buffer, 0, toRead);
                 if (read == -1) {
                     break;
