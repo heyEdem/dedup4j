@@ -173,6 +173,155 @@ class BlobDeduplicationServiceTest {
         assertEquals(0, storage.putCount.get());
     }
 
+    @Test
+    void rejectsDeclaredSizeExceedingMaxUploadSize() {
+        DefaultBlobDeduplicationService limitedService = new DefaultBlobDeduplicationService(
+                new AssetContentRepository(entityManager),
+                new ReferenceCountService(new AssetContentRepository(entityManager), storage),
+                new AssetContentMutationService(entityManager),
+                storage,
+                new Sha256ContentHasher(),
+                new HashObjectKeyStrategy(""),
+                new Dedup4jMetrics(metricsRegistry),
+                10L
+        );
+
+        TrackingInputStream stream = new TrackingInputStream(new byte[20]);
+        BlobValidationException ex = assertThrows(BlobValidationException.class, () -> limitedService.store(new StoreBlobCommand(
+                stream,
+                "oversized.txt",
+                "text/plain",
+                20L,
+                Map.of()
+        )));
+
+        assertTrue(ex.getMessage().contains("exceeds maximum 10"));
+        assertEquals(0, stream.bytesRead);
+        assertTrue(stream.closed);
+        assertEquals(0, storage.putCount.get());
+        Long rowCount = entityManager.createQuery(
+                "select count(content) from AssetContent content", Long.class)
+                .getSingleResult();
+        assertEquals(0L, rowCount);
+    }
+
+    @Test
+    void rejectsStreamExceedingMaxUploadSizeWithoutBufferingBeyondLimit() {
+        DefaultBlobDeduplicationService limitedService = new DefaultBlobDeduplicationService(
+                new AssetContentRepository(entityManager),
+                new ReferenceCountService(new AssetContentRepository(entityManager), storage),
+                new AssetContentMutationService(entityManager),
+                storage,
+                new Sha256ContentHasher(),
+                new HashObjectKeyStrategy(""),
+                new Dedup4jMetrics(metricsRegistry),
+                10L
+        );
+
+        // Declared size is 10 (within limit), but actual stream has 100 bytes
+        TrackingInputStream stream = new TrackingInputStream(new byte[100]);
+        BlobValidationException ex = assertThrows(BlobValidationException.class, () -> limitedService.store(new StoreBlobCommand(
+                stream,
+                "lying-size.txt",
+                "text/plain",
+                10L,
+                Map.of()
+        )));
+
+        assertTrue(ex.getMessage().contains("exceeds maximum 10"));
+        // Rejection happens as soon as the limit is exceeded (at 10 + 1 = 11 bytes), without buffering all 100 bytes!
+        assertEquals(11, stream.bytesRead);
+        assertTrue(stream.closed);
+        assertEquals(0, storage.putCount.get());
+        Long rowCount = entityManager.createQuery(
+                "select count(content) from AssetContent content", Long.class)
+                .getSingleResult();
+        assertEquals(0L, rowCount);
+    }
+
+    @Test
+    void storesUploadOfExactlyMaxUploadSize() {
+        DefaultBlobDeduplicationService limitedService = serviceWithMaxUploadSize(10L);
+
+        BlobReference reference = limitedService.store(new StoreBlobCommand(
+                new ByteArrayInputStream(new byte[10]),
+                "exact.bin",
+                "application/octet-stream",
+                10L,
+                Map.of()
+        ));
+
+        assertEquals(10L, reference.contentHash().sizeBytes());
+        assertEquals(1, storage.putCount.get());
+    }
+
+    @Test
+    void largestMaxUploadSizeStillAcceptsUploads() {
+        DefaultBlobDeduplicationService unlimitedService = serviceWithMaxUploadSize(Long.MAX_VALUE);
+
+        BlobReference reference = unlimitedService.store(new StoreBlobCommand(
+                new ByteArrayInputStream("small".getBytes(StandardCharsets.UTF_8)),
+                "small.txt",
+                "text/plain",
+                5L,
+                Map.of()
+        ));
+
+        assertEquals(5L, reference.contentHash().sizeBytes());
+        assertEquals(1, storage.putCount.get());
+    }
+
+    private DefaultBlobDeduplicationService serviceWithMaxUploadSize(long maxUploadSize) {
+        AssetContentRepository repository = new AssetContentRepository(entityManager);
+        return new DefaultBlobDeduplicationService(
+                repository,
+                new ReferenceCountService(repository, storage),
+                new AssetContentMutationService(entityManager),
+                storage,
+                new Sha256ContentHasher(),
+                new HashObjectKeyStrategy(""),
+                new Dedup4jMetrics(metricsRegistry),
+                maxUploadSize
+        );
+    }
+
+    private static final class TrackingInputStream extends InputStream {
+        private final byte[] data;
+        private int index = 0;
+        private int bytesRead = 0;
+        private boolean closed = false;
+
+        TrackingInputStream(byte[] data) {
+            this.data = data;
+        }
+
+        @Override
+        public int read() {
+            if (index >= data.length) {
+                return -1;
+            }
+            bytesRead++;
+            return data[index++] & 0xFF;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) {
+            if (index >= data.length) {
+                return -1;
+            }
+            int available = Math.min(len, data.length - index);
+            System.arraycopy(data, index, b, off, available);
+            index += available;
+            bytesRead += available;
+            return available;
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+        }
+    }
+
     private static final class RecordingBlobStorage implements BlobStorage {
 
         private final AtomicInteger putCount = new AtomicInteger();

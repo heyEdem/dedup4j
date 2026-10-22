@@ -1,5 +1,6 @@
 package com.edem.dedup4j.autoconfigure.service;
 
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.hash.ContentHasher;
 import com.edem.dedup4j.core.hash.ContentHash;
 import com.edem.dedup4j.core.key.ObjectKeyStrategy;
@@ -27,12 +28,15 @@ import org.springframework.transaction.PlatformTransactionManager;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Proxy;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class Dedup4jServiceAutoConfigurationTest {
 
@@ -53,6 +57,19 @@ class Dedup4jServiceAutoConfigurationTest {
             assertEquals(1, context.getBeansOfType(BlobStore.class).size());
             org.assertj.core.api.Assertions.assertThat(context.getBean(BlobStore.class))
                     .isInstanceOf(DefaultBlobStore.class);
+        });
+    }
+
+    @Test
+    void serviceEnforcesConfiguredMaxUploadSize() {
+        runner.withPropertyValues("dedup4j.deduplication.max-upload-size=10B").run(context -> {
+            BlobDeduplicationService service = context.getBean(BlobDeduplicationService.class);
+
+            BlobValidationException rejection = assertThrows(BlobValidationException.class, () -> service.store(
+                    new StoreBlobCommand(new ByteArrayInputStream(new byte[11]), "big.bin", null, 11L, Map.of())
+            ));
+
+            assertEquals("Upload size 11 exceeds maximum 10", rejection.getMessage());
         });
     }
 

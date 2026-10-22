@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-22 — Upload size limit enforced in the service
+
+- `dedup4j.deduplication.max-upload-size` is now enforced by `DefaultBlobDeduplicationService`, so a direct `BlobDeduplicationService.store` call is limited too, not only the `BlobStore` facade. A declared size over the limit is rejected before the stream is read; a stream longer than the limit is rejected after reading one byte past it, instead of being buffered whole. Rejections throw `BlobValidationException` and nothing is written to storage or to the content metadata. Through the auto-configured service, the rejection is recorded in the upload history like any other failed upload; the `BlobStore` facade still rejects an oversized declared size before calling the service, so that case is not recorded.
+- `DefaultBlobDeduplicationService` gains constructors that take `maxUploadSize`. The existing constructors keep working and default to 25 MiB, the same as the property.
+- Modules affected: `dedup4j-spring-boot-starter`, and project documentation.
+
 ## 2026-10-20 — 0.1.0, first Maven Central release
 
 - First public release, under groupId `io.github.heyedem`. Java packages stay `com.edem.dedup4j.*`.
