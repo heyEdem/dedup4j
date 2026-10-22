@@ -5,6 +5,8 @@ import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.UUID;
  * disabled unless explicitly enabled by the caller.</p>
  */
 public final class ReconciliationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReconciliationService.class);
 
     private final AssetContentRepository repository;
     private final ReferenceCountService referenceCountService;
@@ -96,6 +100,15 @@ public final class ReconciliationService {
     private void adjustReferenceCount(ReconciliationMismatch mismatch) {
         long actual = mismatch.actualReferenceCount();
         long expected = mismatch.expectedReferenceCount();
+        if (actual == 0L) {
+            // The physical object was deleted at zero; raising the count cannot bring the bytes back.
+            LOGGER.warn(
+                    "event=reconcile.repair.skipped contentId={} expected={} actual=0 reason=released",
+                    mismatch.assetContentId(),
+                    expected
+            );
+            return;
+        }
         if (actual < expected) {
             for (long count = actual; count < expected; count++) {
                 referenceCountService.retain(mismatch.assetContentId());

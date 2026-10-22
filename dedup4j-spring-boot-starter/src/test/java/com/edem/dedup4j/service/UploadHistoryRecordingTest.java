@@ -109,6 +109,17 @@ class UploadHistoryRecordingTest {
     }
 
     @Test
+    void reuploadAfterFinalReleaseRecordedAsPhysicalWrite() {
+        runner().run(context -> {
+            BlobReference first = service(context).store(command());
+            service(context).release(first.assetContentId());
+            service(context).store(command());
+
+            assertTotals(history(context).totals(), 2, 0, 2, 2 * N, 0);
+        });
+    }
+
+    @Test
     void totalsSurviveContextRestart() {
         ApplicationContextRunner fileDatabase = runner(
                 "jdbc:h2:file:" + databaseDirectory.resolve("history") + ";DB_CLOSE_ON_EXIT=FALSE");

@@ -130,15 +130,27 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
                         contentHash.hash(),
                         contentHash.sizeBytes()
                 )
-                .map(existing -> new StoreOutcome(retainDuplicate(existing), false))
+                .map(existing -> retainOrRestore(existing, command, bytes))
                 .orElseGet(() -> new StoreOutcome(storeNewContent(command, contentHash, bytes), true));
         logUpload(outcome.reference());
         return outcome;
     }
 
-    private BlobReference retainDuplicate(AssetContent existing) {
-        referenceCountService.retain(existing.getId());
-        return BlobReferences.from(existing, true);
+    private StoreOutcome retainOrRestore(AssetContent existing, StoreBlobCommand command, byte[] bytes) {
+        if (referenceCountService.retainIfReferenced(existing.getId())) {
+            return new StoreOutcome(BlobReferences.from(existing, true), false);
+        }
+        // Every reference was released and the object deleted; write it back under the row's key.
+        metrics.recordStorageWrite(() -> storage.put(new PutBlobRequest(
+                existing.getObjectKey(),
+                new ByteArrayInputStream(bytes),
+                existing.getSizeBytes(),
+                command.contentType(),
+                command.filename(),
+                command.metadata()
+        )));
+        referenceCountService.restoreReleased(existing.getId());
+        return new StoreOutcome(BlobReferences.from(existing, false), true);
     }
 
     private BlobReference storeNewContent(
@@ -168,6 +180,18 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         );
 
         AssetContent persisted = mutationService.createOrRetain(candidate);
+        if (persisted != candidate) {
+            // Another upload committed this content after our lookup, and a release may have deleted
+            // the object since our write. The row is locked now, so writing again keeps it present.
+            metrics.recordStorageWrite(() -> storage.put(new PutBlobRequest(
+                    persisted.getObjectKey(),
+                    new ByteArrayInputStream(bytes),
+                    contentHash.sizeBytes(),
+                    command.contentType(),
+                    command.filename(),
+                    command.metadata()
+            )));
+        }
         return BlobReferences.from(persisted, persisted != candidate);
     }
 

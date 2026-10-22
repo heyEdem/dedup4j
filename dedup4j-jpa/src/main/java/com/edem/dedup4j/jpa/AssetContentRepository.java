@@ -44,11 +44,15 @@ public final class AssetContentRepository {
 
     public Optional<AssetContent> findByIdForUpdate(UUID id) {
         Objects.requireNonNull(id, "id must not be null");
-        return Optional.ofNullable(entityManager.find(
-                AssetContent.class,
-                id,
-                LockModeType.PESSIMISTIC_WRITE
-        ));
+        AssetContent content = entityManager.find(AssetContent.class, id);
+        if (content == null) {
+            return Optional.empty();
+        }
+        // The row may already sit in this persistence context from an unlocked read; locking it
+        // there would fail on a newer version. Flush pending changes, then re-read under the lock.
+        entityManager.flush();
+        entityManager.refresh(content, LockModeType.PESSIMISTIC_WRITE);
+        return Optional.of(content);
     }
 
     public Optional<AssetContent> findById(UUID id) {
