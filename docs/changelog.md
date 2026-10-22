@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-22 — Lost insert race no longer fails when the winner was released
+
+- Fix: when two uploads of new content race and the loser's insert hits the unique constraint, the retry now succeeds even if the winning content was released to zero (and its object deleted) before the retry. The retry writes the object back under the row lock and restores the count, recorded as a physical write. Previously it failed with `ContentNotFoundException`.
+- The auto-configured service now reads the upload before opening its transaction, so a slow upload no longer holds a database transaction open, and a lost race is retried with the same bytes. Size validation and failure recording are unchanged. Custom `BlobDeduplicationService` delegates keep the previous retry, which only retains the winner.
+- Modules affected: `dedup4j-spring-boot-starter`.
+
 ## 2026-10-22 — Upload size limit enforced in the service
 
 - `dedup4j.deduplication.max-upload-size` is now enforced by `DefaultBlobDeduplicationService`, so a direct `BlobDeduplicationService.store` call is limited too, not only the `BlobStore` facade. A declared size over the limit is rejected before the stream is read; a stream longer than the limit is rejected after reading one byte past it, instead of being buffered whole. Rejections throw `BlobValidationException` and nothing is written to storage or to the content metadata. Through the auto-configured service, the rejection is recorded in the upload history like any other failed upload; the `BlobStore` facade still rejects an oversized declared size before calling the service, so that case is not recorded.
