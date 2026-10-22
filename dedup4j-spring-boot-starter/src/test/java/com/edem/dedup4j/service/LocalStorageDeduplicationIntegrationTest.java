@@ -112,6 +112,22 @@ class LocalStorageDeduplicationIntegrationTest {
         assertEquals(0L, regularFileCount());
     }
 
+    @Test
+    void reuploadAfterFinalReleaseRestoresPhysicalObject() throws IOException {
+        BlobReference first = service.store(command("photo.jpg"));
+        service.release(first.assetContentId());
+        assertFalse(storage.exists(first.objectKey()));
+
+        BlobReference again = service.store(command("photo-again.jpg"));
+
+        assertFalse(again.duplicate());
+        assertEquals(first.assetContentId(), again.assetContentId());
+        assertTrue(storage.exists(again.objectKey()));
+        try (BlobResource resource = service.get(again.assetContentId())) {
+            assertArrayEquals(CONTENT, resource.content().readAllBytes());
+        }
+    }
+
     private StoreBlobCommand command(String filename) {
         return new StoreBlobCommand(
                 new ByteArrayInputStream(CONTENT),

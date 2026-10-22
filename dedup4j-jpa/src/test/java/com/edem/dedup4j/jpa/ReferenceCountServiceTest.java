@@ -124,6 +124,25 @@ class ReferenceCountServiceTest {
     }
 
     @Test
+    void retainRejectsReleasedContent() {
+        AssetContent content = persistContent();
+
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        service.release(content.getId());
+
+        assertThrows(
+                ContentNotFoundException.class,
+                () -> service.retain(content.getId())
+        );
+
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+
+        assertEquals(0L, entityManager.find(AssetContent.class, content.getId()).getRefCount());
+    }
+
+    @Test
     void lockedRetainSeesIncrementCommittedAfterUnlockedLookup() {
         AssetContent content = persistContent();
         entityManager.clear();

@@ -103,6 +103,32 @@ class ReconciliationServiceTest {
     }
 
     @Test
+    void repairSkipsReleasedContentAndRepairsTheRest() {
+        AssetContent released = persistContent("f".repeat(64));
+        AssetContent shouldIncrease = persistContent("1".repeat(64));
+        entityManager.clear();
+
+        RecordingStorage storage = new RecordingStorage();
+        ReferenceCountService referenceCounts = new ReferenceCountService(repository, storage);
+        entityManager.getTransaction().begin();
+        referenceCounts.release(released.getId());
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+
+        ReconciliationService service = new ReconciliationService(repository, referenceCounts, true);
+        entityManager.getTransaction().begin();
+        ReconciliationReport report = service.repair(
+                () -> Map.of(released.getId(), 2L, shouldIncrease.getId(), 2L)
+        );
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+
+        assertThat(report.mismatches()).hasSize(2);
+        assertThat(entityManager.find(AssetContent.class, released.getId()).getRefCount()).isZero();
+        assertThat(entityManager.find(AssetContent.class, shouldIncrease.getId()).getRefCount()).isEqualTo(2L);
+    }
+
+    @Test
     void disabledRepairRemainsReadOnly() {
         AssetContent content = persistContent("e".repeat(64));
         entityManager.clear();

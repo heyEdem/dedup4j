@@ -27,7 +27,37 @@ public final class ReferenceCountService {
     }
 
     public void retain(UUID assetContentId) {
+        if (!retainIfReferenced(assetContentId)) {
+            throw new ContentNotFoundException(
+                    "Asset content " + assetContentId + " was released and its object deleted"
+            );
+        }
+    }
+
+    /**
+     * Retains content that still has references. Returns {@code false}, leaving the count at zero,
+     * when every reference was released and the physical object deleted.
+     */
+    public boolean retainIfReferenced(UUID assetContentId) {
         AssetContent content = findForUpdate(assetContentId);
+        if (content.getRefCount() <= 0L) {
+            return false;
+        }
+        content.incrementRefCount();
+        return true;
+    }
+
+    /**
+     * Takes released content back from zero to one reference. The caller must have written the
+     * physical object again first.
+     */
+    public void restoreReleased(UUID assetContentId) {
+        AssetContent content = findForUpdate(assetContentId);
+        if (content.getRefCount() != 0L) {
+            throw new IllegalStateException(
+                    "Asset content " + assetContentId + " is still referenced; nothing to restore"
+            );
+        }
         content.incrementRefCount();
     }
 
