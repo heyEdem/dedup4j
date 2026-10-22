@@ -180,6 +180,18 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         );
 
         AssetContent persisted = mutationService.createOrRetain(candidate);
+        if (persisted != candidate) {
+            // Another upload committed this content after our lookup, and a release may have deleted
+            // the object since our write. The row is locked now, so writing again keeps it present.
+            metrics.recordStorageWrite(() -> storage.put(new PutBlobRequest(
+                    persisted.getObjectKey(),
+                    new ByteArrayInputStream(bytes),
+                    contentHash.sizeBytes(),
+                    command.contentType(),
+                    command.filename(),
+                    command.metadata()
+            )));
+        }
         return BlobReferences.from(persisted, persisted != candidate);
     }
 

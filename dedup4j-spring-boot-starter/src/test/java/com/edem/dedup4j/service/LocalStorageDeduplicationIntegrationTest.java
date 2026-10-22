@@ -1,6 +1,10 @@
 package com.edem.dedup4j.service;
 
 import com.edem.dedup4j.core.hash.Sha256ContentHasher;
+import com.edem.dedup4j.jpa.AssetContent;
+import com.edem.dedup4j.core.storage.StoredBlob;
+import com.edem.dedup4j.core.storage.PutBlobRequest;
+import com.edem.dedup4j.core.hash.ContentHash;
 import com.edem.dedup4j.core.key.HashObjectKeyStrategy;
 import com.edem.dedup4j.core.model.BlobReference;
 import com.edem.dedup4j.core.model.StoreBlobCommand;
@@ -125,6 +129,83 @@ class LocalStorageDeduplicationIntegrationTest {
         assertTrue(storage.exists(again.objectKey()));
         try (BlobResource resource = service.get(again.assetContentId())) {
             assertArrayEquals(CONTENT, resource.content().readAllBytes());
+        }
+    }
+
+    @Test
+    void uploadKeepsObjectWhenContentIsCommittedAndReleasedDuringItsWrite() throws IOException {
+        byte[] content = "released-during-write".getBytes(StandardCharsets.UTF_8);
+        ContentHash hash = new Sha256ContentHasher().hash(new ByteArrayInputStream(content));
+        AssetContentRepository repository = new AssetContentRepository(entityManager);
+        BlobStorage releasingStorage = new ReleaseDuringFirstPut(storage, hash);
+        DefaultBlobDeduplicationService racing = new DefaultBlobDeduplicationService(
+                repository,
+                new ReferenceCountService(repository, releasingStorage),
+                new AssetContentMutationService(entityManager),
+                releasingStorage,
+                new Sha256ContentHasher(),
+                new HashObjectKeyStrategy("")
+        );
+
+        BlobReference reference = racing.store(new StoreBlobCommand(
+                new ByteArrayInputStream(content), "late.txt", "text/plain", content.length, Map.of()
+        ));
+
+        assertTrue(storage.exists(reference.objectKey()));
+        try (BlobResource resource = racing.get(reference.assetContentId())) {
+            assertArrayEquals(content, resource.content().readAllBytes());
+        }
+    }
+
+    /** After the upload's write, another upload commits the row and its last reference is released. */
+    private static final class ReleaseDuringFirstPut implements BlobStorage {
+
+        private final BlobStorage delegate;
+        private final ContentHash hash;
+        private boolean raced;
+
+        ReleaseDuringFirstPut(BlobStorage delegate, ContentHash hash) {
+            this.delegate = delegate;
+            this.hash = hash;
+        }
+
+        @Override
+        public StoredBlob put(PutBlobRequest request) {
+            StoredBlob stored = delegate.put(request);
+            if (!raced) {
+                raced = true;
+                EntityManager other = entityManagerFactory.createEntityManager();
+                try {
+                    AssetContent winner = new AssetContent(
+                            hash.algorithm(), hash.hash(), hash.sizeBytes(), stored.objectKey(),
+                            stored.provider(), stored.bucketOrContainer(), "text/plain", "txt"
+                    );
+                    other.getTransaction().begin();
+                    other.persist(winner);
+                    other.getTransaction().commit();
+                    other.getTransaction().begin();
+                    new ReferenceCountService(new AssetContentRepository(other), delegate).release(winner.getId());
+                    other.getTransaction().commit();
+                } finally {
+                    other.close();
+                }
+            }
+            return stored;
+        }
+
+        @Override
+        public BlobResource get(String objectKey) {
+            return delegate.get(objectKey);
+        }
+
+        @Override
+        public void delete(String objectKey) {
+            delegate.delete(objectKey);
+        }
+
+        @Override
+        public boolean exists(String objectKey) {
+            return delegate.exists(objectKey);
         }
     }
 
