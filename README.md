@@ -266,6 +266,7 @@ Delete logical asset
 ## Documentation
 
 - [User documentation](https://dedup4j-docs.akato.dev)
+- [Contributing](CONTRIBUTING.md)
 - [Project Specification](docs/SPECIFICATION.md)
 - [Task Index](docs/taskindex.md)
 - [Docs Index](docs/README.md)
