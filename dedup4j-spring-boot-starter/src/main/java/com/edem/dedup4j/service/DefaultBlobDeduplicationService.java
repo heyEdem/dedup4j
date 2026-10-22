@@ -168,8 +168,13 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
      * as soon as it is computed, so a caller can still report it if the store then fails.
      */
     public StoreOutcome storeWithOutcome(StoreBlobCommand command, Consumer<ContentHash> hashed) {
-        Objects.requireNonNull(command, "command must not be null");
         Objects.requireNonNull(hashed, "hashed must not be null");
+        return storeBuffered(command, buffer(command), hashed);
+    }
+
+    /** Reads the upload once, enforcing the declared and maximum sizes, and closes its stream. */
+    byte[] buffer(StoreBlobCommand command) {
+        Objects.requireNonNull(command, "command must not be null");
 
         if (command.sizeBytes() > maxUploadSize) {
             closeQuietly(command.content());
@@ -185,6 +190,14 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
                             + " does not match actual size " + bytes.length
             );
         }
+        return bytes;
+    }
+
+    /**
+     * Stores bytes already read by {@link #buffer}; {@code command} supplies only the descriptive
+     * fields. Safe to call again with the same bytes after a rolled-back attempt.
+     */
+    StoreOutcome storeBuffered(StoreBlobCommand command, byte[] bytes, Consumer<ContentHash> hashed) {
         ContentHash contentHash = hash(bytes);
         hashed.accept(contentHash);
         StoreOutcome outcome = repository.findByIdentity(

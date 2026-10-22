@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -99,8 +100,11 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     public BlobReference store(StoreBlobCommand command) {
         AtomicReference<String> contentHash = new AtomicReference<>();
         try {
+            if (delegate instanceof DefaultBlobDeduplicationService service) {
+                return storeBuffered(service, command, contentHash);
+            }
             try {
-                return appendResult(() -> recordCompleted(storeOutcome(command, contentHash)));
+                return appendResult(() -> recordCompleted(storeOutcome(command)));
             } catch (DuplicateContentIdentityException race) {
                 contentHash.set(race.getContentHash());
                 // This request wrote to storage before losing the insert race.
@@ -112,10 +116,30 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
         }
     }
 
-    private StoreOutcome storeOutcome(StoreBlobCommand command, AtomicReference<String> contentHash) {
-        if (delegate instanceof DefaultBlobDeduplicationService service) {
-            return service.storeWithOutcome(command, hash -> contentHash.set(hash.hash()));
+    /**
+     * Reads the upload before any transaction opens, so a lost insert race can be retried with the
+     * same bytes. The retry finds the winner and, if every reference to it was released in the
+     * meantime, writes the object back under the row lock instead of failing.
+     */
+    private BlobReference storeBuffered(
+            DefaultBlobDeduplicationService service,
+            StoreBlobCommand command,
+            AtomicReference<String> contentHash
+    ) {
+        byte[] bytes = service.buffer(command);
+        Consumer<ContentHash> hashed = hash -> contentHash.set(hash.hash());
+        try {
+            return appendResult(() -> recordCompleted(service.storeBuffered(command, bytes, hashed)));
+        } catch (DuplicateContentIdentityException race) {
+            return appendResult(() -> {
+                StoreOutcome retry = service.storeBuffered(command, bytes, hashed);
+                // This request wrote to storage before losing the insert race.
+                return recordCompleted(new StoreOutcome(retry.reference(), true));
+            });
         }
+    }
+
+    private StoreOutcome storeOutcome(StoreBlobCommand command) {
         BlobReference reference = delegate.store(command);
         return new StoreOutcome(reference, !reference.duplicate());
     }
