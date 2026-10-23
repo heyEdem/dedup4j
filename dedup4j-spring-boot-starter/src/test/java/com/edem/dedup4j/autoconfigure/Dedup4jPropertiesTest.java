@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.source.MapConfigurationProper
 import org.springframework.util.unit.DataSize;
 import com.edem.dedup4j.autoconfigure.persistence.SchemaInitialization;
 
+import java.util.List;
 import java.util.Map;
 import java.net.URI;
 import java.nio.file.Path;
@@ -31,6 +32,25 @@ class Dedup4jPropertiesTest {
         assertEquals("s3", properties.getStorage().getProvider());
         assertEquals("uploads", properties.getStorage().getKeyPrefix());
         assertEquals(DataSize.ofMegabytes(64), properties.getDeduplication().getMaxUploadSize());
+    }
+
+    @Test
+    void bindsAllowedContentTypesFromCommaSeparatedValue() {
+        MapConfigurationPropertySource source = new MapConfigurationPropertySource(Map.of(
+                "dedup4j.deduplication.allowed-content-types", "image/*, application/pdf"
+        ));
+
+        Dedup4jProperties properties = new Binder(source)
+                .bind("dedup4j", Bindable.of(Dedup4jProperties.class))
+                .orElseThrow(AssertionError::new);
+
+        assertEquals(List.of("image/*", "application/pdf"),
+                properties.getDeduplication().getAllowedContentTypes());
+    }
+
+    @Test
+    void defaultsAllowedContentTypesToEmpty() {
+        assertEquals(List.of(), new Dedup4jProperties().getDeduplication().getAllowedContentTypes());
     }
 
     @Test

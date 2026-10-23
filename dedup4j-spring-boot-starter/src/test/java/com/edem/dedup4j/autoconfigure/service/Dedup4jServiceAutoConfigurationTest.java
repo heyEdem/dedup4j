@@ -1,5 +1,6 @@
 package com.edem.dedup4j.autoconfigure.service;
 
+import com.edem.dedup4j.autoconfigure.Dedup4jAutoConfiguration;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.hash.ContentHasher;
 import com.edem.dedup4j.core.hash.ContentHash;
@@ -16,6 +17,7 @@ import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
 import com.edem.dedup4j.service.BlobDeduplicationService;
+import com.edem.dedup4j.service.ContentTypePolicy;
 import com.edem.dedup4j.facade.BlobStore;
 import com.edem.dedup4j.facade.DefaultBlobStore;
 import jakarta.persistence.EntityManager;
@@ -71,6 +73,51 @@ class Dedup4jServiceAutoConfigurationTest {
 
             assertEquals("Upload size 11 exceeds maximum 10", rejection.getMessage());
         });
+    }
+
+    @Test
+    void serviceEnforcesConfiguredAllowedContentTypes() {
+        runner.withPropertyValues("dedup4j.deduplication.allowed-content-types=image/*").run(context -> {
+            BlobDeduplicationService service = context.getBean(BlobDeduplicationService.class);
+
+            BlobValidationException rejection = assertThrows(BlobValidationException.class, () -> service.store(
+                    new StoreBlobCommand(new ByteArrayInputStream(new byte[1]), "a.txt", "text/plain", 1L, Map.of())
+            ));
+
+            assertEquals("Content type 'text/plain' is not allowed", rejection.getMessage());
+        });
+    }
+
+    @Test
+    void serviceUsesApplicationContentTypePolicy() {
+        runner.withUserConfiguration(ContentTypePolicyOverride.class).run(context -> {
+            BlobDeduplicationService service = context.getBean(BlobDeduplicationService.class);
+
+            assertThrows(BlobValidationException.class, () -> service.store(
+                    new StoreBlobCommand(new ByteArrayInputStream(new byte[1]), "a.txt", "text/plain", 1L, Map.of())
+            ));
+        });
+    }
+
+    @Test
+    void malformedAllowedContentTypeFailsStartup() {
+        runner.withPropertyValues("dedup4j.deduplication.allowed-content-types=image/").run(context ->
+                org.assertj.core.api.Assertions.assertThat(context).hasFailed()
+                        .getFailure().hasRootCauseMessage(
+                                "Invalid dedup4j.deduplication.allowed-content-types entry 'image/': "
+                                        + "expected type/subtype or type/*"));
+    }
+
+    @Test
+    void malformedAllowedContentTypeFailsStartupWithApplicationService() {
+        runner.withConfiguration(AutoConfigurations.of(Dedup4jAutoConfiguration.class))
+                .withUserConfiguration(ServiceOverride.class)
+                .withPropertyValues("dedup4j.storage.provider=local")
+                .withPropertyValues("dedup4j.deduplication.allowed-content-types=*/*")
+                .run(context -> org.assertj.core.api.Assertions.assertThat(context).hasFailed()
+                        .getFailure().hasRootCauseMessage(
+                                "Invalid dedup4j.deduplication.allowed-content-types entry '*/*': "
+                                        + "expected type/subtype or type/*"));
     }
 
     @Test
@@ -180,6 +227,14 @@ class Dedup4jServiceAutoConfigurationTest {
     static class MetricsOverride {
         static final Dedup4jMetrics METRICS = new Dedup4jMetrics(null);
         @Bean Dedup4jMetrics metrics() { return METRICS; }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class ContentTypePolicyOverride {
+        @Bean
+        ContentTypePolicy contentTypePolicy() {
+            return ContentTypePolicy.of(java.util.List.of("image/*"));
+        }
     }
 
     @Configuration(proxyBeanMethods = false)

@@ -3,9 +3,11 @@ package com.edem.dedup4j.autoconfigure;
 import com.edem.dedup4j.autoconfigure.persistence.Dedup4jPersistenceAutoConfiguration;
 import com.edem.dedup4j.autoconfigure.service.Dedup4jServiceAutoConfiguration;
 import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.service.ContentTypePolicy;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
@@ -17,7 +19,8 @@ import java.util.Locale;
  *
  * <p>Provider-specific starter auto-configurations create the selected
  * {@link BlobStorage}; this configuration validates that exactly one provider
- * is selected at startup.</p>
+ * is selected at startup. It also parses the allowed upload content types, so a malformed
+ * entry fails startup whether or not the default upload service is configured.</p>
  */
 @AutoConfiguration(after = {
         Dedup4jPersistenceAutoConfiguration.class,
@@ -25,6 +28,12 @@ import java.util.Locale;
 })
 @EnableConfigurationProperties(Dedup4jProperties.class)
 public class Dedup4jAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(ContentTypePolicy.class)
+    ContentTypePolicy contentTypePolicy(Dedup4jProperties properties) {
+        return ContentTypePolicy.of(properties.getDeduplication().getAllowedContentTypes());
+    }
 
     @Bean
     public static BlobStorageProviderValidator blobStorageProviderValidator(

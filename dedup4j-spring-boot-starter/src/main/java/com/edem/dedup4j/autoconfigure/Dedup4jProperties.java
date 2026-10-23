@@ -7,6 +7,8 @@ import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @ConfigurationProperties(prefix = "dedup4j")
@@ -206,12 +208,23 @@ public class Dedup4jProperties {
 
         private DataSize maxUploadSize = DataSize.ofMegabytes(25);
 
+        /** Allowed declared content types ({@code type/subtype} or {@code type/*}); empty allows all. */
+        private List<String> allowedContentTypes = new ArrayList<>();
+
         public DataSize getMaxUploadSize() {
             return maxUploadSize;
         }
 
         public void setMaxUploadSize(DataSize maxUploadSize) {
             this.maxUploadSize = maxUploadSize;
+        }
+
+        public List<String> getAllowedContentTypes() {
+            return allowedContentTypes;
+        }
+
+        public void setAllowedContentTypes(List<String> allowedContentTypes) {
+            this.allowedContentTypes = allowedContentTypes;
         }
     }
 

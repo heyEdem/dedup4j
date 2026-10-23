@@ -4,6 +4,7 @@ import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.dedup4j.core.storage.PutBlobRequest;
 import com.edem.dedup4j.core.storage.StoredBlob;
+import com.edem.dedup4j.service.ContentTypePolicy;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,6 +29,25 @@ class Dedup4jAutoConfigurationTest {
                     assertTrue(context.isActive());
                     assertNotNull(context.getBean("localBlobStorage", BlobStorage.class));
                 });
+    }
+
+    @Test
+    void malformedAllowedContentTypeFailsStartupWithoutPersistenceInfrastructure() {
+        runner.withUserConfiguration(LocalStorageConfig.class)
+                .withPropertyValues(
+                        "dedup4j.storage.provider=local",
+                        "dedup4j.deduplication.allowed-content-types=*/*")
+                .run(context -> assertFailureContains(context.getStartupFailure(),
+                        "Invalid dedup4j.deduplication.allowed-content-types entry '*/*'"));
+    }
+
+    @Test
+    void registersContentTypePolicyWithoutPersistenceInfrastructure() {
+        runner.withUserConfiguration(LocalStorageConfig.class)
+                .withPropertyValues(
+                        "dedup4j.storage.provider=local",
+                        "dedup4j.deduplication.allowed-content-types=image/*")
+                .run(context -> assertFalse(context.getBean(ContentTypePolicy.class).allowsAll()));
     }
 
     @Test
