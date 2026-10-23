@@ -187,6 +187,47 @@ class UploadHistoryRecordingTest {
     }
 
     @Test
+    void duplicateRaceRestoresWinnerReleasedBeforeRetry() {
+        runner().withUserConfiguration(CompetingInsertConfiguration.class).run(context -> {
+            context.getBean(CompetingInsert.class).releaseWinner.set(true);
+
+            BlobReference reference = service(context).store(oneShotCommand());
+
+            try (var stored = service(context).get(reference.assetContentId()).content()) {
+                assertThat(stored.readAllBytes()).isEqualTo(CONTENT);
+            }
+            assertTotals(history(context).totals(), 1, 0, 1, N, 0);
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).isEmpty();
+            assertThat(count(context, "dedup4j.uploads")).isEqualTo(1);
+            assertThat(count(context, "dedup4j.skipped.physical.writes")).isZero();
+        });
+    }
+
+    @Test
+    void failedRestoreAfterDuplicateRaceRecordedAsFailure() {
+        runner().withUserConfiguration(CompetingInsertConfiguration.class).run(context -> {
+            CompetingInsert competingInsert = context.getBean(CompetingInsert.class);
+            competingInsert.releaseWinner.set(true);
+            competingInsert.failRestore.set(true);
+            SwitchableStorage storage = context.getBean(SwitchableStorage.class);
+
+            Throwable thrown = catchThrowable(() -> service(context).store(command()));
+
+            assertThat(thrown).isSameAs(storage.putFailure);
+            assertTotals(history(context).totals(), 0, 0, 0, 0, 0);
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10))
+                    .singleElement()
+                    .satisfies(failure -> assertThat(failure.operation()).isEqualTo("upload"));
+
+            storage.failPut.set(false);
+            BlobReference reference = service(context).store(command());
+            try (var stored = service(context).get(reference.assetContentId()).content()) {
+                assertThat(stored.readAllBytes()).isEqualTo(CONTENT);
+            }
+        });
+    }
+
+    @Test
     void commitFailureLeavesMetersUnchanged() {
         runner().withUserConfiguration(FailingCommitConfiguration.class).run(context -> {
             FailingCommitTransactionManager transactions = context.getBean(FailingCommitTransactionManager.class);
@@ -304,6 +345,27 @@ class UploadHistoryRecordingTest {
         return new StoreBlobCommand(new ByteArrayInputStream(CONTENT), "history.txt", "text/plain", N, Map.of());
     }
 
+    /** A stream that fails if anything reads it again after it was closed. */
+    private static StoreBlobCommand oneShotCommand() {
+        ByteArrayInputStream once = new ByteArrayInputStream(CONTENT) {
+            private boolean closed;
+
+            @Override
+            public void close() {
+                closed = true;
+            }
+
+            @Override
+            public synchronized int read(byte[] buffer, int offset, int length) {
+                if (closed) {
+                    throw new IllegalStateException("upload stream read after close");
+                }
+                return super.read(buffer, offset, length);
+            }
+        };
+        return new StoreBlobCommand(once, "history.txt", "text/plain", N, Map.of());
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration
     static class Consumer {
@@ -365,8 +427,8 @@ class UploadHistoryRecordingTest {
     static class CompetingInsertConfiguration {
 
         @Bean
-        CompetingInsert competingInsert(ObjectProvider<DataSource> dataSource) {
-            return new CompetingInsert(dataSource);
+        CompetingInsert competingInsert(ObjectProvider<DataSource> dataSource, ObjectProvider<BlobStorage> storage) {
+            return new CompetingInsert(dataSource, storage);
         }
 
         @Bean
@@ -396,10 +458,16 @@ class UploadHistoryRecordingTest {
     static final class CompetingInsert {
 
         final AtomicBoolean inserted = new AtomicBoolean();
+        /** When set, the competing content is released to zero and its object deleted before the retry. */
+        final AtomicBoolean releaseWinner = new AtomicBoolean();
+        /** When set with {@link #releaseWinner}, the retry's write-back of the object fails. */
+        final AtomicBoolean failRestore = new AtomicBoolean();
         private final ObjectProvider<DataSource> dataSource;
+        private final ObjectProvider<BlobStorage> storage;
 
-        CompetingInsert(ObjectProvider<DataSource> dataSource) {
+        CompetingInsert(ObjectProvider<DataSource> dataSource, ObjectProvider<BlobStorage> storage) {
             this.dataSource = dataSource;
+            this.storage = storage;
         }
 
         void insertOnce(AssetContent content) throws Exception {
@@ -412,7 +480,7 @@ class UploadHistoryRecordingTest {
                          insert into dedup4j_asset_content (id, hash_algorithm, content_hash, size_bytes,
                              object_key, storage_provider, bucket_or_container, ref_count,
                              created_at, updated_at, version)
-                         values (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 0)""")) {
+                         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)""")) {
                 connection.setAutoCommit(true);
                 insert.setObject(1, UUID.randomUUID());
                 insert.setString(2, content.getHashAlgorithm());
@@ -421,9 +489,16 @@ class UploadHistoryRecordingTest {
                 insert.setString(5, content.getObjectKey());
                 insert.setString(6, content.getStorageProvider());
                 insert.setString(7, content.getBucketOrContainer());
-                insert.setTimestamp(8, now);
+                insert.setLong(8, releaseWinner.get() ? 0 : 1);
                 insert.setTimestamp(9, now);
+                insert.setTimestamp(10, now);
                 insert.executeUpdate();
+            }
+            if (releaseWinner.get()) {
+                storage.getObject().delete(content.getObjectKey());
+                if (failRestore.get()) {
+                    ((SwitchableStorage) storage.getObject()).failPut.set(true);
+                }
             }
         }
     }
