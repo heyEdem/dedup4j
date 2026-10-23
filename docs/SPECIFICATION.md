@@ -392,7 +392,7 @@ dedup4j:
   deduplication:
     hash-algorithm: SHA-256
     max-upload-size: 25MB
-    strict-content-type-validation: false
+    allowed-content-types: image/*, application/pdf   # empty (default) allows all
   cleanup:
     delete-physical-on-zero-references: true
     reconciliation-enabled: false

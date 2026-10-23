@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-23 — Allowed upload content types
+
+- New `dedup4j.deduplication.allowed-content-types` (`type/subtype` or `type/*`, comma-separated). Empty by default, which allows every upload as in 0.1.0. When set, `DefaultBlobDeduplicationService` rejects an upload whose declared type is missing, malformed or not listed with `BlobValidationException` before reading its stream, so nothing is written to storage or content metadata and a rejected duplicate does not gain a reference. The auto-configured service records the rejection in upload history; batch uploads continue past it. Only the declared type is checked; the stored type is kept as declared.
+- `ContentTypePolicy` is registered by `Dedup4jAutoConfiguration`, outside the persistence condition, so a malformed entry fails startup even when the application supplies its own `BlobDeduplicationService` or has no JPA setup. Control and non-ASCII characters are rejected rather than normalized into a match. A custom service only enforces the list if it uses the policy.
+- `DefaultBlobDeduplicationService` gains a constructor that takes a `ContentTypePolicy`; the existing constructors allow all types.
+- Docs: replaced the never-implemented `strict-content-type-validation` property with the real one, and corrected the README and architecture map to name the `BlobStore` facade.
+- Modules affected: `dedup4j-spring-boot-starter`.
+
 ## 2026-10-22 — Lost insert race no longer fails when the winner was released
 
 - Fix: when two uploads of new content race and the loser's insert hits the unique constraint, the retry now succeeds even if the winning content was released to zero (and its object deleted) before the retry. The retry writes the object back under the row lock and restores the count, recorded as a physical write. Previously it failed with `ContentNotFoundException`.
