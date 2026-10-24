@@ -17,6 +17,7 @@ import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
 import com.edem.dedup4j.service.BlobDeduplicationService;
+import com.edem.dedup4j.service.ContentTypePolicy;
 import com.edem.dedup4j.service.DefaultBlobDeduplicationService;
 import com.edem.dedup4j.service.SpringTransactionalBlobDeduplicationService;
 import com.edem.dedup4j.facade.BlobStore;
@@ -128,6 +129,7 @@ public class Dedup4jServiceAutoConfiguration {
             ContentHasher contentHasher,
             ObjectKeyStrategy objectKeyStrategy,
             Dedup4jMetrics metrics,
+            ObjectProvider<ContentTypePolicy> contentTypePolicy,
             PlatformTransactionManager transactionManager,
             ObjectProvider<UploadHistory> history,
             Dedup4jProperties properties
@@ -140,7 +142,9 @@ public class Dedup4jServiceAutoConfiguration {
                 contentHasher,
                 objectKeyStrategy,
                 metrics,
-                properties.getDeduplication().getMaxUploadSize().toBytes()
+                properties.getDeduplication().getMaxUploadSize().toBytes(),
+                contentTypePolicy.getIfAvailable(() -> ContentTypePolicy.of(
+                        properties.getDeduplication().getAllowedContentTypes()))
         );
         return new SpringTransactionalBlobDeduplicationService(
                 delegate,

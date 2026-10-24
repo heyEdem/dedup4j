@@ -5,12 +5,15 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.edem.dedup4j.core.exception.BlobStorageException;
+import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.model.BlobReference;
 import com.edem.dedup4j.core.model.StoreBlobCommand;
 import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.dedup4j.core.storage.PutBlobRequest;
 import com.edem.dedup4j.core.storage.StoredBlob;
+import com.edem.dedup4j.facade.BatchStoreResult;
+import com.edem.dedup4j.facade.BlobStore;
 import com.edem.dedup4j.history.FailureRecord;
 import com.edem.dedup4j.history.HistoryTotals;
 import com.edem.dedup4j.history.UploadHistory;
@@ -34,15 +37,18 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -145,6 +151,45 @@ class UploadHistoryRecordingTest {
                 assertThat(failure.operation()).isEqualTo("upload");
                 assertThat(failure.contentHash()).isEqualTo(sha256(CONTENT));
             });
+        });
+    }
+
+    @Test
+    void rejectedContentTypeExcludedFromTotalsAndListed() {
+        runner().withPropertyValues("dedup4j.deduplication.allowed-content-types=image/*").run(context -> {
+            assertThatThrownBy(() -> service(context).store(command()))
+                    .isInstanceOf(BlobValidationException.class)
+                    .hasMessage("Content type 'text/plain' is not allowed");
+
+            assertTotals(history(context).totals(), 0, 0, 0, 0, 0);
+            assertThat(count(context, "dedup4j.uploads")).isZero();
+            try (var files = Files.walk(storageRoot)) {
+                assertThat(files.filter(Files::isRegularFile)).isEmpty();
+            }
+            List<FailureRecord> failures = history(context).recentFailures(Instant.EPOCH, 10);
+            assertThat(failures).singleElement().satisfies(failure -> {
+                assertThat(failure.operation()).isEqualTo("upload");
+                assertThat(failure.message()).contains("not allowed");
+                assertThat(failure.contentHash()).isNull();
+            });
+        });
+    }
+
+    @Test
+    void batchContinuesPastRejectedContentType() {
+        runner().withPropertyValues("dedup4j.deduplication.allowed-content-types=image/*").run(context -> {
+            BatchStoreResult result = context.getBean(BlobStore.class).storeAll(new MultipartFile[] {
+                    new MockMultipartFile("file", "notes.txt", "text/plain", CONTENT),
+                    new MockMultipartFile("file", "photo.png", "image/png", CONTENT)
+            });
+
+            assertThat(result.failures()).singleElement().satisfies(failure -> {
+                assertThat(failure.index()).isZero();
+                assertThat(failure.failure()).isInstanceOf(BlobValidationException.class);
+            });
+            assertThat(result.successes()).singleElement()
+                    .satisfies(success -> assertThat(success.index()).isEqualTo(1));
+            assertTotals(history(context).totals(), 1, 0, 1, N, 0);
         });
     }
 

@@ -51,6 +51,7 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
     private final ObjectKeyStrategy objectKeyStrategy;
     private final Dedup4jMetrics metrics;
     private final long maxUploadSize;
+    private final ContentTypePolicy contentTypePolicy;
 
     public DefaultBlobDeduplicationService(
             AssetContentRepository repository,
@@ -124,6 +125,30 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
             Dedup4jMetrics metrics,
             long maxUploadSize
     ) {
+        this(
+                repository,
+                referenceCountService,
+                mutationService,
+                storage,
+                contentHasher,
+                objectKeyStrategy,
+                metrics,
+                maxUploadSize,
+                ContentTypePolicy.allowAll()
+        );
+    }
+
+    public DefaultBlobDeduplicationService(
+            AssetContentRepository repository,
+            ReferenceCountService referenceCountService,
+            AssetContentMutationService mutationService,
+            BlobStorage storage,
+            ContentHasher contentHasher,
+            ObjectKeyStrategy objectKeyStrategy,
+            Dedup4jMetrics metrics,
+            long maxUploadSize,
+            ContentTypePolicy contentTypePolicy
+    ) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.referenceCountService = Objects.requireNonNull(
                 referenceCountService,
@@ -144,6 +169,10 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
             throw new IllegalArgumentException("maxUploadSize must not be negative");
         }
         this.maxUploadSize = maxUploadSize;
+        this.contentTypePolicy = Objects.requireNonNull(
+                contentTypePolicy,
+                "contentTypePolicy must not be null"
+        );
     }
 
     public long maxUploadSize() {
@@ -172,9 +201,19 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         return storeBuffered(command, buffer(command), hashed);
     }
 
-    /** Reads the upload once, enforcing the declared and maximum sizes, and closes its stream. */
+    /**
+     * Reads the upload once, enforcing the allowed content types and the declared and maximum
+     * sizes, and closes its stream.
+     */
     byte[] buffer(StoreBlobCommand command) {
         Objects.requireNonNull(command, "command must not be null");
+
+        try {
+            contentTypePolicy.check(command.contentType());
+        } catch (BlobValidationException rejected) {
+            closeQuietly(command.content());
+            throw rejected;
+        }
 
         if (command.sizeBytes() > maxUploadSize) {
             closeQuietly(command.content());

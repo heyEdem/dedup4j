@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -269,6 +270,110 @@ class BlobDeduplicationServiceTest {
 
         assertEquals(5L, reference.contentHash().sizeBytes());
         assertEquals(1, storage.putCount.get());
+    }
+
+    @Test
+    void rejectsDisallowedContentTypeBeforeReadingTheStream() {
+        DefaultBlobDeduplicationService restrictedService = serviceAllowing("image/*", "application/pdf");
+
+        TrackingInputStream stream = new TrackingInputStream(CONTENT);
+        BlobValidationException ex = assertThrows(BlobValidationException.class, () -> restrictedService.store(
+                new StoreBlobCommand(stream, "notes.txt", "text/plain", CONTENT.length, Map.of())
+        ));
+
+        assertTrue(ex.getMessage().contains("not allowed"));
+        assertEquals(0, stream.bytesRead);
+        assertTrue(stream.closed);
+        assertEquals(0, storage.putCount.get());
+        Long rowCount = entityManager.createQuery(
+                        "select count(content) from AssetContent content", Long.class)
+                .getSingleResult();
+        assertEquals(0L, rowCount);
+    }
+
+    @Test
+    void rejectsMissingContentTypeWhenAllowListIsSet() {
+        DefaultBlobDeduplicationService restrictedService = serviceAllowing("image/*");
+
+        TrackingInputStream stream = new TrackingInputStream(CONTENT);
+        assertThrows(BlobValidationException.class, () -> restrictedService.store(
+                new StoreBlobCommand(stream, "unknown", null, CONTENT.length, Map.of())
+        ));
+
+        assertEquals(0, stream.bytesRead);
+        assertTrue(stream.closed);
+        assertEquals(0, storage.putCount.get());
+    }
+
+    @Test
+    void rejectedDuplicateDoesNotRetainExistingContent() {
+        BlobReference original = service.store(new StoreBlobCommand(
+                new ByteArrayInputStream(CONTENT),
+                "report.txt",
+                "text/plain",
+                CONTENT.length,
+                Map.of()
+        ));
+        DefaultBlobDeduplicationService restrictedService = serviceAllowing("image/*");
+
+        assertThrows(BlobValidationException.class, () -> restrictedService.store(new StoreBlobCommand(
+                new ByteArrayInputStream(CONTENT),
+                "copy.txt",
+                "text/plain",
+                CONTENT.length,
+                Map.of()
+        )));
+
+        AssetContent persisted = entityManager.find(AssetContent.class, original.assetContentId());
+        assertEquals(1L, persisted.getRefCount());
+        assertEquals(1, storage.putCount.get());
+    }
+
+    @Test
+    void storesAllowedContentTypeExactlyAsDeclared() {
+        DefaultBlobDeduplicationService restrictedService = serviceAllowing("image/*");
+
+        BlobReference reference = restrictedService.store(new StoreBlobCommand(
+                new ByteArrayInputStream(CONTENT),
+                "photo.png",
+                "Image/PNG; charset=binary",
+                CONTENT.length,
+                Map.of()
+        ));
+
+        AssetContent persisted = entityManager.find(AssetContent.class, reference.assetContentId());
+        assertEquals("Image/PNG; charset=binary", persisted.getContentType());
+        assertEquals("Image/PNG; charset=binary", storage.lastStored.contentType());
+    }
+
+    @Test
+    void defaultServiceStoresUploadWithoutContentType() {
+        BlobReference reference = service.store(new StoreBlobCommand(
+                new ByteArrayInputStream(CONTENT),
+                "unknown",
+                null,
+                CONTENT.length,
+                Map.of()
+        ));
+
+        AssetContent persisted = entityManager.find(AssetContent.class, reference.assetContentId());
+        assertNull(persisted.getContentType());
+        assertEquals(1, storage.putCount.get());
+    }
+
+    private DefaultBlobDeduplicationService serviceAllowing(String... contentTypes) {
+        AssetContentRepository repository = new AssetContentRepository(entityManager);
+        return new DefaultBlobDeduplicationService(
+                repository,
+                new ReferenceCountService(repository, storage),
+                new AssetContentMutationService(entityManager),
+                storage,
+                new Sha256ContentHasher(),
+                new HashObjectKeyStrategy(""),
+                new Dedup4jMetrics(metricsRegistry),
+                DefaultBlobDeduplicationService.DEFAULT_MAX_UPLOAD_SIZE,
+                ContentTypePolicy.of(List.of(contentTypes))
+        );
     }
 
     private DefaultBlobDeduplicationService serviceWithMaxUploadSize(long maxUploadSize) {

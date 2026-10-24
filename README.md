@@ -140,18 +140,18 @@ transaction retains the winning row, without replaying the input stream or
 writing storage again during recovery. These transactions do not include the
 application's logical records or make object storage and the database atomic.
 
-For common Spring upload flows, inject the auto-configured `Dedup4j` facade:
+For common Spring upload flows, inject the auto-configured `BlobStore` facade:
 
 ```java
 public String uploadImage(MultipartFile file) {
-    BlobReference stored = dedup4j.store(file);
+    BlobReference stored = blobStore.store(file);
     BlobLocation location = stored.location();
     uploadRepository.save(new Upload(location.objectKey(), stored.assetContentId()));
     return publicUrlMapper.toUrl(location);
 }
 ```
 
-`dedup4j.store` is the only physical upload call; the application must not
+`blobStore.store` is the only physical upload call; the application must not
 call `S3Client.putObject` or another provider SDK afterward. The application
 creates its logical row for every successful call, including duplicates, and
 may return its own URL, DTO, ID, `BlobReference`, or empty response. A stable
