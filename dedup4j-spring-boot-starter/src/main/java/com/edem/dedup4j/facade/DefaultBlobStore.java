@@ -21,11 +21,23 @@ public final class DefaultBlobStore implements BlobStore {
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
     private final BlobDeduplicationService service;
-    private final Dedup4jProperties properties;
 
-    public DefaultBlobStore(BlobDeduplicationService service, Dedup4jProperties properties) {
+    /**
+     * Adapts uploads into {@link StoreBlobCommand}s for {@code service}, which enforces upload
+     * limits such as the maximum size and allowed content types.
+     */
+    public DefaultBlobStore(BlobDeduplicationService service) {
         this.service = Objects.requireNonNull(service, "service must not be null");
-        this.properties = Objects.requireNonNull(properties, "properties must not be null");
+    }
+
+    /**
+     * @deprecated since 0.2.0; {@code properties} is ignored because the service enforces upload
+     * limits. Use {@link #DefaultBlobStore(BlobDeduplicationService)}.
+     */
+    @Deprecated(since = "0.2.0", forRemoval = true)
+    public DefaultBlobStore(BlobDeduplicationService service, Dedup4jProperties properties) {
+        this(service);
+        Objects.requireNonNull(properties, "properties must not be null");
     }
 
     @Override
@@ -110,22 +122,7 @@ public final class DefaultBlobStore implements BlobStore {
     }
 
     private BlobReference store(StoreBlobCommand command) {
-        long maximum = properties.getDeduplication().getMaxUploadSize().toBytes();
-        if (command.sizeBytes() > maximum) {
-            closeAfterRejected(command.content());
-            throw new BlobValidationException(
-                    "Upload size " + command.sizeBytes() + " exceeds maximum " + maximum
-            );
-        }
         return service.store(command);
-    }
-
-    private static void closeAfterRejected(InputStream content) {
-        try {
-            content.close();
-        } catch (IOException ignored) {
-            // The size validation failure is the useful error for the caller.
-        }
     }
 
     private static BlobValidationException sourceFailure(String source, IOException failure) {
