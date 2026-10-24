@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-24 — Oversized BlobStore uploads recorded in failure history
+
+- `DefaultBlobStore` no longer checks `dedup4j.deduplication.max-upload-size` itself. The service already enforces it, so an oversized upload through `BlobStore` is now rejected inside the auto-configured service and recorded in upload failure history, like content-type and other validation failures. The message and exception are unchanged (`BlobValidationException: Upload size N exceeds maximum M`), the stream is still closed, nothing is stored, and batches continue past the item.
+- Behaviour change for applications with their own `BlobDeduplicationService`: `BlobStore` no longer enforces the size limit for them; the custom service must.
+- `DefaultBlobStore(BlobDeduplicationService)` is the new constructor. The `(service, Dedup4jProperties)` constructor is deprecated for removal and ignores the properties.
+- Docs: `docs/implementation.md` now names the facade files `BlobStore`, `DefaultBlobStore` and their tests.
+- Modules affected: `dedup4j-spring-boot-starter`.
+
 ## 2026-10-23 — Allowed upload content types
 
 - New `dedup4j.deduplication.allowed-content-types` (`type/subtype` or `type/*`, comma-separated). Empty by default, which allows every upload as in 0.1.0. When set, `DefaultBlobDeduplicationService` rejects an upload whose declared type is missing, malformed or not listed with `BlobValidationException` before reading its stream, so nothing is written to storage or content metadata and a rejected duplicate does not gain a reference. The auto-configured service records the rejection in upload history; batch uploads continue past it. Only the declared type is checked; the stored type is kept as declared.

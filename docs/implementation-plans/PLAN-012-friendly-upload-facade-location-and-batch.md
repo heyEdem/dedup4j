@@ -53,7 +53,7 @@
 - [ ] **BlobDeduplicationServiceContractTest.locationFindsPersistedContent:** ID lookup returns provider/container/key and never invokes storage IO.
 - [ ] **DefaultDedup4jTest.multipartDelegatesOnce:** multipart metadata becomes one exact `StoreBlobCommand` and returns the delegate reference unchanged.
 - [ ] **DefaultDedup4jTest.acceptsPathBytesAndDescribedStream:** every promised source delegates with correct filename, content type, size, and metadata.
-- [ ] **DefaultDedup4jTest.rejectsOversizeBeforeDelegate:** configured maximum size prevents service and provider calls.
+- [ ] ~~**DefaultDedup4jTest.rejectsOversizeBeforeDelegate:** configured maximum size prevents service and provider calls.~~ Superseded by #77: the service enforces the size limit so the rejection reaches failure history; see `DefaultBlobStoreTest.leavesSizeEnforcementToTheService`.
 - [ ] **BlobDeduplicationServiceTest.rejectsDeclaredSizeMismatch:** the advanced store path rejects streams whose actual byte count differs from the command.
 - [ ] **DefaultDedup4jBatchTest.reportsEveryOutcomeInOrder:** a success/failure/success input produces three indexed outcomes in that order and continues after the failure.
 - [ ] **DefaultDedup4jBatchTest.duplicateIsSuccess:** duplicate references appear as successful outcomes, not failures.

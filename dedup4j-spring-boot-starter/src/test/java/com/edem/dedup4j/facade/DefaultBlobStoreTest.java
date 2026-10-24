@@ -32,8 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class DefaultBlobStoreTest {
 
     private final RecordingService service = new RecordingService();
-    private final Dedup4jProperties properties = new Dedup4jProperties();
-    private final DefaultBlobStore helper = new DefaultBlobStore(service, properties);
+    private final DefaultBlobStore helper = new DefaultBlobStore(service);
 
     @Test
     void multipartDelegatesOnce() {
@@ -87,12 +86,16 @@ class DefaultBlobStoreTest {
     }
 
     @Test
-    void rejectsOversizeBeforeDelegate() {
+    @SuppressWarnings("removal")
+    void leavesSizeEnforcementToTheService() {
+        Dedup4jProperties properties = new Dedup4jProperties();
         properties.getDeduplication().setMaxUploadSize(DataSize.ofBytes(2));
+        DefaultBlobStore facade = new DefaultBlobStore(service, properties);
 
-        assertThrows(BlobValidationException.class,
-                () -> helper.store(new byte[] {1, 2, 3}, "large.bin", "application/octet-stream"));
-        assertEquals(0, service.commands.size());
+        facade.store(new byte[] {1, 2, 3}, "large.bin", "application/octet-stream");
+
+        assertEquals(1, service.commands.size());
+        assertEquals(3, service.commands.get(0).sizeBytes());
     }
 
     @Test

@@ -158,8 +158,8 @@ public class Dedup4jServiceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(BlobStore.class)
-    BlobStore blobStore(BlobDeduplicationService service, Dedup4jProperties properties) {
-        return new DefaultBlobStore(service, properties);
+    BlobStore blobStore(BlobDeduplicationService service) {
+        return new DefaultBlobStore(service);
     }
 
     private static EntityManager resolveEntityManager(
