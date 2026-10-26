@@ -1,6 +1,5 @@
 package com.edem.dedup4j.facade;
 
-import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.core.exception.BlobStorageException;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.hash.ContentHash;
@@ -27,7 +26,7 @@ class DefaultBlobStoreBatchTest {
     @Test
     void reportsEveryOutcomeInOrder() {
         RecordingService service = new RecordingService();
-        DefaultBlobStore helper = new DefaultBlobStore(service, new Dedup4jProperties());
+        DefaultBlobStore helper = new DefaultBlobStore(service);
 
         BatchStoreResult result = helper.storeAll(new MockMultipartFile[] {
                 file("first.txt"), file("broken.txt"), file("duplicate.txt")
@@ -50,7 +49,7 @@ class DefaultBlobStoreBatchTest {
     @Test
     void nullItemBecomesFailureAndLaterInputsContinue() {
         RecordingService service = new RecordingService();
-        DefaultBlobStore helper = new DefaultBlobStore(service, new Dedup4jProperties());
+        DefaultBlobStore helper = new DefaultBlobStore(service);
 
         BatchStoreResult result = helper.storeAll(new MockMultipartFile[] {
                 file("first.txt"), null, file("third.txt")
@@ -64,9 +63,7 @@ class DefaultBlobStoreBatchTest {
 
     @Test
     void nullArrayIsRejectedBeforeProcessing() {
-        DefaultBlobStore helper = new DefaultBlobStore(
-                new RecordingService(), new Dedup4jProperties()
-        );
+        DefaultBlobStore helper = new DefaultBlobStore(new RecordingService());
 
         assertThrows(BlobValidationException.class, () -> helper.storeAll(null));
     }

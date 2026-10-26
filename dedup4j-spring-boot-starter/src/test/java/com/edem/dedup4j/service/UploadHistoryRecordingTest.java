@@ -45,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
@@ -172,6 +173,54 @@ class UploadHistoryRecordingTest {
                 assertThat(failure.message()).contains("not allowed");
                 assertThat(failure.contentHash()).isNull();
             });
+        });
+    }
+
+    @Test
+    void oversizedUploadThroughBlobStoreRecordedAsFailure() {
+        runner().withPropertyValues("dedup4j.deduplication.max-upload-size=10B").run(context -> {
+            AtomicBoolean closed = new AtomicBoolean();
+            InputStream content = new ByteArrayInputStream(new byte[20]) {
+                @Override
+                public void close() {
+                    closed.set(true);
+                }
+            };
+
+            assertThatThrownBy(() -> context.getBean(BlobStore.class)
+                    .store(content, 20, "large.bin", "application/octet-stream", Map.of()))
+                    .isInstanceOf(BlobValidationException.class)
+                    .hasMessage("Upload size 20 exceeds maximum 10");
+
+            assertThat(closed).isTrue();
+            assertThat(context.getBean(JdbcTemplate.class).queryForObject(
+                    "select count(*) from dedup4j_asset_content", Long.class)).isZero();
+            assertTotals(history(context).totals(), 0, 0, 0, 0, 0);
+            try (var files = Files.walk(storageRoot)) {
+                assertThat(files.filter(Files::isRegularFile)).isEmpty();
+            }
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).singleElement()
+                    .satisfies(failure -> {
+                        assertThat(failure.operation()).isEqualTo("upload");
+                        assertThat(failure.message()).contains("exceeds maximum 10");
+                    });
+        });
+    }
+
+    @Test
+    void batchContinuesPastOversizedUpload() {
+        runner().withPropertyValues("dedup4j.deduplication.max-upload-size=10B").run(context -> {
+            BatchStoreResult result = context.getBean(BlobStore.class).storeAll(new MultipartFile[] {
+                    new MockMultipartFile("file", "large.bin", "application/octet-stream", new byte[20]),
+                    new MockMultipartFile("file", "small.bin", "application/octet-stream", new byte[5])
+            });
+
+            assertThat(result.failures()).singleElement()
+                    .satisfies(failure -> assertThat(failure.index()).isZero());
+            assertThat(result.successes()).singleElement()
+                    .satisfies(success -> assertThat(success.index()).isEqualTo(1));
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).hasSize(1);
+            assertTotals(history(context).totals(), 1, 0, 1, 5, 0);
         });
     }
 
