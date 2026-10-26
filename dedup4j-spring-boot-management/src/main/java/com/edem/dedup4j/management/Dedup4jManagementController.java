@@ -5,6 +5,7 @@ import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.history.HistoryTotals;
 import com.edem.dedup4j.history.UploadHistory;
+import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,7 @@ public class Dedup4jManagementController {
     private final UploadHistory uploadHistory;
     private final AssetContentRepository contentRepository;
     private final Dedup4jManagementSnapshot.FailureSource failureSource;
+    private final ScheduledReconciliation reconciliation;
 
     public Dedup4jManagementController(
             Dedup4jManagementProperties managementProperties,
@@ -35,6 +37,18 @@ public class Dedup4jManagementController {
             ObjectProvider<AssetContentRepository> contentRepository,
             ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource
     ) {
+        this(managementProperties, dedup4jProperties, uploadHistory, contentRepository, failureSource, null);
+    }
+
+    public Dedup4jManagementController(
+            Dedup4jManagementProperties managementProperties,
+            Dedup4jProperties dedup4jProperties,
+            ObjectProvider<UploadHistory> uploadHistory,
+            ObjectProvider<AssetContentRepository> contentRepository,
+            ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
+            ObjectProvider<ScheduledReconciliation> reconciliation
+    ) {
+        this.reconciliation = reconciliation == null ? null : reconciliation.getIfAvailable();
         this.managementProperties = managementProperties;
         this.dedup4jProperties = dedup4jProperties;
         this.uploadHistory = uploadHistory.getIfAvailable();
@@ -85,6 +99,16 @@ public class Dedup4jManagementController {
         }
         List<Dedup4jManagementSnapshot.Failure> recent = failureSource.recentFailures(since);
         return recent.size() > pageSize ? recent.subList(0, pageSize) : recent;
+    }
+
+    @GetMapping("/reconciliation")
+    public Dedup4jManagementSnapshot.Reconciliation reconciliation() {
+        String instanceId = managementProperties.getInstanceId();
+        if (reconciliation == null) {
+            return new Dedup4jManagementSnapshot.Reconciliation(false, instanceId, null, null);
+        }
+        return new Dedup4jManagementSnapshot.Reconciliation(
+                true, instanceId, reconciliation.cronExpression(), reconciliation.lastRun().orElse(null));
     }
 
     private HistoryTotals totals() {

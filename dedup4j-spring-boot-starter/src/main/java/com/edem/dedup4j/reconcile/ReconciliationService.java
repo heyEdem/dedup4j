@@ -9,10 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 
 /**
  * Reports drift between application-owned logical references and stored
@@ -60,6 +63,64 @@ public final class ReconciliationService {
         Objects.requireNonNull(source, "source must not be null");
         ReconciliationSnapshot snapshot = inspect(source);
         return new ReconciliationReport(snapshot.checkedContentCount(), snapshot.mismatches());
+    }
+
+    /**
+     * Read-only pass for scheduled runs: pages through content rows by ID, so memory holds one
+     * page plus the application's counts, and keeps at most {@code sampleLimit} mismatches and
+     * dangling references while counting all of them. It never writes, even when called inside a
+     * transaction, and stops with a {@link CancellationException} between pages once the thread is
+     * interrupted.
+     */
+    public ReconciliationSummary summarize(LogicalReferenceCountSource source, int pageSize, int sampleLimit) {
+        Objects.requireNonNull(source, "source must not be null");
+        if (pageSize < 1) {
+            throw new IllegalArgumentException("pageSize must be positive");
+        }
+        if (sampleLimit < 0) {
+            throw new IllegalArgumentException("sampleLimit must not be negative");
+        }
+        Map<UUID, Long> expectedCounts = Objects.requireNonNull(
+                source.countLogicalReferences(),
+                "logical reference counts must not be null"
+        );
+        Set<UUID> unseen = new HashSet<>(expectedCounts.keySet());
+        List<ReconciliationMismatch> mismatchSample = new ArrayList<>();
+        long checked = 0;
+        long mismatches = 0;
+        UUID after = null;
+        List<AssetContent> page;
+        do {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new CancellationException("Reconciliation interrupted after " + checked + " content rows");
+            }
+            page = repository.findPageAfter(after, pageSize);
+            for (AssetContent content : page) {
+                checked++;
+                unseen.remove(content.getId());
+                long expected = expectedCount(expectedCounts, content.getId());
+                if (expected != content.getRefCount()) {
+                    mismatches++;
+                    if (mismatchSample.size() < sampleLimit) {
+                        mismatchSample.add(new ReconciliationMismatch(
+                                content.getId(), expected, content.getRefCount()));
+                    }
+                }
+                after = content.getId();
+            }
+        } while (page.size() == pageSize);
+
+        List<UUID> danglingSample = new ArrayList<>();
+        long dangling = 0;
+        for (UUID id : unseen) {
+            if (expectedCount(expectedCounts, id) > 0L) {
+                dangling++;
+                if (danglingSample.size() < sampleLimit) {
+                    danglingSample.add(id);
+                }
+            }
+        }
+        return new ReconciliationSummary(checked, mismatches, dangling, mismatchSample, danglingSample);
     }
 
     /**

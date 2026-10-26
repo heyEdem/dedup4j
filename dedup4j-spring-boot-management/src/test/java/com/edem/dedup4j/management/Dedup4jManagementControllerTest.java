@@ -3,16 +3,30 @@ package com.edem.dedup4j.management;
 import com.edem.dedup4j.history.DefaultInstanceId;
 import com.edem.dedup4j.history.DisabledUploadHistory;
 import com.edem.dedup4j.history.UploadHistory;
+import com.edem.dedup4j.jpa.AssetContentRepository;
+import com.edem.dedup4j.observability.Dedup4jMetrics;
+import com.edem.dedup4j.reconcile.ReconciliationMismatch;
+import com.edem.dedup4j.reconcile.ReconciliationRun;
+import com.edem.dedup4j.reconcile.ReconciliationService;
+import com.edem.dedup4j.reconcile.ReconciliationSummary;
+import com.edem.dedup4j.reconcile.ScheduledReconciliation;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.time.Clock;
+import java.time.ZoneOffset;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,10 +95,77 @@ class Dedup4jManagementControllerTest {
 
     @Test
     void managementEndpointsAreReadOnly() {
-        assertThat(Arrays.stream(Dedup4jManagementController.class.getDeclaredMethods())
-                .filter(method -> method.isAnnotationPresent(RequestMapping.class))
-                .map(method -> method.getAnnotation(RequestMapping.class))
-                .flatMap(mapping -> Arrays.stream(mapping.method())))
-                .allMatch(method -> method == RequestMethod.GET);
+        List<RequestMethod> methods = Arrays.stream(Dedup4jManagementController.class.getDeclaredMethods())
+                .map(method -> AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class))
+                .filter(Objects::nonNull)
+                .flatMap(mapping -> Arrays.stream(mapping.method()))
+                .toList();
+
+        assertThat(methods).hasSize(5).containsOnly(RequestMethod.GET);
+    }
+
+    @Test
+    void reconciliationIsReportedDisabledWithoutASchedule() {
+        contextRunner.withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local",
+                        "dedup4j.management.instance-id=orders-1")
+                .run(context -> assertThat(context.getBean(Dedup4jManagementController.class).reconciliation())
+                        .isEqualTo(new Dedup4jManagementSnapshot.Reconciliation(false, "orders-1", null, null)));
+    }
+
+    @Test
+    void reconciliationExposesThisInstancesLastRun() {
+        ScheduledReconciliation scheduled = new ScheduledReconciliation(
+                new ReconciliationService(new AssetContentRepository(unusedEntityManager())),
+                () -> {
+                    throw new IllegalStateException("source down");
+                },
+                new CronTrigger("0 0 3 * * *", ZoneOffset.UTC), 10, 10, new Dedup4jMetrics(null), Clock.systemUTC());
+        contextRunner.withPropertyValues("dedup4j.management.enabled=true", "dedup4j.storage.provider=local",
+                        "dedup4j.management.instance-id=orders-1")
+                .withBean(ScheduledReconciliation.class, () -> scheduled)
+                .run(context -> {
+                    ReconciliationRun run = scheduled.runNow();
+
+                    Dedup4jManagementSnapshot.Reconciliation view =
+                            context.getBean(Dedup4jManagementController.class).reconciliation();
+
+                    assertThat(view.enabled()).isTrue();
+                    assertThat(view.instanceId()).isEqualTo("orders-1");
+                    assertThat(view.cron()).isEqualTo("0 0 3 * * *");
+                    assertThat(view.lastRun()).isEqualTo(run);
+                    assertThat(view.lastRun().failureMessage()).isEqualTo("source down");
+                });
+    }
+
+    @Test
+    void reconciliationSerializesSucceededAndAbsentRuns() {
+        ReconciliationRun run = new ReconciliationRun(
+                Instant.parse("2026-10-26T03:00:00Z"), Instant.parse("2026-10-26T03:00:01Z"),
+                ReconciliationRun.Outcome.SUCCEEDED,
+                new ReconciliationSummary(5, 2, 1,
+                        List.of(new ReconciliationMismatch(UUID.fromString("00000000-0000-0000-0000-000000000001"), 3, 1)),
+                        List.of(UUID.fromString("00000000-0000-0000-0000-000000000002"))),
+                null, null);
+        JsonMapper json = JsonMapper.builder().build();
+
+        String withRun = json.writeValueAsString(
+                new Dedup4jManagementSnapshot.Reconciliation(true, "orders-1", "0 0 3 * * *", run));
+        String disabled = json.writeValueAsString(
+                new Dedup4jManagementSnapshot.Reconciliation(false, "orders-1", null, null));
+
+        assertThat(withRun)
+                .contains("\"outcome\":\"SUCCEEDED\"")
+                .contains("\"mismatchCount\":2")
+                .contains("\"danglingReferenceSample\":[\"00000000-0000-0000-0000-000000000002\"]")
+                .contains("\"expectedReferenceCount\":3")
+                .contains("\"startedAt\":\"2026-10-26T03:00:00Z\"");
+        assertThat(disabled).contains("\"enabled\":false").contains("\"lastRun\":null");
+    }
+
+    private static EntityManager unusedEntityManager() {
+        return (EntityManager) Proxy.newProxyInstance(EntityManager.class.getClassLoader(),
+                new Class<?>[]{EntityManager.class}, (proxy, method, args) -> {
+                    throw new UnsupportedOperationException(method.getName());
+                });
     }
 }

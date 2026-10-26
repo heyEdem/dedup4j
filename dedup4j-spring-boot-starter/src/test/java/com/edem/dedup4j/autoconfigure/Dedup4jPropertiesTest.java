@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.util.unit.DataSize;
 import com.edem.dedup4j.autoconfigure.persistence.SchemaInitialization;
+import com.edem.dedup4j.reconcile.ReconciliationMode;
 
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import java.net.URI;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Dedup4jPropertiesTest {
@@ -51,6 +54,39 @@ class Dedup4jPropertiesTest {
     @Test
     void defaultsAllowedContentTypesToEmpty() {
         assertEquals(List.of(), new Dedup4jProperties().getDeduplication().getAllowedContentTypes());
+    }
+
+    @Test
+    void defaultsReconciliationToDisabledNightlyReport() {
+        Dedup4jProperties.Reconciliation reconciliation = new Dedup4jProperties().getReconciliation();
+
+        assertFalse(reconciliation.isEnabled());
+        assertEquals("0 0 3 * * *", reconciliation.getCron());
+        assertNull(reconciliation.getZone());
+        assertEquals(ReconciliationMode.REPORT, reconciliation.getMode());
+        assertEquals(100, reconciliation.getSampleSize());
+    }
+
+    @Test
+    void bindsReconciliationProperties() {
+        MapConfigurationPropertySource source = new MapConfigurationPropertySource(Map.of(
+                "dedup4j.reconciliation.enabled", "true",
+                "dedup4j.reconciliation.cron", "0 30 2 * * SUN",
+                "dedup4j.reconciliation.zone", "Africa/Accra",
+                "dedup4j.reconciliation.mode", "report",
+                "dedup4j.reconciliation.sample-size", "25"
+        ));
+
+        Dedup4jProperties.Reconciliation reconciliation = new Binder(source)
+                .bind("dedup4j", Bindable.of(Dedup4jProperties.class))
+                .orElseThrow(AssertionError::new)
+                .getReconciliation();
+
+        assertTrue(reconciliation.isEnabled());
+        assertEquals("0 30 2 * * SUN", reconciliation.getCron());
+        assertEquals("Africa/Accra", reconciliation.getZone());
+        assertEquals(ReconciliationMode.REPORT, reconciliation.getMode());
+        assertEquals(25, reconciliation.getSampleSize());
     }
 
     @Test

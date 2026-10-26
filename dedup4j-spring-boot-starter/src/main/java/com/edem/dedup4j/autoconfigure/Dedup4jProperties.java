@@ -1,6 +1,7 @@
 package com.edem.dedup4j.autoconfigure;
 
 import com.edem.dedup4j.autoconfigure.persistence.SchemaInitialization;
+import com.edem.dedup4j.reconcile.ReconciliationMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.util.unit.DataSize;
@@ -27,6 +28,9 @@ public class Dedup4jProperties {
     @NestedConfigurationProperty
     private final History history = new History();
 
+    @NestedConfigurationProperty
+    private final Reconciliation reconciliation = new Reconciliation();
+
     public Storage getStorage() {
         return storage;
     }
@@ -42,6 +46,65 @@ public class Dedup4jProperties {
 
     public History getHistory() {
         return history;
+    }
+
+    public Reconciliation getReconciliation() {
+        return reconciliation;
+    }
+
+    /**
+     * Scheduled, read-only reference-count reconciliation. Enable it on one instance per shared
+     * database; instances are not coordinated.
+     */
+    public static class Reconciliation {
+
+        private boolean enabled;
+        private String cron = "0 0 3 * * *";
+        /** Time zone for the cron expression; the JVM default when unset. */
+        private String zone;
+        private ReconciliationMode mode = ReconciliationMode.REPORT;
+        /** Maximum mismatches and dangling references kept in a run's result and logged. */
+        private int sampleSize = 100;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getCron() {
+            return cron;
+        }
+
+        public void setCron(String cron) {
+            this.cron = cron;
+        }
+
+        public String getZone() {
+            return zone;
+        }
+
+        public void setZone(String zone) {
+            this.zone = zone;
+        }
+
+        public ReconciliationMode getMode() {
+            return mode;
+        }
+
+        public void setMode(ReconciliationMode mode) {
+            this.mode = mode;
+        }
+
+        public int getSampleSize() {
+            return sampleSize;
+        }
+
+        public void setSampleSize(int sampleSize) {
+            this.sampleSize = sampleSize;
+        }
     }
 
     public static class History {
