@@ -393,9 +393,10 @@ dedup4j:
     hash-algorithm: SHA-256
     max-upload-size: 25MB
     allowed-content-types: image/*, application/pdf   # empty (default) allows all
-  cleanup:
-    delete-physical-on-zero-references: true
-    reconciliation-enabled: false
+  reconciliation:
+    enabled: false            # read-only; needs a LogicalReferenceCountSource bean
+    cron: "0 0 3 * * *"
+    mode: report              # the only mode; repair stays an explicit call
 ```
 
 S3:
@@ -497,6 +498,12 @@ The library should provide a reconciliation service that can:
 
 The first implementation can expose the service without enabling scheduled
 repairs by default.
+
+Scheduled reconciliation (`dedup4j.reconciliation.*`, disabled by default) only
+reports: it pages through content, counts mismatches and dangling references,
+logs and meters the result, and exposes this instance's last run through the
+management API. Enable it on one instance per shared database. Scheduled repair
+is out of scope until application reference writes can be coordinated with it.
 
 ## 14.1 Dashboard Monitoring
 

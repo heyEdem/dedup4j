@@ -36,9 +36,10 @@ public class Dedup4jManagementAutoConfiguration {
             Dedup4jProperties dedup4jProperties,
             org.springframework.beans.factory.ObjectProvider<com.edem.dedup4j.history.UploadHistory> uploadHistory,
             org.springframework.beans.factory.ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
-            org.springframework.beans.factory.ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource
+            org.springframework.beans.factory.ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
+            org.springframework.beans.factory.ObjectProvider<com.edem.dedup4j.reconcile.ScheduledReconciliation> reconciliation
     ) {
         return new Dedup4jManagementController(
-                managementProperties, dedup4jProperties, uploadHistory, contentRepository, failureSource);
+                managementProperties, dedup4jProperties, uploadHistory, contentRepository, failureSource, reconciliation);
     }
 }

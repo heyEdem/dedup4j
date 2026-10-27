@@ -1,6 +1,12 @@
 package com.edem.dedup4j.history;
 
 import com.edem.dedup4j.core.model.StoreBlobCommand;
+import com.edem.dedup4j.jpa.AssetContentRepository;
+import com.edem.dedup4j.reconcile.LogicalReferenceCountSource;
+import com.edem.dedup4j.reconcile.ReconciliationRun;
+import com.edem.dedup4j.reconcile.ReconciliationService;
+import com.edem.dedup4j.reconcile.ReconciliationSummary;
+import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import com.edem.dedup4j.service.BlobDeduplicationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -27,7 +33,10 @@ import java.sql.Statement;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,6 +71,34 @@ class PostgresApplicationTest {
                     .extracting(FailureRecord::recordedAt)
                     .isEqualTo(Instant.parse("2026-10-19T00:00:00.123456Z"));
         });
+    }
+
+    @Test
+    void reconciliationPagesThroughContentOnPostgres() {
+        Map<UUID, Long> expected = new HashMap<>();
+        UUID dangling = UUID.randomUUID();
+        runner(PostgresDatabases.create(POSTGRES))
+                .withBean(LogicalReferenceCountSource.class, () -> () -> expected)
+                .withPropertyValues("dedup4j.reconciliation.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    UUID matched = service(context).store(command("matched")).assetContentId();
+                    UUID undercounted = service(context).store(command("undercounted")).assetContentId();
+                    service(context).store(command("uncounted"));
+                    expected.put(matched, 1L);
+                    expected.put(undercounted, 2L);
+                    expected.put(dangling, 1L);
+
+                    ReconciliationSummary paged = new ReconciliationService(
+                            context.getBean(AssetContentRepository.class)).summarize(() -> expected, 1, 10);
+                    ReconciliationRun scheduled = context.getBean(ScheduledReconciliation.class).runNow();
+
+                    for (ReconciliationSummary summary : List.of(paged, scheduled.summary())) {
+                        assertThat(summary.checkedContentCount()).isEqualTo(3);
+                        assertThat(summary.mismatchCount()).isEqualTo(2);
+                        assertThat(summary.danglingReferenceSample()).containsExactly(dangling);
+                    }
+                });
     }
 
     /** Waiting on the dataset lock must not leave a stale snapshot, even when the database defaults to repeatable read. */

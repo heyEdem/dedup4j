@@ -3,7 +3,9 @@ package com.edem.dedup4j.observability;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
+import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 /**
@@ -24,8 +26,13 @@ public final class Dedup4jMetrics {
     private static final String STORAGE_WRITES = "dedup4j.storage.writes";
     private static final String DELETE_FAILURES = "dedup4j.storage.delete.failures";
     private static final String REPAIRS = "dedup4j.repairs";
+    private static final String RECONCILIATION_RUNS = "dedup4j.reconciliation.runs";
+    private static final String RECONCILIATION_MISMATCHES = "dedup4j.reconciliation.mismatches";
+    private static final String RECONCILIATION_DANGLING = "dedup4j.reconciliation.dangling";
 
     private final MeterRegistry registry;
+    private final AtomicLong lastMismatches = new AtomicLong();
+    private final AtomicLong lastDangling = new AtomicLong();
 
     public Dedup4jMetrics(MeterRegistry registry) {
         this.registry = registry;
@@ -66,6 +73,22 @@ public final class Dedup4jMetrics {
     public void recordRepair() {
         if (registry != null) {
             registry.counter(REPAIRS).increment();
+        }
+    }
+
+    public void recordReconciliationRun(boolean succeeded, Duration duration) {
+        if (registry != null) {
+            registry.timer(RECONCILIATION_RUNS, "outcome", succeeded ? "success" : "failure").record(duration);
+        }
+    }
+
+    /** Gauges hold the counts from the last successful run. */
+    public void recordReconciliationDrift(long mismatches, long dangling) {
+        lastMismatches.set(mismatches);
+        lastDangling.set(dangling);
+        if (registry != null) {
+            registry.gauge(RECONCILIATION_MISMATCHES, lastMismatches);
+            registry.gauge(RECONCILIATION_DANGLING, lastDangling);
         }
     }
 

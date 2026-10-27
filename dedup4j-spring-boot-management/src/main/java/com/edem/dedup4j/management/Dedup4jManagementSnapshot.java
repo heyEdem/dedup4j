@@ -1,5 +1,7 @@
 package com.edem.dedup4j.management;
 
+import com.edem.dedup4j.reconcile.ReconciliationRun;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +19,12 @@ public record Dedup4jManagementSnapshot(
     public record Info(String instanceId, String instanceName, String provider, String datasetId) { }
 
     public record Health(String status, Instant observedAt) { }
+
+    /**
+     * This instance's scheduled reconciliation: whether it runs here, its cron expression and its
+     * last run, which is null until the first run and is not kept across restarts.
+     */
+    public record Reconciliation(boolean enabled, String instanceId, String cron, ReconciliationRun lastRun) { }
 
     public record Metrics(
             String datasetId,

@@ -2,6 +2,7 @@ package com.edem.dedup4j.jpa;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 import java.util.Objects;
@@ -58,6 +59,27 @@ public final class AssetContentRepository {
     public Optional<AssetContent> findById(UUID id) {
         Objects.requireNonNull(id, "id must not be null");
         return Optional.ofNullable(entityManager.find(AssetContent.class, id));
+    }
+
+    /**
+     * Returns up to {@code limit} rows ordered by ID, starting after {@code afterId}, or from the
+     * first row when it is null. Keyset paging neither skips nor repeats rows when others are added.
+     */
+    public List<AssetContent> findPageAfter(UUID afterId, int limit) {
+        if (limit < 1) {
+            throw new IllegalArgumentException("limit must be positive");
+        }
+        TypedQuery<AssetContent> query = afterId == null
+                ? entityManager.createQuery(
+                        "select content from AssetContent content order by content.id", AssetContent.class)
+                : entityManager.createQuery("""
+                                select content
+                                from AssetContent content
+                                where content.id > :afterId
+                                order by content.id
+                                """, AssetContent.class)
+                        .setParameter("afterId", afterId);
+        return query.setMaxResults(limit).getResultList();
     }
 
     public List<AssetContent> findAll() {

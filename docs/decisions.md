@@ -101,3 +101,10 @@
 **Why:** In-memory counters reset on restart, differ per replica, and counted failed uploads. A database-backed, append-only ledger committed with each upload gives shared all-time totals and a gapless failure sequence that dashboards can page without gaps.
 **Tradeoffs:** History runs only on PostgreSQL and H2, where append-only triggers are implemented; other databases fail startup unless `dedup4j.history.enabled=false`. Uploads serialize on the dataset row lock for a few statements at commit, negligible at thousands per day. Totals start at zero with no backfill, and mistakes are fixed only by compensating rows.
 **Alternatives considered:** Keeping in-memory totals was rejected as non-durable. Mutable summary rows were rejected because they allow silent edits. Supporting every database without enforcement was rejected because append-only must be enforced in the database.
+
+## Scheduled reconciliation reports only and runs on one designated instance
+
+**Date:** 2026-10-26
+**Why:** The application's logical counts and dedup4j's `ref_count` are read at different moments, so a transaction still in flight looks like drift. Repairing it automatically would corrupt the count, and a release to zero deletes bytes before commit (#80). Requiring a mismatch in two consecutive runs does not help, because one pending transaction can span both. Reporting is safe at any time.
+**Tradeoffs:** Drift is detected on a schedule but still fixed by an explicit `ReconciliationService.repair()` call. Instances are not coordinated: operators enable the schedule on one instance per shared database, and the last result is held in memory per instance, not persisted. `mode` accepts only `report` so `repair` fails startup instead of being ignored.
+**Alternatives considered:** Scheduled repair, including repair limited to non-zero targets, was deferred to #81, which needs the application's reference writes to take part in coordination. A home-made lease table was rejected: expiry, renewal and clock skew would all be ours to get right, and it still would not coordinate application writes. Optional ShedLock integration and persisted run history were deferred.

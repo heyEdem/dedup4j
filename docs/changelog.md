@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-26 — Scheduled reference-count reconciliation (report-only)
+
+- New `dedup4j.reconciliation.*` properties: `enabled` (`false`), `cron` (`0 0 3 * * *`), `zone`, `mode` (`report` only) and `sample-size` (`100`). Startup fails when enabled without one `LogicalReferenceCountSource` (or one marked `@Primary`), or with an invalid cron, zone, mode or sample size.
+- `ScheduledReconciliation` runs `ReconciliationService.summarize` on a private cron scheduler. Each run pages through content by ID, counts mismatches and dangling references, keeps bounded samples, and never writes. Failed runs are logged and kept as the last result without stopping the schedule. Runs read through their own shared `EntityManager` built from the `EntityManagerFactory`, never the application's `EntityManager`, and shutdown interrupts an active scheduled or manual run and waits up to 30 seconds in total.
+- Metrics `dedup4j.reconciliation.runs` (timer by outcome), `dedup4j.reconciliation.mismatches` and `dedup4j.reconciliation.dangling`; management `GET /v1/reconciliation` returns this instance's schedule and last run.
+- `AssetContentRepository.findPageAfter` adds keyset paging.
+- Docs: removed the documented but never implemented `dedup4j.cleanup.reconciliation-enabled` and `dedup4j.cleanup.delete-physical-on-zero-references`; physical deletion on the last release is always on. ADR added for report-only, single-instance scheduling.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management`.
+
 ## 2026-10-24 — Oversized BlobStore uploads recorded in failure history
 
 - `DefaultBlobStore` no longer checks `dedup4j.deduplication.max-upload-size` itself. The service already enforces it, so an oversized upload through `BlobStore` is now rejected inside the auto-configured service and recorded in upload failure history, like content-type and other validation failures. The message and exception are unchanged (`BlobValidationException: Upload size N exceeds maximum M`), the stream is still closed, nothing is stored, and batches continue past the item.
