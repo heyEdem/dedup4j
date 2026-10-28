@@ -3,7 +3,7 @@
 ## 2026-10-28 — Clean up objects left in storage by released content (#83)
 
 - New `ReleasedObjectCleanup` bean. Its `run()` pages through content at zero references and, per row in its own transaction, relocks it and deletes its object only while the count is still zero and the object exists. Restored content keeps its object; failures are logged (`event=blob.cleanup.failed`), recorded in failure history and retried next pass. The application decides when to call it; nothing schedules it.
-- `ReleasedCleanupResult` reports checked, deleted, already absent, referenced and failed rows. New metrics `dedup4j.cleanup.deleted` (counter) and `dedup4j.cleanup.remaining` (gauge, leftovers the last pass failed to delete).
+- `ReleasedCleanupResult` reports checked, deleted, already absent, referenced and failed rows. New metrics `dedup4j.cleanup.deleted` (counter, incremented as each delete commits, so an interrupted pass keeps its count) and `dedup4j.cleanup.remaining` (gauge, failed rows of the last completed pass).
 - `ReferenceCountService.cleanUpReleased` returns `ReleasedCleanupOutcome`; `AssetContentRepository.findReleasedPageAfter` pages released rows. No schema change.
 - Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`.
 
