@@ -5,6 +5,7 @@ import com.edem.dedup4j.autoconfigure.Dedup4jAutoConfiguration;
 import com.edem.dedup4j.autoconfigure.storage.AzureBlobStorageAutoConfiguration;
 import com.edem.dedup4j.autoconfigure.storage.LocalBlobStorageAutoConfiguration;
 import com.edem.dedup4j.autoconfigure.storage.S3BlobStorageAutoConfiguration;
+import com.edem.dedup4j.cleanup.ReleasedObjectCleanup;
 import com.edem.dedup4j.core.hash.ContentHasher;
 import com.edem.dedup4j.core.hash.Sha256ContentHasher;
 import com.edem.dedup4j.core.key.HashObjectKeyStrategy;
@@ -55,6 +56,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 @Conditional(Dedup4jServiceAutoConfiguration.PersistenceInfrastructureCondition.class)
 @EnableConfigurationProperties(Dedup4jProperties.class)
 public class Dedup4jServiceAutoConfiguration {
+
+    private static final int CLEANUP_PAGE_SIZE = 500;
 
     static final class PersistenceInfrastructureCondition extends AnyNestedCondition {
 
@@ -153,6 +156,25 @@ public class Dedup4jServiceAutoConfiguration {
                 transactionManager,
                 history.getIfAvailable(DisabledUploadHistory::new),
                 metrics
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ReleasedObjectCleanup.class)
+    ReleasedObjectCleanup releasedObjectCleanup(
+            AssetContentRepository repository,
+            ReferenceCountService referenceCountService,
+            PlatformTransactionManager transactionManager,
+            ObjectProvider<UploadHistory> history,
+            Dedup4jMetrics metrics
+    ) {
+        return new ReleasedObjectCleanup(
+                repository,
+                referenceCountService,
+                transactionManager,
+                history.getIfAvailable(DisabledUploadHistory::new),
+                metrics,
+                CLEANUP_PAGE_SIZE
         );
     }
 

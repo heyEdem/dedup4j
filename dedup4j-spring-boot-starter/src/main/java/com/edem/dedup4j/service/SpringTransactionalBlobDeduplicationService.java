@@ -210,7 +210,8 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     /**
      * The release has committed, so a failure here is recorded and logged but not thrown: a caller
      * retrying the release could drop a reference a later upload restored. The object stays in
-     * storage, unreferenced, until a later upload of the same bytes reuses it.
+     * storage, unreferenced, until a later upload of the same bytes reuses it or
+     * {@link com.edem.dedup4j.cleanup.ReleasedObjectCleanup} removes it.
      */
     private void deleteReleased(UUID assetContentId) {
         try {

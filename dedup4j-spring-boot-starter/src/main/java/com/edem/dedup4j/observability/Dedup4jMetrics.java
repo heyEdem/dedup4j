@@ -29,10 +29,13 @@ public final class Dedup4jMetrics {
     private static final String RECONCILIATION_RUNS = "dedup4j.reconciliation.runs";
     private static final String RECONCILIATION_MISMATCHES = "dedup4j.reconciliation.mismatches";
     private static final String RECONCILIATION_DANGLING = "dedup4j.reconciliation.dangling";
+    private static final String CLEANUP_DELETED = "dedup4j.cleanup.deleted";
+    private static final String CLEANUP_REMAINING = "dedup4j.cleanup.remaining";
 
     private final MeterRegistry registry;
     private final AtomicLong lastMismatches = new AtomicLong();
     private final AtomicLong lastDangling = new AtomicLong();
+    private final AtomicLong cleanupRemaining = new AtomicLong();
 
     public Dedup4jMetrics(MeterRegistry registry) {
         this.registry = registry;
@@ -89,6 +92,21 @@ public final class Dedup4jMetrics {
         if (registry != null) {
             registry.gauge(RECONCILIATION_MISMATCHES, lastMismatches);
             registry.gauge(RECONCILIATION_DANGLING, lastDangling);
+        }
+    }
+
+    /** Counted per row as soon as its delete commits, so an aborted pass keeps what it deleted. */
+    public void recordReleasedObjectDeleted() {
+        if (registry != null) {
+            registry.counter(CLEANUP_DELETED).increment();
+        }
+    }
+
+    /** The gauge holds the failed rows of the last completed pass; their objects may remain. */
+    public void recordReleasedCleanupCompleted(long failed) {
+        cleanupRemaining.set(failed);
+        if (registry != null) {
+            registry.gauge(CLEANUP_REMAINING, cleanupRemaining);
         }
     }
 

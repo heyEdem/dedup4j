@@ -82,6 +82,28 @@ public final class AssetContentRepository {
         return query.setMaxResults(limit).getResultList();
     }
 
+    /** Keyset page of released rows (zero references), ordered by ID, as {@link #findPageAfter}. */
+    public List<AssetContent> findReleasedPageAfter(UUID afterId, int limit) {
+        if (limit < 1) {
+            throw new IllegalArgumentException("limit must be positive");
+        }
+        TypedQuery<AssetContent> query = afterId == null
+                ? entityManager.createQuery("""
+                                select content
+                                from AssetContent content
+                                where content.refCount = 0
+                                order by content.id
+                                """, AssetContent.class)
+                : entityManager.createQuery("""
+                                select content
+                                from AssetContent content
+                                where content.refCount = 0 and content.id > :afterId
+                                order by content.id
+                                """, AssetContent.class)
+                        .setParameter("afterId", afterId);
+        return query.setMaxResults(limit).getResultList();
+    }
+
     public List<AssetContent> findAll() {
         return entityManager.createQuery("select content from AssetContent content", AssetContent.class)
                 .getResultList();
