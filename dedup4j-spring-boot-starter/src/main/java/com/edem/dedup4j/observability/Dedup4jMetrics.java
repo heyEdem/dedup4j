@@ -95,11 +95,17 @@ public final class Dedup4jMetrics {
         }
     }
 
-    /** Counts deleted leftover objects; the gauge holds the leftovers the last pass failed to delete. */
-    public void recordReleasedCleanup(long deleted, long failed) {
+    /** Counted per row as soon as its delete commits, so an aborted pass keeps what it deleted. */
+    public void recordReleasedObjectDeleted() {
+        if (registry != null) {
+            registry.counter(CLEANUP_DELETED).increment();
+        }
+    }
+
+    /** The gauge holds the failed rows of the last completed pass; their objects may remain. */
+    public void recordReleasedCleanupCompleted(long failed) {
         cleanupRemaining.set(failed);
         if (registry != null) {
-            registry.counter(CLEANUP_DELETED).increment(deleted);
             registry.gauge(CLEANUP_REMAINING, cleanupRemaining);
         }
     }

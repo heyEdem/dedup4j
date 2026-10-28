@@ -35,8 +35,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Other test classes share this H2 database and may leave released rows behind, so assertions
@@ -147,6 +149,22 @@ class ReleasedObjectCleanupTest {
     }
 
     @Test
+    void interruptedPassStopsAndKeepsCountOfDeletesAlreadyCommitted() {
+        releasedContentWithObject();
+        releasedContentWithObject();
+        storage.interruptAfterDelete = true;
+
+        try {
+            assertThatThrownBy(cleanup::run).isInstanceOf(CancellationException.class);
+        } finally {
+            Thread.interrupted();
+        }
+
+        assertThat(storage.deletedKeys).hasSize(1);
+        assertThat(registry.counter("dedup4j.cleanup.deleted").count()).isEqualTo(1.0);
+    }
+
+    @Test
     void historyRecordingFailureDoesNotStopThePass() {
         AssetContent failing = releasedContentWithObject();
         AssetContent next = releasedContentWithObject();
@@ -211,6 +229,7 @@ class ReleasedObjectCleanupTest {
         private final Set<String> presentKeys = new HashSet<>();
         private final Set<String> failingKeys = new HashSet<>();
         private final List<String> deletedKeys = new ArrayList<>();
+        private boolean interruptAfterDelete;
 
         @Override public StoredBlob put(PutBlobRequest request) { throw new UnsupportedOperationException(); }
         @Override public BlobResource get(String objectKey) { throw new UnsupportedOperationException(); }
@@ -222,6 +241,10 @@ class ReleasedObjectCleanupTest {
             }
             presentKeys.remove(objectKey);
             deletedKeys.add(objectKey);
+            if (interruptAfterDelete) {
+                interruptAfterDelete = false;
+                Thread.currentThread().interrupt();
+            }
         }
 
         @Override

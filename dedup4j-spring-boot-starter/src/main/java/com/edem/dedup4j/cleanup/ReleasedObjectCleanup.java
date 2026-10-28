@@ -85,7 +85,10 @@ public final class ReleasedObjectCleanup {
                 checked++;
                 try {
                     switch (cleanUp(content.getId())) {
-                        case DELETED -> deleted++;
+                        case DELETED -> {
+                            deleted++;
+                            metrics.recordReleasedObjectDeleted();
+                        }
                         case ABSENT -> absent++;
                         case REFERENCED -> referenced++;
                     }
@@ -96,7 +99,7 @@ public final class ReleasedObjectCleanup {
             }
         } while (page.size() == pageSize);
         ReleasedCleanupResult result = new ReleasedCleanupResult(checked, deleted, absent, referenced, failed);
-        metrics.recordReleasedCleanup(deleted, failed);
+        metrics.recordReleasedCleanupCompleted(failed);
         log(result);
         return result;
     }
