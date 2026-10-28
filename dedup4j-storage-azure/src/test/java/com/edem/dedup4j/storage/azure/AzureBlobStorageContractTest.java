@@ -179,6 +179,7 @@ class AzureBlobStorageContractTest {
     private static final class FakeAzure implements HttpHandler, AutoCloseable {
 
         private final HttpServer server;
+        private final java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newCachedThreadPool();
         private final Map<String, StoredObject> objects = new HashMap<>();
         private final java.util.List<String> deleteIfMatches = new java.util.ArrayList<>();
         private int failureStatus;
@@ -189,7 +190,7 @@ class AzureBlobStorageContractTest {
             try {
                 server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
                 server.createContext("/", this);
-                server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+                server.setExecutor(executor);
                 server.start();
             } catch (IOException failure) {
                 throw new IllegalStateException("Could not start fake Azure server", failure);
@@ -291,6 +292,7 @@ class AzureBlobStorageContractTest {
                 return;
             }
             if (ifMatch != null && !unquoted(ifMatch).equals(unquoted(object.eTag))) {
+                exchange.getResponseHeaders().set("x-ms-error-code", "ConditionNotMet");
                 respond(exchange, 412, new byte[0]);
                 return;
             }
@@ -333,6 +335,7 @@ class AzureBlobStorageContractTest {
         @Override
         public void close() {
             server.stop(0);
+            executor.shutdownNow();
         }
     }
 

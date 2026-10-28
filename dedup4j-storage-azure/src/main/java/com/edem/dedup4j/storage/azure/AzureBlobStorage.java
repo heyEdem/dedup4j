@@ -3,6 +3,7 @@ package com.edem.dedup4j.storage.azure;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.BlobRequestConditions;
@@ -23,8 +24,6 @@ import java.time.Instant;
 public class AzureBlobStorage implements BlobStorage {
 
     public static final String PROVIDER = "azure";
-
-    private static final int PRECONDITION_FAILED = 412;
 
     private final BlobContainerClient client;
     private final AzureBlobStorageProperties properties;
@@ -123,7 +122,7 @@ public class AzureBlobStorage implements BlobStorage {
             if (isNotFound(failure)) {
                 return;
             }
-            if (failure.getStatusCode() == PRECONDITION_FAILED) {
+            if (BlobErrorCode.CONDITION_NOT_MET.equals(failure.getErrorCode())) {
                 throw new BlobStorageException("Object was rewritten before its delete; kept: " + objectKey, failure);
             }
             throw new BlobStorageException("Failed to delete object: " + objectKey, failure);
