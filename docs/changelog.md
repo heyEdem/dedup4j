@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-28 — Released content is deleted only after the release commits (#80)
+
+- `ReferenceCountService.release` returns whether the count reached zero and no longer deletes. New `deleteIfReleased` deletes in a later transaction under the row lock, only while the count is still zero, so content restored by an upload in between keeps its object.
+- `SpringTransactionalBlobDeduplicationService.release` commits the decrement, then cleans up in its own transaction. Cleanup failures are logged (`event=blob.cleanup.failed`) and recorded in failure history instead of thrown; the object stays in storage under a zero count.
+- `DefaultBlobDeduplicationService` gains `deleteReleased` for callers owning their transactions; `get` rejects released content.
+- `ReconciliationService.repair` no longer deletes; `ReconciliationReport.releasedContentIds` lists content it took to zero.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`.
+
 ## 2026-10-26 — Scheduled reference-count reconciliation (report-only)
 
 - New `dedup4j.reconciliation.*` properties: `enabled` (`false`), `cron` (`0 0 3 * * *`), `zone`, `mode` (`report` only) and `sample-size` (`100`). Startup fails when enabled without one `LogicalReferenceCountSource` (or one marked `@Primary`), or with an invalid cron, zone, mode or sample size.
