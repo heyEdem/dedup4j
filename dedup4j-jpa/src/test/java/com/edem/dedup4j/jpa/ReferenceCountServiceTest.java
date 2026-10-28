@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReferenceCountServiceTest {
 
@@ -81,7 +83,7 @@ class ReferenceCountServiceTest {
 
         entityManager.clear();
         entityManager.getTransaction().begin();
-        service.release(content.getId());
+        assertFalse(service.release(content.getId()));
         entityManager.getTransaction().commit();
         entityManager.clear();
 
@@ -90,17 +92,67 @@ class ReferenceCountServiceTest {
     }
 
     @Test
-    void releaseFinalReferenceDeletesPhysicalObjectOnce() {
+    void releaseFinalReferenceLeavesPhysicalObjectUntilCleanup() {
+        AssetContent content = persistContent();
+
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        assertTrue(service.release(content.getId()));
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+
+        assertEquals(0L, entityManager.find(AssetContent.class, content.getId()).getRefCount());
+        assertEquals(List.of(), storage.deletedObjectKeys());
+    }
+
+    @Test
+    void rolledBackFinalReleaseKeepsCountAndPhysicalObject() {
         AssetContent content = persistContent();
 
         entityManager.clear();
         entityManager.getTransaction().begin();
         service.release(content.getId());
-        entityManager.getTransaction().commit();
+        entityManager.getTransaction().rollback();
         entityManager.clear();
 
-        assertEquals(0L, entityManager.find(AssetContent.class, content.getId()).getRefCount());
+        assertEquals(1L, entityManager.find(AssetContent.class, content.getId()).getRefCount());
+        assertEquals(List.of(), storage.deletedObjectKeys());
+    }
+
+    @Test
+    void deleteIfReleasedDeletesObjectOfCommittedRelease() {
+        AssetContent content = persistContent();
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        service.release(content.getId());
+        entityManager.getTransaction().commit();
+
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        assertTrue(service.deleteIfReleased(content.getId()));
+        entityManager.getTransaction().commit();
+
         assertEquals(List.of(content.getObjectKey()), storage.deletedObjectKeys());
+    }
+
+    @Test
+    void deleteIfReleasedKeepsObjectRestoredAfterRelease() {
+        AssetContent content = persistContent();
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        service.release(content.getId());
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        service.restoreReleased(content.getId());
+        entityManager.getTransaction().commit();
+
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        assertFalse(service.deleteIfReleased(content.getId()));
+        entityManager.getTransaction().commit();
+
+        assertEquals(List.of(), storage.deletedObjectKeys());
     }
 
     @Test
@@ -120,7 +172,7 @@ class ReferenceCountServiceTest {
         entityManager.clear();
 
         assertEquals(0L, entityManager.find(AssetContent.class, content.getId()).getRefCount());
-        assertEquals(List.of(content.getObjectKey()), storage.deletedObjectKeys());
+        assertEquals(List.of(), storage.deletedObjectKeys());
     }
 
     @Test

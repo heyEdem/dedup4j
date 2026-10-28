@@ -123,8 +123,9 @@ class Dedup4jLoggingTest {
     void logsFailedPhysicalDeleteWithReconciliationContext() {
         BlobReference reference = service.store(command("delete-failure.txt"));
         storage.failDeletes.set(true);
+        service.release(reference.assetContentId());
 
-        assertThatThrownBy(() -> service.release(reference.assetContentId()))
+        assertThatThrownBy(() -> service.deleteReleased(reference.assetContentId()))
                 .isInstanceOf(BlobStorageException.class);
 
         ILoggingEvent failure = logAppender.list.stream()

@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
+import com.edem.dedup4j.core.exception.ContentNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,6 +37,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LocalStorageDeduplicationIntegrationTest {
@@ -112,14 +114,28 @@ class LocalStorageDeduplicationIntegrationTest {
         assertTrue(storage.exists(first.objectKey()));
 
         service.release(duplicate.assetContentId());
+        assertTrue(storage.exists(first.objectKey()));
+
+        assertTrue(service.deleteReleased(duplicate.assetContentId()));
         assertFalse(storage.exists(first.objectKey()));
         assertEquals(0L, regularFileCount());
     }
 
     @Test
+    void getRejectsReleasedContentWhoseObjectIsNotDeletedYet() {
+        BlobReference reference = service.store(command("photo.jpg"));
+        service.release(reference.assetContentId());
+
+        assertTrue(storage.exists(reference.objectKey()));
+        assertThrows(ContentNotFoundException.class, () -> service.get(reference.assetContentId()));
+    }
+
+
+    @Test
     void reuploadAfterFinalReleaseRestoresPhysicalObject() throws IOException {
         BlobReference first = service.store(command("photo.jpg"));
         service.release(first.assetContentId());
+        service.deleteReleased(first.assetContentId());
         assertFalse(storage.exists(first.objectKey()));
 
         BlobReference again = service.store(command("photo-again.jpg"));
@@ -184,7 +200,11 @@ class LocalStorageDeduplicationIntegrationTest {
                     other.persist(winner);
                     other.getTransaction().commit();
                     other.getTransaction().begin();
-                    new ReferenceCountService(new AssetContentRepository(other), delegate).release(winner.getId());
+                    ReferenceCountService references = new ReferenceCountService(new AssetContentRepository(other), delegate);
+                    references.release(winner.getId());
+                    other.getTransaction().commit();
+                    other.getTransaction().begin();
+                    references.deleteIfReleased(winner.getId());
                     other.getTransaction().commit();
                 } finally {
                     other.close();

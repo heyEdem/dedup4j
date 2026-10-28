@@ -1,6 +1,5 @@
 package com.edem.dedup4j.service;
 
-import com.edem.dedup4j.core.exception.BlobStorageException;
 import com.edem.dedup4j.core.hash.ContentHash;
 import com.edem.dedup4j.core.model.BlobReference;
 import com.edem.dedup4j.core.model.BlobLocation;
@@ -189,15 +188,47 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
         transactions.executeWithoutResult(status -> delegate.retain(assetContentId));
     }
 
+    /**
+     * Commits the release first and deletes the object of a final reference afterwards, in its own
+     * transaction, so a release that fails to commit never loses the object.
+     */
     @Override
     public void release(UUID assetContentId) {
+        boolean released = Boolean.TRUE.equals(transactions.execute(status -> {
+            delegate.release(assetContentId);
+            return repository.findById(assetContentId)
+                    .map(content -> content.getRefCount() == 0L)
+                    .orElse(false);
+        }));
+        if (released) {
+            deleteReleased(assetContentId);
+        }
+    }
+
+    /**
+     * The release has committed, so a failure here is recorded and logged but not thrown: a caller
+     * retrying the release could drop a reference a later upload restored. The object stays in
+     * storage, unreferenced, until a later upload of the same bytes reuses it.
+     */
+    private void deleteReleased(UUID assetContentId) {
         try {
-            transactions.executeWithoutResult(status -> delegate.release(assetContentId));
+            transactions.executeWithoutResult(status -> {
+                if (delegate instanceof DefaultBlobDeduplicationService service) {
+                    service.deleteReleased(assetContentId);
+                } else {
+                    referenceCountService.deleteIfReleased(assetContentId);
+                }
+            });
         } catch (RuntimeException failure) {
-            if (failure instanceof BlobStorageException) {
-                recordGuarded(DELETE, null, objectKeyOf(assetContentId, failure), failure);
-            }
-            throw failure;
+            LOGGER.warn(
+                    "event=blob.cleanup.failed contentId={} errorType={} failureMessage={} "
+                            + "detail=\"reference released; object left in storage\"",
+                    assetContentId,
+                    failure.getClass().getSimpleName(),
+                    failure.getMessage(),
+                    failure
+            );
+            recordGuarded(DELETE, null, objectKeyOf(assetContentId, failure), failure);
         }
     }
 
@@ -212,8 +243,8 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     }
 
     /**
-     * BlobStorageException carries no object key, so it is read from the content row, which the
-     * rolled-back release left in place. Runs after the release transaction has ended.
+     * BlobStorageException carries no object key, so it is read from the released content row.
+     * Runs after the failed cleanup transaction has ended.
      */
     private String objectKeyOf(UUID assetContentId, RuntimeException failure) {
         try {
