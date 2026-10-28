@@ -370,6 +370,23 @@ class UploadHistoryRecordingTest {
     }
 
     @Test
+    void commitFailureOnFinalReleaseKeepsCountAndObject() {
+        runner().withUserConfiguration(FailingCommitConfiguration.class).run(context -> {
+            SwitchableStorage storage = context.getBean(SwitchableStorage.class);
+            BlobReference reference = service(context).store(command());
+            FailingCommitTransactionManager transactions = context.getBean(FailingCommitTransactionManager.class);
+            transactions.failNextCommit.set(true);
+
+            assertThatThrownBy(() -> service(context).release(reference.assetContentId()))
+                    .isSameAs(transactions.commitFailure);
+
+            assertThat(storage.exists(reference.objectKey())).isTrue();
+            assertThat(context.getBean(AssetContentRepository.class).findById(reference.assetContentId()))
+                    .hasValueSatisfying(content -> assertThat(content.getRefCount()).isEqualTo(1L));
+        });
+    }
+
+    @Test
     void deleteFailureAfterCommittedReleaseRecordedNotThrown() {
         runner().run(context -> {
             SwitchableStorage storage = context.getBean(SwitchableStorage.class);

@@ -196,7 +196,9 @@ public final class SpringTransactionalBlobDeduplicationService implements BlobDe
     public void release(UUID assetContentId) {
         boolean released = Boolean.TRUE.equals(transactions.execute(status -> {
             delegate.release(assetContentId);
-            return repository.findById(assetContentId)
+            // Refreshes under the lock the release holds, so a count changed outside this persistence
+            // context (bulk update, JDBC) is seen too.
+            return repository.findByIdForUpdate(assetContentId)
                     .map(content -> content.getRefCount() == 0L)
                     .orElse(false);
         }));
