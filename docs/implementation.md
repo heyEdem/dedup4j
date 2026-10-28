@@ -135,7 +135,7 @@
 - `dedup4j-dashboard/src/main/resources/static/css/states.css`: dashboard state and configuration overrides, including the four-column desktop settings row and responsive two-column fallback.
 - `dedup4j-dashboard/src/main/resources/static/js/dashboard.js`: fetches dashboard resources, renders metrics/instances/failures, draws the trend chart, persists theme choice locally, and tolerates optional/mismatched presentation selectors during refresh.
 - `dedup4j-dashboard/src/main/resources/application.yaml`: dashboard defaults for loopback binding, port 9090, database path, polling interval, and failure retention.
-- `.github/workflows/ci.yml`: GitHub Actions workflow that runs Maven verify on pushes, pull requests, and manual dispatch.
+- `.github/workflows/ci.yml`: GitHub Actions workflow with build, unit-test and PostgreSQL-test stages on pushes, pull requests, and manual dispatch.
 - `.github/dependabot.yml`: weekly Maven and GitHub Actions dependency update proposals.
 - `.github/workflows/dependency-review.yml`: pull-request vulnerability gate configured to fail on high severity or above.
 - `src/main/java/com/edem/dedup4j/Dedup4jApplication.java`: original Spring Boot application class. Current root packaging means this is not part of a normal Spring Boot app module.
@@ -234,9 +234,13 @@
 ### CI and supply-chain governance
 
 - **Entry point:** `.github/workflows/ci.yml`
-- **Key behavior:** Checks out code, sets up Java 21 Temurin, enables Maven dependency caching, runs `./mvnw --batch-mode --no-transfer-progress verify`, and uploads Surefire reports.
+- **Key behavior:** Three jobs on Java 21 Temurin with Maven dependency caching and `MAVEN_ARGS=--batch-mode --no-transfer-progress`:
+  - `build` runs Enforcer, compiles main and test sources and packages every module (`./mvnw verify -DskipTests`).
+  - `unit-tests` (after `build`) runs every test not tagged `postgres` (`-DexcludedGroups=postgres`).
+  - `postgres-tests` (after `build`, in parallel with `unit-tests`) runs the `postgres`-tagged Testcontainers tests in the starter (`-pl dedup4j-spring-boot-starter -am -Dgroups=postgres`).
+  - Each test job uploads its own Surefire reports.
 - **Initialization:** Triggered on pushes and pull requests targeting `main`, `staging`, or `dev`, and by manual `workflow_dispatch`.
-- **Non-obvious logic:** The workflow runs `chmod +x ./mvnw` so CI is not blocked if executable bits are lost.
+- **Non-obvious logic:** The workflow runs `chmod +x ./mvnw` so CI is not blocked if executable bits are lost. Superseded pull request runs are cancelled; branch pushes always finish. A new PostgreSQL test must carry `@Tag("postgres")`, or the unit job runs it and the Postgres job skips it.
 - **Dependency safeguards:** The root Enforcer plugin checks convergence for Netty, Jackson, Reactor, HTTP Components, and SLF4J. Dependabot proposes weekly Maven/Actions updates, while `dependency-review.yml` fails pull requests that introduce high- or critical-severity vulnerabilities.
 
 ## Configuration

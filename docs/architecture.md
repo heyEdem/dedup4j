@@ -79,7 +79,7 @@ multi-instance end-to-end verification, as defined by
 | `dedup4j-dashboard` | Standalone local monitoring application. Owns multi-instance registration, pull polling, SQLite aggregate history, seven-day failure retention, read-only REST views, and the static light/dark UI. |
 | root `pom.xml` | Maven reactor parent with Java 21, JUnit and Spring Boot BOMs, compiler/Surefire plugin management, and Enforcer dependency-convergence validation for shared SDK infrastructure. |
 | root `src/main/java/com/edem/dedup4j` | Legacy Spring Boot shell application class from project creation. Not currently part of a reactor child module. |
-| `.github/workflows/ci.yml` | GitHub Actions CI workflow for Java 21 Maven verification. |
+| `.github/workflows/ci.yml` | GitHub Actions CI: build, then unit tests and PostgreSQL integration tests in parallel, on Java 21. |
 | `.github/dependabot.yml` | Weekly update proposals for Maven and GitHub Actions dependencies. |
 | `.github/workflows/dependency-review.yml` | Pull-request gate that rejects newly introduced high/critical vulnerable dependencies. |
 | `docs/adrs` | Architecture decisions for content identity, upload/ref-counting, release/reconciliation, and pluggable storage. |

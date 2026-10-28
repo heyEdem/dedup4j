@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-28 — Split CI into build, unit-test and PostgreSQL-test stages
+
+- `ci.yml` now runs a `build` job (Enforcer, compile, package, no tests), then `unit-tests` and `postgres-tests` in parallel, each uploading its own Surefire reports. Superseded PR runs are cancelled; pushes to branches always finish.
+- The three Testcontainers test classes in the starter carry `@Tag("postgres")`; the stages select them with `-Dgroups` / `-DexcludedGroups`. Together they cover the full suite (410 + 25 tests).
+- Modules affected: CI workflow, `dedup4j-spring-boot-starter` tests.
+
 ## 2026-10-28 — Guard deletes that the provider applies late (#84)
 
 - `AzureBlobStorage.delete` reads the blob's ETag and deletes with `If-Match`, so a delete Azure applies after the client gave up cannot remove an object an upload rewrote in the meantime. A rewrite between the read and the delete fails the call with `BlobStorageException` and the object kept; released-object cleanup retries it.

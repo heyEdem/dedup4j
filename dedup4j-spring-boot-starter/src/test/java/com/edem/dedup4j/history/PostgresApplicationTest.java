@@ -8,6 +8,7 @@ import com.edem.dedup4j.reconcile.ReconciliationService;
 import com.edem.dedup4j.reconcile.ReconciliationSummary;
 import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import com.edem.dedup4j.service.BlobDeduplicationService;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -47,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** The starter's real auto-configuration started against PostgreSQL. */
+@Tag("postgres")
 @Testcontainers
 class PostgresApplicationTest {
 

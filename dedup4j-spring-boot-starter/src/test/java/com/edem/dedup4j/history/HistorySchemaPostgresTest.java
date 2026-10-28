@@ -1,10 +1,12 @@
 package com.edem.dedup4j.history;
 
+import org.junit.jupiter.api.Tag;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+@Tag("postgres")
 @Testcontainers
 class HistorySchemaPostgresTest extends AbstractHistorySchemaTest {
 
