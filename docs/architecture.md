@@ -110,6 +110,8 @@ Application deletes logical asset
        -> still zero: delete physical object through BlobStorage
        -> restored by an upload meanwhile: keep the object
   -> a transaction 2 failure is logged and recorded, not thrown
+  -> ReleasedObjectCleanup.run(), called by the application, later pages through rows at zero
+       -> per row, its own transaction: lock, still zero and object exists: delete
 ```
 
 Planned monitoring flow:
