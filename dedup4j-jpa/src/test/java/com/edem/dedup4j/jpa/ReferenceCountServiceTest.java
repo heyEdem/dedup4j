@@ -156,6 +156,49 @@ class ReferenceCountServiceTest {
     }
 
     @Test
+    void cleanUpReleasedDeletesLeftoverObject() {
+        AssetContent content = releasedContent();
+
+        assertEquals(ReleasedCleanupOutcome.DELETED, cleanUp(content));
+        assertEquals(List.of(content.getObjectKey()), storage.deletedObjectKeys());
+    }
+
+    @Test
+    void cleanUpReleasedSkipsObjectAlreadyDeleted() {
+        AssetContent content = releasedContent();
+        storage.markAbsent(content.getObjectKey());
+
+        assertEquals(ReleasedCleanupOutcome.ABSENT, cleanUp(content));
+        assertEquals(List.of(), storage.deletedObjectKeys());
+    }
+
+    @Test
+    void cleanUpReleasedKeepsObjectRestoredBeforeThePass() {
+        AssetContent content = releasedContent();
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        service.restoreReleased(content.getId());
+        entityManager.getTransaction().commit();
+
+        assertEquals(ReleasedCleanupOutcome.REFERENCED, cleanUp(content));
+        assertEquals(List.of(), storage.deletedObjectKeys());
+    }
+
+    @Test
+    void releasedPageListsOnlyContentAtZeroReferences() {
+        AssetContent released = releasedContent();
+        AssetContent referenced = persistContent();
+        entityManager.clear();
+
+        List<UUID> ids = new AssetContentRepository(entityManager).findReleasedPageAfter(null, 1000).stream()
+                .map(AssetContent::getId)
+                .toList();
+
+        assertTrue(ids.contains(released.getId()));
+        assertFalse(ids.contains(referenced.getId()));
+    }
+
+    @Test
     void releaseRejectsReferenceCountUnderflow() {
         AssetContent content = persistContent();
 
@@ -232,6 +275,23 @@ class ReferenceCountServiceTest {
         entityManager.getTransaction().rollback();
     }
 
+    private AssetContent releasedContent() {
+        AssetContent content = persistContent();
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        service.release(content.getId());
+        entityManager.getTransaction().commit();
+        return content;
+    }
+
+    private ReleasedCleanupOutcome cleanUp(AssetContent content) {
+        entityManager.clear();
+        entityManager.getTransaction().begin();
+        ReleasedCleanupOutcome outcome = service.cleanUpReleased(content.getId());
+        entityManager.getTransaction().commit();
+        return outcome;
+    }
+
     private AssetContent persistContent() {
         String contentHash = UUID.randomUUID().toString().replace("-", "");
         AssetContent content = new AssetContent(
@@ -254,6 +314,7 @@ class ReferenceCountServiceTest {
     private static final class RecordingBlobStorage implements BlobStorage {
 
         private final List<String> deletedObjectKeys = new ArrayList<>();
+        private final List<String> absentObjectKeys = new ArrayList<>();
 
         @Override
         public StoredBlob put(PutBlobRequest request) {
@@ -272,7 +333,11 @@ class ReferenceCountServiceTest {
 
         @Override
         public boolean exists(String objectKey) {
-            throw new UnsupportedOperationException("exists is not used by this test");
+            return !deletedObjectKeys.contains(objectKey) && !absentObjectKeys.contains(objectKey);
+        }
+
+        private void markAbsent(String objectKey) {
+            absentObjectKeys.add(objectKey);
         }
 
         private List<String> deletedObjectKeys() {
