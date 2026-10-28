@@ -92,6 +92,11 @@ public class LocalBlobStorage implements BlobStorage {
         }
     }
 
+    /**
+     * Deletes synchronously in this process, so on a local filesystem the delete cannot take effect
+     * after this call returns or throws. A network or custom filesystem behind the root path may not
+     * give that guarantee.
+     */
     @Override
     public void delete(String objectKey) {
         Path file = resolve(objectKey);

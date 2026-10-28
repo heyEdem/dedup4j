@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-28 — Guard deletes that the provider applies late (#84)
+
+- `AzureBlobStorage.delete` reads the blob's ETag and deletes with `If-Match`, so a delete Azure applies after the client gave up cannot remove an object an upload rewrote in the meantime. A rewrite between the read and the delete fails the call with `BlobStorageException` and the object kept; released-object cleanup retries it.
+- S3 and local deletes are unchanged. S3 cannot guard same-bytes rewrites on general purpose buckets, so the late-delete risk there is accepted and documented; local deletes are synchronous. `BlobStorage.delete` documents the contract.
+- Modules affected: `dedup4j-core` (javadoc only), `dedup4j-storage-azure`, `dedup4j-storage-s3` and `dedup4j-storage-local` (javadoc only).
+
 ## 2026-10-28 — Clean up objects left in storage by released content (#83)
 
 - New `ReleasedObjectCleanup` bean. Its `run()` pages through content at zero references and, per row in its own transaction, relocks it and deletes its object only while the count is still zero and the object exists. Restored content keeps its object; failures are logged (`event=blob.cleanup.failed`), recorded in failure history and retried next pass. The application decides when to call it; nothing schedules it.

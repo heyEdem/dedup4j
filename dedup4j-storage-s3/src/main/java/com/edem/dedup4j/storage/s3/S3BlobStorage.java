@@ -93,6 +93,14 @@ public class S3BlobStorage implements BlobStorage, AutoCloseable {
         }
     }
 
+    /**
+     * Deletes by key without a generation condition. The ETag of a single-part upload is the MD5 of
+     * its bytes, so {@code If-Match} cannot tell the object apart from a rewrite of the same content,
+     * and deleting a version ID would make an older version current. A delete S3 applies after this
+     * call gave up can therefore remove content an upload restored in the meantime; this risk is
+     * accepted. On a versioned bucket the delete only adds a delete marker, so the bytes stay
+     * recoverable.
+     */
     @Override
     public void delete(String objectKey) {
         validateKey(objectKey);
