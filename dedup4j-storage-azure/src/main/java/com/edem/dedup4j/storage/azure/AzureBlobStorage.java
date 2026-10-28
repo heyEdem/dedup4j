@@ -5,6 +5,7 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobProperties;
+import com.azure.storage.blob.models.BlobRequestConditions;
 import com.azure.storage.blob.options.BlobParallelUploadOptions;
 import com.azure.core.util.Context;
 import com.edem.dedup4j.core.exception.BlobStorageException;
@@ -22,6 +23,8 @@ import java.time.Instant;
 public class AzureBlobStorage implements BlobStorage {
 
     public static final String PROVIDER = "azure";
+
+    private static final int PRECONDITION_FAILED = 412;
 
     private final BlobContainerClient client;
     private final AzureBlobStorageProperties properties;
@@ -101,14 +104,27 @@ public class AzureBlobStorage implements BlobStorage {
         }
     }
 
+    /**
+     * Deletes only the write read just before the delete, by sending its ETag as {@code If-Match}.
+     * Azure changes the ETag on every write, even of identical bytes, so a delete the service
+     * applies after this call gave up cannot remove an object rewritten in the meantime. A changed
+     * ETag fails the call with the object kept; the ETag is not refreshed and retried.
+     */
     @Override
     public void delete(String objectKey) {
         validateKey(objectKey);
+        BlobClient blob = client.getBlobClient(objectKey);
         try {
-            client.getBlobClient(objectKey).deleteIfExists();
+            String eTag = blob.getProperties().getETag();
+            blob.deleteIfExistsWithResponse(
+                    null, new BlobRequestConditions().setIfMatch(eTag), null, Context.NONE
+            );
         } catch (com.azure.storage.blob.models.BlobStorageException failure) {
             if (isNotFound(failure)) {
                 return;
+            }
+            if (failure.getStatusCode() == PRECONDITION_FAILED) {
+                throw new BlobStorageException("Object was rewritten before its delete; kept: " + objectKey, failure);
             }
             throw new BlobStorageException("Failed to delete object: " + objectKey, failure);
         }

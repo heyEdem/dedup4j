@@ -110,6 +110,34 @@ class AzureBlobStorageContractTest {
     }
 
     @Test
+    void deleteSendsETagOfTheWriteItRemoves() {
+        fake = new FakeAzure();
+        AzureBlobStorage storage = new AzureBlobStorage(client(fake), properties());
+        storage.put(request(OBJECT_KEY, new byte[]{1, 2, 3}));
+        String eTag = fake.objects.get(OBJECT_KEY).eTag;
+
+        storage.delete(OBJECT_KEY);
+
+        assertEquals(java.util.List.of(eTag.replace("\"", "")), fake.deleteIfMatches);
+        assertFalse(storage.exists(OBJECT_KEY));
+    }
+
+    @Test
+    void deleteAppliedAfterARewriteKeepsTheRewrittenObject() {
+        fake = new FakeAzure();
+        AzureBlobStorage storage = new AzureBlobStorage(client(fake), properties());
+        byte[] payload = {1, 2, 3};
+        storage.put(request(OBJECT_KEY, payload));
+        fake.beforeDelete = () -> storage.put(request(OBJECT_KEY, payload));
+
+        BlobStorageException failure = assertThrows(BlobStorageException.class, () -> storage.delete(OBJECT_KEY));
+
+        assertTrue(failure.getMessage().contains(OBJECT_KEY));
+        assertTrue(storage.exists(OBJECT_KEY));
+        assertArrayEquals(payload, fake.objects.get(OBJECT_KEY).content);
+    }
+
+    @Test
     void deleteOfMissingObjectIsIdempotent() {
         fake = new FakeAzure();
         AzureBlobStorage storage = new AzureBlobStorage(client(fake), properties());
@@ -152,12 +180,16 @@ class AzureBlobStorageContractTest {
 
         private final HttpServer server;
         private final Map<String, StoredObject> objects = new HashMap<>();
+        private final java.util.List<String> deleteIfMatches = new java.util.ArrayList<>();
         private int failureStatus;
+        private int writes;
+        private Runnable beforeDelete;
 
         private FakeAzure() {
             try {
                 server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
                 server.createContext("/", this);
+                server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
                 server.start();
             } catch (IOException failure) {
                 throw new IllegalStateException("Could not start fake Azure server", failure);
@@ -201,10 +233,11 @@ class AzureBlobStorageContractTest {
                     content,
                     exchange.getRequestHeaders().getFirst("x-ms-blob-content-type"),
                     exchange.getRequestHeaders().getFirst("x-ms-blob-content-disposition"),
-                    metadata
+                    metadata,
+                    "\"etag-" + ++writes + "\""
             );
             objects.put(key, object);
-            exchange.getResponseHeaders().set("ETag", "\"fake-etag\"");
+            exchange.getResponseHeaders().set("ETag", object.eTag);
             respond(exchange, 201, new byte[0]);
         }
 
@@ -243,20 +276,42 @@ class AzureBlobStorageContractTest {
             respond(exchange, 200, body);
         }
 
+        /** Applies If-Match as Azure does; {@code beforeDelete} stands in for a rewrite the delete lands after. */
         private void delete(HttpExchange exchange, String key) throws IOException {
-            if (objects.remove(key) == null) {
+            String ifMatch = exchange.getRequestHeaders().getFirst("If-Match");
+            deleteIfMatches.add(ifMatch);
+            if (beforeDelete != null) {
+                Runnable rewrite = beforeDelete;
+                beforeDelete = null;
+                rewrite.run();
+            }
+            StoredObject object = objects.get(key);
+            if (object == null) {
                 respond(exchange, 404, new byte[0]);
                 return;
             }
+            if (ifMatch != null && !unquoted(ifMatch).equals(unquoted(object.eTag))) {
+                respond(exchange, 412, new byte[0]);
+                return;
+            }
+            objects.remove(key);
             respond(exchange, 202, new byte[0]);
         }
 
         private void addObjectHeaders(HttpExchange exchange, StoredObject object) {
             exchange.getResponseHeaders().set("Content-Length", String.valueOf(object.content.length));
-            exchange.getResponseHeaders().set("Content-Type", object.contentType);
-            exchange.getResponseHeaders().set("Content-Disposition", object.contentDisposition);
-            exchange.getResponseHeaders().set("ETag", "\"fake-etag\"");
+            if (object.contentType != null) {
+                exchange.getResponseHeaders().set("Content-Type", object.contentType);
+            }
+            if (object.contentDisposition != null) {
+                exchange.getResponseHeaders().set("Content-Disposition", object.contentDisposition);
+            }
+            exchange.getResponseHeaders().set("ETag", object.eTag);
             object.metadata.forEach((key, value) -> exchange.getResponseHeaders().set("x-ms-meta-" + key, value));
+        }
+
+        private static String unquoted(String eTag) {
+            return eTag.replace("\"", "");
         }
 
         private String key(HttpExchange exchange) {
@@ -287,17 +342,20 @@ class AzureBlobStorageContractTest {
         private final String contentType;
         private final String contentDisposition;
         private final Map<String, String> metadata;
+        private final String eTag;
 
         private StoredObject(
                 byte[] content,
                 String contentType,
                 String contentDisposition,
-                Map<String, String> metadata
+                Map<String, String> metadata,
+                String eTag
         ) {
             this.content = content;
             this.contentType = contentType;
             this.contentDisposition = contentDisposition;
             this.metadata = Map.copyOf(metadata);
+            this.eTag = eTag;
         }
     }
 }
