@@ -314,11 +314,23 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
         referenceCountService.retain(assetContentId);
     }
 
+    /**
+     * Releases one reference without touching storage. After the caller's transaction commits,
+     * call {@link #deleteReleased} in a new transaction to remove the object of the final reference.
+     */
     @Override
     public void release(UUID assetContentId) {
+        referenceCountService.release(assetContentId);
+    }
+
+    /**
+     * Deletes the object of content whose final reference was released and committed, unless it
+     * was restored since. Run it in its own transaction. Returns whether it deleted.
+     */
+    public boolean deleteReleased(UUID assetContentId) {
         AssetContent content = repository.findByIdForUpdate(assetContentId).orElse(null);
         try {
-            referenceCountService.release(assetContentId);
+            return referenceCountService.deleteIfReleased(assetContentId);
         } catch (BlobStorageException failure) {
             metrics.recordDeleteFailure();
             logDeleteFailure(assetContentId, content, failure);
@@ -329,11 +341,15 @@ public final class DefaultBlobDeduplicationService implements BlobDeduplicationS
     @Override
     public BlobResource get(UUID assetContentId) {
         Objects.requireNonNull(assetContentId, "assetContentId must not be null");
-        return repository.findByIdForUpdate(assetContentId)
-                .map(content -> storage.get(content.getObjectKey()))
+        AssetContent content = repository.findByIdForUpdate(assetContentId)
                 .orElseThrow(() -> new ContentNotFoundException(
                         "Asset content not found: " + assetContentId
                 ));
+        if (content.getRefCount() <= 0L) {
+            // The object may still exist until cleanup deletes it; released content is not readable.
+            throw new ContentNotFoundException("Asset content " + assetContentId + " was released");
+        }
+        return storage.get(content.getObjectKey());
     }
 
     @Override

@@ -9,12 +9,15 @@ import java.util.UUID;
 
 /**
  * Mutates content reference counts while holding a pessimistic row lock and
- * deletes physical storage after the final reference is released.
+ * deletes physical storage once a release of the final reference has committed.
  *
  * <p>The caller owns the transaction. The transaction must remain active until
- * the caller commits or rolls back the operation. The supplied storage
- * collaborator is expected to implement the idempotent delete contract from
- * {@code BlobStorage}, so an already-missing object is treated as deleted.</p>
+ * the caller commits or rolls back the operation. Releasing never touches
+ * storage: the caller commits the release first and then calls
+ * {@link #deleteIfReleased} in a new transaction, so a release that rolls back
+ * never loses the object. The supplied storage collaborator is expected to
+ * implement the idempotent delete contract from {@code BlobStorage}, so an
+ * already-missing object is treated as deleted.</p>
  */
 public final class ReferenceCountService {
 
@@ -48,8 +51,10 @@ public final class ReferenceCountService {
     }
 
     /**
-     * Takes released content back from zero to one reference. The caller must have written the
-     * physical object again first.
+     * Takes released content back from zero to one reference. The caller must lock the row first
+     * (for example through {@link #retainIfReferenced}), write the physical object again while
+     * holding that lock, and only then restore; writing before locking lets
+     * {@link #deleteIfReleased} remove the new object.
      */
     public void restoreReleased(UUID assetContentId) {
         AssetContent content = findForUpdate(assetContentId);
@@ -61,7 +66,11 @@ public final class ReferenceCountService {
         content.incrementRefCount();
     }
 
-    public void release(UUID assetContentId) {
+    /**
+     * Releases one reference. Returns {@code true} when this call took the count to zero; the
+     * physical object stays until {@link #deleteIfReleased} runs after this transaction commits.
+     */
+    public boolean release(UUID assetContentId) {
         AssetContent content = findForUpdate(assetContentId);
         if (content.getRefCount() <= 0L) {
             throw new ReferenceCountUnderflowException(
@@ -69,9 +78,22 @@ public final class ReferenceCountService {
             );
         }
         content.decrementRefCount();
-        if (content.getRefCount() == 0L) {
-            storage.delete(content.getObjectKey());
+        return content.getRefCount() == 0L;
+    }
+
+    /**
+     * Deletes the physical object of released content. Run it in a new transaction after the
+     * release committed, never in the releasing one. It locks the row and deletes only while the
+     * count is still zero, so content restored in the meantime keeps its object. Returns whether it
+     * deleted. Safe to retry after a storage failure.
+     */
+    public boolean deleteIfReleased(UUID assetContentId) {
+        AssetContent content = findForUpdate(assetContentId);
+        if (content.getRefCount() != 0L) {
+            return false;
         }
+        storage.delete(content.getObjectKey());
+        return true;
     }
 
     private AssetContent findForUpdate(UUID assetContentId) {

@@ -115,7 +115,8 @@ class ReconciliationServiceTest {
         assertThat(report.mismatches()).hasSize(2);
         assertThat(entityManager.find(AssetContent.class, shouldIncrease.getId()).getRefCount()).isEqualTo(3L);
         assertThat(entityManager.find(AssetContent.class, shouldReachZero.getId()).getRefCount()).isZero();
-        assertThat(storage.deletedKeys).containsExactly(shouldReachZero.getObjectKey());
+        assertThat(report.releasedContentIds()).containsExactly(shouldReachZero.getId());
+        assertThat(storage.deletedKeys).isEmpty();
     }
 
     @Test

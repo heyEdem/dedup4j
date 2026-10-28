@@ -66,7 +66,7 @@ multi-instance end-to-end verification, as defined by
 | Module/Package | Purpose |
 |---|---|
 | `dedup4j-core` | Provider-neutral core module. Owns streaming content hashing, deterministic hash-derived object key generation, stable `BlobLocation`/reference models, the storage SPI, command/result models, domain exceptions, and dependency-boundary enforcement, including the reactor-level provider SDK ownership test. |
-| `dedup4j-jpa` | Framework-independent relational metadata module. Owns the `AssetContent` JPA mapping, content-identity uniqueness, physical object metadata, timestamps, optimistic-lock state, transaction-scoped repository lookups/locks, create-or-retain duplicate-key retry, lock-aware reference mutation, and final-reference delete delegation; uses provider-neutral contracts and exceptions from `dedup4j-core`. |
+| `dedup4j-jpa` | Framework-independent relational metadata module. Owns the `AssetContent` JPA mapping, content-identity uniqueness, physical object metadata, timestamps, optimistic-lock state, transaction-scoped repository lookups/locks, create-or-retain duplicate-key retry, lock-aware reference mutation, and post-commit, lock-revalidated deletion of released content; uses provider-neutral contracts and exceptions from `dedup4j-core`. |
 | `dedup4j-spring-boot-starter` | Standard Spring Boot upload dependency. Owns `dedup4j.*` configuration binding, selected-provider client/storage auto-configuration, consumer JPA entity discovery and conditional service assembly, guarded Liquibase schema lifecycle, per-operation Spring transactions, the provider-neutral `BlobStore` upload façade and ordered batch outcomes, final provider validation, and optional Micrometer metrics; it transitively includes the local, S3, and Azure adapter modules but declares no provider SDK coordinates or REST controllers. |
 | `dedup4j-jpa` history store | `com.edem.dedup4j.historystore` holds immutable `HistoryDataset`, `UploadEvent` and `FailureEvent` entities with append/read-only repositories (`UploadLedgerRepository`, `FailureLogRepository`) over the append-only `dedup4j_history_dataset`, `dedup4j_upload_event` and `dedup4j_failure_event` tables. The starter `history` package (`UploadHistory`, `JpaUploadHistory`, `DisabledUploadHistory`, `H2AppendOnlyTrigger`) records history inside the upload transaction; PostgreSQL and H2 only. |
 | `dedup4j-spring-boot-starter` reconcile | `com.edem.dedup4j.reconcile` compares stored `ref_count` with an application `LogicalReferenceCountSource`. `ScheduledReconciliation` (registered by `autoconfigure.reconcile.Dedup4jReconciliationAutoConfiguration` when `dedup4j.reconciliation.enabled=true`) runs a read-only, keyset-paged pass on a cron trigger with its own private scheduler and keeps only this instance's last run; repair is never scheduled. |
@@ -100,14 +100,16 @@ Application upload
   -> application creates its own logical asset pointing to AssetContent
 ```
 
-Planned delete flow:
+Delete flow:
 
 ```text
 Application deletes logical asset
   -> dedup4j release(assetContentId)
-  -> lock AssetContent
-  -> decrement ref_count
-  -> if final reference: delete physical object through BlobStorage
+  -> transaction 1: lock AssetContent, decrement ref_count, commit
+  -> if it reached zero, transaction 2: lock AssetContent again
+       -> still zero: delete physical object through BlobStorage
+       -> restored by an upload meanwhile: keep the object
+  -> a transaction 2 failure is logged and recorded, not thrown
 ```
 
 Planned monitoring flow:

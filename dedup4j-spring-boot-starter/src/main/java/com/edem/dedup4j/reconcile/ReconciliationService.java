@@ -126,16 +126,20 @@ public final class ReconciliationService {
     /**
      * Reports drift and, when explicitly enabled, adjusts each mismatched row
      * through the lock-aware reference-count service. The caller must keep a
-     * transaction active for the duration of an enabled repair.
+     * transaction active for the duration of an enabled repair. Repair never
+     * deletes physical objects: content it takes to zero is listed in
+     * {@link ReconciliationReport#releasedContentIds()} for the caller to delete
+     * after the transaction commits.
      */
     public ReconciliationReport repair(LogicalReferenceCountSource source) {
         ReconciliationSnapshot snapshot = inspect(source);
+        List<UUID> released = new ArrayList<>();
         if (repairEnabled) {
             for (ReconciliationMismatch mismatch : snapshot.mismatches()) {
-                adjustReferenceCount(mismatch);
+                adjustReferenceCount(mismatch, released);
             }
         }
-        return new ReconciliationReport(snapshot.checkedContentCount(), snapshot.mismatches());
+        return new ReconciliationReport(snapshot.checkedContentCount(), snapshot.mismatches(), released);
     }
 
     private ReconciliationSnapshot inspect(LogicalReferenceCountSource source) {
@@ -158,7 +162,7 @@ public final class ReconciliationService {
         return new ReconciliationSnapshot(contents.size(), mismatches);
     }
 
-    private void adjustReferenceCount(ReconciliationMismatch mismatch) {
+    private void adjustReferenceCount(ReconciliationMismatch mismatch, List<UUID> released) {
         long actual = mismatch.actualReferenceCount();
         long expected = mismatch.expectedReferenceCount();
         if (actual == 0L) {
@@ -176,7 +180,9 @@ public final class ReconciliationService {
             }
         } else {
             for (long count = actual; count > expected; count--) {
-                referenceCountService.release(mismatch.assetContentId());
+                if (referenceCountService.release(mismatch.assetContentId())) {
+                    released.add(mismatch.assetContentId());
+                }
             }
         }
         metrics.recordRepair();

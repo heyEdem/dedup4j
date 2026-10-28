@@ -18,6 +18,7 @@ import com.edem.dedup4j.history.FailureRecord;
 import com.edem.dedup4j.history.HistoryTotals;
 import com.edem.dedup4j.history.UploadHistory;
 import com.edem.dedup4j.jpa.AssetContent;
+import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.storage.local.LocalBlobStorage;
 import com.edem.dedup4j.storage.local.LocalBlobStorageProperties;
 import io.micrometer.core.instrument.Counter;
@@ -355,15 +356,48 @@ class UploadHistoryRecordingTest {
     }
 
     @Test
-    void deleteFailureRecorded() {
+    void finalReleaseDeletesObjectAfterCommit() {
+        runner().run(context -> {
+            SwitchableStorage storage = context.getBean(SwitchableStorage.class);
+            BlobReference reference = service(context).store(command());
+
+            service(context).release(reference.assetContentId());
+
+            assertThat(storage.exists(reference.objectKey())).isFalse();
+            assertThat(context.getBean(AssetContentRepository.class).findById(reference.assetContentId()))
+                    .hasValueSatisfying(content -> assertThat(content.getRefCount()).isZero());
+        });
+    }
+
+    @Test
+    void commitFailureOnFinalReleaseKeepsCountAndObject() {
+        runner().withUserConfiguration(FailingCommitConfiguration.class).run(context -> {
+            SwitchableStorage storage = context.getBean(SwitchableStorage.class);
+            BlobReference reference = service(context).store(command());
+            FailingCommitTransactionManager transactions = context.getBean(FailingCommitTransactionManager.class);
+            transactions.failNextCommit.set(true);
+
+            assertThatThrownBy(() -> service(context).release(reference.assetContentId()))
+                    .isSameAs(transactions.commitFailure);
+
+            assertThat(storage.exists(reference.objectKey())).isTrue();
+            assertThat(context.getBean(AssetContentRepository.class).findById(reference.assetContentId()))
+                    .hasValueSatisfying(content -> assertThat(content.getRefCount()).isEqualTo(1L));
+        });
+    }
+
+    @Test
+    void deleteFailureAfterCommittedReleaseRecordedNotThrown() {
         runner().run(context -> {
             SwitchableStorage storage = context.getBean(SwitchableStorage.class);
             BlobReference reference = service(context).store(command());
             storage.failDelete.set(true);
 
-            Throwable thrown = catchThrowable(() -> service(context).release(reference.assetContentId()));
+            service(context).release(reference.assetContentId());
 
-            assertThat(thrown).isSameAs(storage.deleteFailure);
+            assertThat(storage.exists(reference.objectKey())).isTrue();
+            assertThat(context.getBean(AssetContentRepository.class).findById(reference.assetContentId()))
+                    .hasValueSatisfying(content -> assertThat(content.getRefCount()).isZero());
             assertThat(history(context).recentFailures(Instant.EPOCH, 10)).singleElement().satisfies(failure -> {
                 assertThat(failure.operation()).isEqualTo("delete");
                 assertThat(failure.objectKey()).isEqualTo(reference.objectKey());
@@ -372,18 +406,20 @@ class UploadHistoryRecordingTest {
     }
 
     @Test
-    void deleteFailureRecordingFailureRethrowsOriginal() {
+    void deleteFailureRecordingFailureOnlyLogged() {
         runner().withUserConfiguration(FailingFailureRecordingConfiguration.class).run(context -> {
             SwitchableStorage storage = context.getBean(SwitchableStorage.class);
             BlobReference reference = service(context).store(command());
             storage.failDelete.set(true);
 
-            List<ILoggingEvent> warnings = captureWarnings(
-                    () -> assertThat(catchThrowable(() -> service(context).release(reference.assetContentId())))
-                            .isSameAs(storage.deleteFailure)
-                            .satisfies(thrown -> assertThat(thrown.getSuppressed()).hasSize(1)));
+            List<ILoggingEvent> warnings = captureWarnings(() -> service(context).release(reference.assetContentId()));
 
-            assertUnrecordedWarning(warnings, "delete");
+            assertThat(warnings).extracting(ILoggingEvent::getFormattedMessage)
+                    .anySatisfy(message -> assertThat(message).contains(
+                            "event=blob.cleanup.failed", "contentId=" + reference.assetContentId()));
+            assertUnrecordedWarning(warnings.stream()
+                    .filter(event -> !event.getFormattedMessage().contains("event=blob.cleanup.failed"))
+                    .toList(), "delete");
         });
     }
 
