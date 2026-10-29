@@ -42,9 +42,12 @@ final class Dedup4jSchemaValidator implements InitializingBean {
                     + "storage_provider, bucket_or_container, content_type, original_extension, ref_count, "
                     + "created_at, updated_at, version "
                     + "from dedup4j_asset_content where 1 = 0");
+            jdbcTemplate.queryForList("select id, asset_content_id, previous_count, repaired_count, run_id, "
+                    + "instance_id, repaired_at, compensates_repair_id from dedup4j_reference_repair where 1 = 0");
         }
         catch (DataAccessException failure) {
-            throw new IllegalStateException("dedup4j schema table 'dedup4j_asset_content' is missing "
+            throw new IllegalStateException("dedup4j schema tables 'dedup4j_asset_content' and "
+                    + "'dedup4j_reference_repair' are missing or incomplete "
                     + "for initialize-schema mode '" + mode.name().toLowerCase() + "'. Apply " + CHANGELOG
                     + " or set dedup4j.persistence.initialize-schema to an appropriate mode.", failure);
         }

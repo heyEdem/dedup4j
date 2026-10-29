@@ -8,13 +8,13 @@ import java.sql.Statement;
 import java.util.UUID;
 
 /** Creates a fresh, empty database inside a shared PostgreSQL container. */
-final class PostgresDatabases {
+public final class PostgresDatabases {
 
     private PostgresDatabases() {
     }
 
     /** Returns the JDBC URL of a newly created database. */
-    static String create(PostgreSQLContainer container) {
+    public static String create(PostgreSQLContainer container) {
         String name = "t_" + UUID.randomUUID().toString().replace("-", "");
         try (Connection connection = DriverManager.getConnection(
                 container.getJdbcUrl(), container.getUsername(), container.getPassword());

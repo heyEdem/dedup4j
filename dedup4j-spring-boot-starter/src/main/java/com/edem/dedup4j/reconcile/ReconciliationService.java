@@ -3,10 +3,6 @@ package com.edem.dedup4j.reconcile;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
-import com.edem.dedup4j.jpa.ReferenceCountService;
-import com.edem.dedup4j.observability.Dedup4jMetrics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,42 +17,15 @@ import java.util.concurrent.CancellationException;
  * Reports drift between application-owned logical references and stored
  * physical-content reference counts.
  *
- * <p>Reporting is always read-only. Repair is a separate operation and is
- * disabled unless explicitly enabled by the caller.</p>
+ * <p>Always read-only. Drift is repaired by {@link CoordinatedRepair}, which rechecks each
+ * difference under the content row lock.</p>
  */
 public final class ReconciliationService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReconciliationService.class);
-
     private final AssetContentRepository repository;
-    private final ReferenceCountService referenceCountService;
-    private final boolean repairEnabled;
-    private final Dedup4jMetrics metrics;
 
     public ReconciliationService(AssetContentRepository repository) {
-        this(repository, null, false, new Dedup4jMetrics(null));
-    }
-
-    public ReconciliationService(
-            AssetContentRepository repository,
-            ReferenceCountService referenceCountService,
-            boolean repairEnabled
-    ) {
-        this(repository, referenceCountService, repairEnabled, new Dedup4jMetrics(null));
-    }
-
-    public ReconciliationService(
-            AssetContentRepository repository,
-            ReferenceCountService referenceCountService,
-            boolean repairEnabled,
-            Dedup4jMetrics metrics
-    ) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
-        this.referenceCountService = repairEnabled
-                ? Objects.requireNonNull(referenceCountService, "referenceCountService must not be null")
-                : referenceCountService;
-        this.repairEnabled = repairEnabled;
-        this.metrics = Objects.requireNonNull(metrics, "metrics must not be null");
     }
 
     public ReconciliationReport reconcile(LogicalReferenceCountSource source) {
@@ -123,25 +92,6 @@ public final class ReconciliationService {
         return new ReconciliationSummary(checked, mismatches, dangling, mismatchSample, danglingSample);
     }
 
-    /**
-     * Reports drift and, when explicitly enabled, adjusts each mismatched row
-     * through the lock-aware reference-count service. The caller must keep a
-     * transaction active for the duration of an enabled repair. Repair never
-     * deletes physical objects: content it takes to zero is listed in
-     * {@link ReconciliationReport#releasedContentIds()} for the caller to delete
-     * after the transaction commits.
-     */
-    public ReconciliationReport repair(LogicalReferenceCountSource source) {
-        ReconciliationSnapshot snapshot = inspect(source);
-        List<UUID> released = new ArrayList<>();
-        if (repairEnabled) {
-            for (ReconciliationMismatch mismatch : snapshot.mismatches()) {
-                adjustReferenceCount(mismatch, released);
-            }
-        }
-        return new ReconciliationReport(snapshot.checkedContentCount(), snapshot.mismatches(), released);
-    }
-
     private ReconciliationSnapshot inspect(LogicalReferenceCountSource source) {
         Objects.requireNonNull(source, "source must not be null");
         Map<UUID, Long> expectedCounts = Objects.requireNonNull(
@@ -160,32 +110,6 @@ public final class ReconciliationService {
         }
 
         return new ReconciliationSnapshot(contents.size(), mismatches);
-    }
-
-    private void adjustReferenceCount(ReconciliationMismatch mismatch, List<UUID> released) {
-        long actual = mismatch.actualReferenceCount();
-        long expected = mismatch.expectedReferenceCount();
-        if (actual == 0L) {
-            // The physical object was deleted at zero; raising the count cannot bring the bytes back.
-            LOGGER.warn(
-                    "event=reconcile.repair.skipped contentId={} expected={} actual=0 reason=released",
-                    mismatch.assetContentId(),
-                    expected
-            );
-            return;
-        }
-        if (actual < expected) {
-            for (long count = actual; count < expected; count++) {
-                referenceCountService.retain(mismatch.assetContentId());
-            }
-        } else {
-            for (long count = actual; count > expected; count--) {
-                if (referenceCountService.release(mismatch.assetContentId())) {
-                    released.add(mismatch.assetContentId());
-                }
-            }
-        }
-        metrics.recordRepair();
     }
 
     private record ReconciliationSnapshot(int checkedContentCount, List<ReconciliationMismatch> mismatches) {

@@ -1,6 +1,7 @@
 package com.edem.dedup4j.autoconfigure;
 
 import com.edem.dedup4j.cleanup.ReleasedObjectCleanup;
+import com.edem.dedup4j.reconcile.CoordinatedRepair;
 import com.edem.dedup4j.core.model.BlobReference;
 import com.edem.dedup4j.core.model.StoreBlobCommand;
 import com.edem.dedup4j.core.storage.BlobResource;
@@ -71,6 +72,7 @@ class Dedup4jContextStartTest {
             assertThat(context).hasNotFailed()
                     .hasSingleBean(BlobDeduplicationService.class)
                     .hasSingleBean(ReleasedObjectCleanup.class)
+                    .hasSingleBean(CoordinatedRepair.class)
                     .hasSingleBean(JdbcTemplate.class);
 
             assertThat(context.getBean(JdbcTemplate.class).queryForObject(

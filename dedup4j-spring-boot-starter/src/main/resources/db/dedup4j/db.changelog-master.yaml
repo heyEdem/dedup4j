@@ -1,3 +1,9 @@
 databaseChangeLog:
   - include:
       file: db/dedup4j/changes/001-create-asset-content.yaml
+  - include:
+      file: db/dedup4j/changes/002-create-reference-repair.yaml
+  - include:
+      file: db/dedup4j/changes/003-reference-repair-append-only-postgresql.yaml
+  - include:
+      file: db/dedup4j/changes/004-reference-repair-append-only-h2.yaml

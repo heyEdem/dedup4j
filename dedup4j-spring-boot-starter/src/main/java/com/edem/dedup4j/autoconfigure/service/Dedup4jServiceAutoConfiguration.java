@@ -11,11 +11,15 @@ import com.edem.dedup4j.core.hash.Sha256ContentHasher;
 import com.edem.dedup4j.core.key.HashObjectKeyStrategy;
 import com.edem.dedup4j.core.key.ObjectKeyStrategy;
 import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.history.DefaultInstanceId;
 import com.edem.dedup4j.history.DisabledUploadHistory;
 import com.edem.dedup4j.history.UploadHistory;
 import com.edem.dedup4j.jpa.AssetContentMutationService;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
+import com.edem.dedup4j.jpa.ReferenceRepairRepository;
+import com.edem.dedup4j.jpa.ReferenceRepairService;
+import com.edem.dedup4j.reconcile.CoordinatedRepair;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
 import com.edem.dedup4j.service.BlobDeduplicationService;
 import com.edem.dedup4j.service.ContentTypePolicy;
@@ -26,6 +30,7 @@ import com.edem.dedup4j.facade.DefaultBlobStore;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
@@ -41,6 +46,8 @@ import org.springframework.orm.jpa.SharedEntityManagerCreator;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import io.micrometer.core.instrument.MeterRegistry;
+
+import java.time.Clock;
 
 @AutoConfiguration(before = Dedup4jAutoConfiguration.class)
 @AutoConfigureAfter(
@@ -58,6 +65,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class Dedup4jServiceAutoConfiguration {
 
     private static final int CLEANUP_PAGE_SIZE = 500;
+    private static final int REPAIR_PAGE_SIZE = 500;
 
     static final class PersistenceInfrastructureCondition extends AnyNestedCondition {
 
@@ -175,6 +183,41 @@ public class Dedup4jServiceAutoConfiguration {
                 history.getIfAvailable(DisabledUploadHistory::new),
                 metrics,
                 CLEANUP_PAGE_SIZE
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ReferenceRepairService.class)
+    ReferenceRepairService referenceRepairService(
+            ObjectProvider<EntityManager> entityManagers,
+            ObjectProvider<EntityManagerFactory> entityManagerFactories,
+            AssetContentRepository repository
+    ) {
+        return new ReferenceRepairService(repository, new ReferenceRepairRepository(
+                resolveEntityManager(entityManagers, entityManagerFactories)));
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(CoordinatedRepair.class)
+    CoordinatedRepair coordinatedRepair(
+            AssetContentRepository repository,
+            ReferenceRepairService referenceRepairService,
+            ReferenceCountService referenceCountService,
+            PlatformTransactionManager transactionManager,
+            ObjectProvider<UploadHistory> history,
+            Dedup4jMetrics metrics,
+            @Value("${dedup4j.history.instance-id:${dedup4j.management.instance-id:}}") String instanceId
+    ) {
+        return new CoordinatedRepair(
+                repository,
+                referenceRepairService,
+                referenceCountService,
+                transactionManager,
+                history.getIfAvailable(DisabledUploadHistory::new),
+                metrics,
+                instanceId == null || instanceId.isBlank() ? DefaultInstanceId.value() : instanceId,
+                Clock.systemUTC(),
+                REPAIR_PAGE_SIZE
         );
     }
 
