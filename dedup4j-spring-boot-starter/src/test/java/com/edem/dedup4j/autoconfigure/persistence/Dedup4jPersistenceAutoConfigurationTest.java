@@ -292,6 +292,10 @@ class Dedup4jPersistenceAutoConfigurationTest {
                     + "bucket_or_container varchar(255) not null, content_type varchar(255), original_extension varchar(32),"
                     + "ref_count bigint not null, created_at timestamp not null, updated_at timestamp not null, version bigint not null,"
                     + "constraint uk_dedup4j_asset_content_identity unique (hash_algorithm, content_hash, size_bytes))");
+            new JdbcTemplate(dataSource).execute("create table dedup4j_reference_repair ("
+                    + "id uuid not null primary key, asset_content_id uuid not null, previous_count bigint not null,"
+                    + "repaired_count bigint not null, run_id uuid not null, instance_id varchar(255) not null,"
+                    + "repaired_at timestamp with time zone not null, compensates_repair_id uuid)");
             return new Object();
         }
     }

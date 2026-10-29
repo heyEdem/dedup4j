@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-reference-repair-append-only-h2
+      author: dedup4j
+      dbms: h2
+      changes:
+        - sql:
+            sql: CREATE TRIGGER dedup4j_reference_repair_no_row_change BEFORE UPDATE, DELETE ON dedup4j_reference_repair FOR EACH ROW CALL "com.edem.dedup4j.reconcile.H2ReferenceRepairAppendOnlyTrigger"

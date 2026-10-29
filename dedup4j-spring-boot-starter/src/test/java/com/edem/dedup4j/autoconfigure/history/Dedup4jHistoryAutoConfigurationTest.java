@@ -231,7 +231,8 @@ class Dedup4jHistoryAutoConfigurationTest {
                             "select id from DEDUP4J_DATABASE_CHANGELOG", String.class);
                     List<String> history = jdbc.queryForList(
                             "select id from DEDUP4J_HISTORY_DATABASE_CHANGELOG", String.class);
-                    assertThat(asset).containsExactly("001-create-asset-content");
+                    assertThat(asset).containsExactly(
+                            "001-create-asset-content", "002-create-reference-repair", "004-reference-repair-append-only-h2");
                     assertThat(history).isNotEmpty().doesNotContain("001-create-asset-content");
                     assertThat(jdbc.queryForObject(
                             "select count(*) from DEDUP4J_HISTORY_DATABASE_CHANGELOG_LOCK", Integer.class))
@@ -284,7 +285,7 @@ class Dedup4jHistoryAutoConfigurationTest {
             JdbcDataSource dataSource = h2();
             SpringLiquibase liquibase = new SpringLiquibase();
             liquibase.setDataSource(dataSource);
-            liquibase.setChangeLog("classpath:db/dedup4j/changes/001-create-asset-content.yaml");
+            liquibase.setChangeLog("classpath:db/dedup4j/db.changelog-master.yaml");
             liquibase.afterPropertiesSet();
             return dataSource;
         }

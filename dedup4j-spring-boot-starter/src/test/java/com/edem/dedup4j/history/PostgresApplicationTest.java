@@ -2,6 +2,8 @@ package com.edem.dedup4j.history;
 
 import com.edem.dedup4j.core.model.StoreBlobCommand;
 import com.edem.dedup4j.jpa.AssetContentRepository;
+import com.edem.dedup4j.reconcile.CoordinatedRepair;
+import com.edem.dedup4j.reconcile.CoordinatedRepairResult;
 import com.edem.dedup4j.reconcile.LogicalReferenceCountSource;
 import com.edem.dedup4j.reconcile.ReconciliationRun;
 import com.edem.dedup4j.reconcile.ReconciliationService;
@@ -34,6 +36,7 @@ import java.sql.Statement;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +104,31 @@ class PostgresApplicationTest {
                         assertThat(summary.danglingReferenceSample()).containsExactly(dangling);
                     }
                 });
+    }
+
+    /** Coordinated repair pins READ COMMITTED through Boot's transaction manager, even on a repeatable-read database. */
+    @Test
+    void coordinatedRepairRunsAtReadCommittedAndRecordsTheRepair() {
+        runner(repeatableReadDatabase()).run(context -> {
+            assertThat(context).hasNotFailed();
+            UUID content = service(context).store(command("drifted")).assetContentId();
+            JdbcTemplate jdbc = context.getBean(JdbcTemplate.class);
+            List<String> isolation = new ArrayList<>();
+
+            CoordinatedRepairResult result = context.getBean(CoordinatedRepair.class).run(
+                    () -> Map.of(content, 2L),
+                    id -> {
+                        isolation.add(jdbc.queryForObject("show transaction_isolation", String.class));
+                        return 2L;
+                    });
+
+            assertThat(result.repaired()).isEqualTo(1);
+            assertThat(isolation).containsExactly("read committed");
+            assertThat(jdbc.queryForObject("select ref_count from dedup4j_asset_content where id = ?",
+                    Long.class, content)).isEqualTo(2L);
+            assertThat(jdbc.queryForObject("select count(*) from dedup4j_reference_repair where asset_content_id = ?"
+                    + " and previous_count = 1 and repaired_count = 2", Integer.class, content)).isEqualTo(1);
+        });
     }
 
     /** Waiting on the dataset lock must not leave a stale snapshot, even when the database defaults to repeatable read. */

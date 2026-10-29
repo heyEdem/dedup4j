@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-reference-repair-append-only-postgresql
+      author: dedup4j
+      dbms: postgresql
+      changes:
+        - createProcedure:
+            procedureBody: |
+              CREATE OR REPLACE FUNCTION dedup4j_reject_reference_repair_change() RETURNS trigger AS $$
+              BEGIN
+                RAISE EXCEPTION 'dedup4j reference repair audit is append-only';
+              END;
+              $$ LANGUAGE plpgsql
+        - sql:
+            sql: CREATE TRIGGER dedup4j_reference_repair_no_row_change BEFORE UPDATE OR DELETE ON dedup4j_reference_repair FOR EACH ROW EXECUTE FUNCTION dedup4j_reject_reference_repair_change()
+        - sql:
+            sql: CREATE TRIGGER dedup4j_reference_repair_no_truncate BEFORE TRUNCATE ON dedup4j_reference_repair FOR EACH STATEMENT EXECUTE FUNCTION dedup4j_reject_reference_repair_change()

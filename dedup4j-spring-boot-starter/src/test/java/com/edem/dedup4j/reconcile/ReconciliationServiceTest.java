@@ -3,11 +3,6 @@ package com.edem.dedup4j.reconcile;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
-import com.edem.dedup4j.jpa.ReferenceCountService;
-import com.edem.dedup4j.core.storage.BlobResource;
-import com.edem.dedup4j.core.storage.BlobStorage;
-import com.edem.dedup4j.core.storage.PutBlobRequest;
-import com.edem.dedup4j.core.storage.StoredBlob;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.TypedQuery;
@@ -91,79 +86,6 @@ class ReconciliationServiceTest {
                 );
         assertThat(entityManager.find(AssetContent.class, expectedThree.getId()).getRefCount()).isEqualTo(1L);
         assertThat(entityManager.find(AssetContent.class, expectedZero.getId()).getRefCount()).isEqualTo(1L);
-    }
-
-    @Test
-    void repairsOnlyWhenExplicitlyEnabled() {
-        AssetContent shouldIncrease = persistContent("c".repeat(64));
-        AssetContent shouldReachZero = persistContent("d".repeat(64));
-        entityManager.clear();
-
-        RecordingStorage storage = new RecordingStorage();
-        ReconciliationService service = new ReconciliationService(
-                repository,
-                new ReferenceCountService(repository, storage),
-                true
-        );
-
-        entityManager.getTransaction().begin();
-        ReconciliationReport report = service.repair(
-                () -> Map.of(shouldIncrease.getId(), 3L)
-        );
-        entityManager.getTransaction().commit();
-
-        assertThat(report.mismatches()).hasSize(2);
-        assertThat(entityManager.find(AssetContent.class, shouldIncrease.getId()).getRefCount()).isEqualTo(3L);
-        assertThat(entityManager.find(AssetContent.class, shouldReachZero.getId()).getRefCount()).isZero();
-        assertThat(report.releasedContentIds()).containsExactly(shouldReachZero.getId());
-        assertThat(storage.deletedKeys).isEmpty();
-    }
-
-    @Test
-    void repairSkipsReleasedContentAndRepairsTheRest() {
-        AssetContent released = persistContent("f".repeat(64));
-        AssetContent shouldIncrease = persistContent("1".repeat(64));
-        entityManager.clear();
-
-        RecordingStorage storage = new RecordingStorage();
-        ReferenceCountService referenceCounts = new ReferenceCountService(repository, storage);
-        entityManager.getTransaction().begin();
-        referenceCounts.release(released.getId());
-        entityManager.getTransaction().commit();
-        entityManager.clear();
-
-        ReconciliationService service = new ReconciliationService(repository, referenceCounts, true);
-        entityManager.getTransaction().begin();
-        ReconciliationReport report = service.repair(
-                () -> Map.of(released.getId(), 2L, shouldIncrease.getId(), 2L)
-        );
-        entityManager.getTransaction().commit();
-        entityManager.clear();
-
-        assertThat(report.mismatches()).hasSize(2);
-        assertThat(entityManager.find(AssetContent.class, released.getId()).getRefCount()).isZero();
-        assertThat(entityManager.find(AssetContent.class, shouldIncrease.getId()).getRefCount()).isEqualTo(2L);
-    }
-
-    @Test
-    void disabledRepairRemainsReadOnly() {
-        AssetContent content = persistContent("e".repeat(64));
-        entityManager.clear();
-
-        ReconciliationService service = new ReconciliationService(
-                repository,
-                new ReferenceCountService(repository, new RecordingStorage()),
-                false
-        );
-
-        entityManager.getTransaction().begin();
-        ReconciliationReport report = service.repair(
-                () -> Map.of(content.getId(), 3L)
-        );
-        entityManager.getTransaction().commit();
-
-        assertThat(report.mismatches()).hasSize(1);
-        assertThat(entityManager.find(AssetContent.class, content.getId()).getRefCount()).isEqualTo(1L);
     }
 
     @Test
@@ -283,12 +205,10 @@ class ReconciliationServiceTest {
     }
 
     @Test
-    void summarizeNeverWritesEvenWithRepairEnabledInsideACommittedTransaction() {
+    void summarizeNeverWritesInsideACommittedTransaction() {
         persistContents(3);
         entityManager.clear();
-        RecordingStorage storage = new RecordingStorage();
-        ReconciliationService service = new ReconciliationService(
-                repository, new ReferenceCountService(repository, storage), true);
+        ReconciliationService service = new ReconciliationService(repository);
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
@@ -299,7 +219,6 @@ class ReconciliationServiceTest {
         assertThat(statistics.getEntityInsertCount()).isZero();
         assertThat(statistics.getEntityUpdateCount()).isZero();
         assertThat(statistics.getEntityDeleteCount()).isZero();
-        assertThat(storage.deletedKeys).isEmpty();
         assertThat(summary.mismatchCount()).isEqualTo(3);
     }
 
@@ -319,30 +238,5 @@ class ReconciliationServiceTest {
         entityManager.persist(content);
         entityManager.getTransaction().commit();
         return content;
-    }
-
-    private static final class RecordingStorage implements BlobStorage {
-
-        private final java.util.List<String> deletedKeys = new java.util.ArrayList<>();
-
-        @Override
-        public StoredBlob put(PutBlobRequest request) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public BlobResource get(String objectKey) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void delete(String objectKey) {
-            deletedKeys.add(objectKey);
-        }
-
-        @Override
-        public boolean exists(String objectKey) {
-            return true;
-        }
     }
 }

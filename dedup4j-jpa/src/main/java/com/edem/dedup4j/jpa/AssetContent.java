@@ -164,6 +164,10 @@ public class AssetContent {
         refCount--;
     }
 
+    void repairRefCount(long refCount) {
+        this.refCount = refCount;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }

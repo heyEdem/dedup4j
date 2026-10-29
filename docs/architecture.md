@@ -69,7 +69,7 @@ multi-instance end-to-end verification, as defined by
 | `dedup4j-jpa` | Framework-independent relational metadata module. Owns the `AssetContent` JPA mapping, content-identity uniqueness, physical object metadata, timestamps, optimistic-lock state, transaction-scoped repository lookups/locks, create-or-retain duplicate-key retry, lock-aware reference mutation, and post-commit, lock-revalidated deletion of released content; uses provider-neutral contracts and exceptions from `dedup4j-core`. |
 | `dedup4j-spring-boot-starter` | Standard Spring Boot upload dependency. Owns `dedup4j.*` configuration binding, selected-provider client/storage auto-configuration, consumer JPA entity discovery and conditional service assembly, guarded Liquibase schema lifecycle, per-operation Spring transactions, the provider-neutral `BlobStore` upload façade and ordered batch outcomes, final provider validation, and optional Micrometer metrics; it transitively includes the local, S3, and Azure adapter modules but declares no provider SDK coordinates or REST controllers. |
 | `dedup4j-jpa` history store | `com.edem.dedup4j.historystore` holds immutable `HistoryDataset`, `UploadEvent` and `FailureEvent` entities with append/read-only repositories (`UploadLedgerRepository`, `FailureLogRepository`) over the append-only `dedup4j_history_dataset`, `dedup4j_upload_event` and `dedup4j_failure_event` tables. The starter `history` package (`UploadHistory`, `JpaUploadHistory`, `DisabledUploadHistory`, `H2AppendOnlyTrigger`) records history inside the upload transaction; PostgreSQL and H2 only. |
-| `dedup4j-spring-boot-starter` reconcile | `com.edem.dedup4j.reconcile` compares stored `ref_count` with an application `LogicalReferenceCountSource`. `ScheduledReconciliation` (registered by `autoconfigure.reconcile.Dedup4jReconciliationAutoConfiguration` when `dedup4j.reconciliation.enabled=true`) runs a read-only, keyset-paged pass on a cron trigger with its own private scheduler and keeps only this instance's last run; repair is never scheduled. |
+| `dedup4j-spring-boot-starter` reconcile | `com.edem.dedup4j.reconcile` compares stored `ref_count` with an application `LogicalReferenceCountSource`. `ScheduledReconciliation` (registered by `autoconfigure.reconcile.Dedup4jReconciliationAutoConfiguration` when `dedup4j.reconciliation.enabled=true`) runs a read-only, keyset-paged pass on a cron trigger with its own private scheduler and keeps only this instance's last run; repair is never scheduled. `CoordinatedRepair` rechecks each mismatch under its row lock at READ COMMITTED against `ContentReferenceCountSource` and records every repair in the append-only `dedup4j_reference_repair` table. |
 | `dedup4j-storage-local` | Local filesystem storage adapter module. Owns local provider configuration (`LocalBlobStorageProperties` with configurable root directory) and the `LocalBlobStorage` adapter implementing put, get, idempotent delete, and exists with normalized key resolution that rejects path traversal outside the root; depends only on `dedup4j-core` with no cloud SDKs. |
 | `dedup4j-storage-s3` | AWS S3 provider module. Owns the module-local AWS SDK v2 dependency management, S3 connection properties, and `S3BlobStorage` adapter implementing the provider-neutral `BlobStorage` contract with streaming access and domain exception mapping. |
 | `dedup4j-storage-azure` | Azure Blob Storage provider module. Owns the module-local Azure SDK BOM and Blob SDK dependency, Azure connection properties, and `AzureBlobStorage`, which implements streaming put/get, idempotent delete, existence checks, and provider-to-core exception mapping without exposing Azure types through core. |
@@ -112,6 +112,19 @@ Application deletes logical asset
   -> a transaction 2 failure is logged and recorded, not thrown
   -> ReleasedObjectCleanup.run(), called by the application, later pages through rows at zero
        -> per row, its own transaction: lock, still zero and object exists: delete
+```
+
+Repair flow (applications following the single-transaction writer contract):
+
+```text
+CoordinatedRepair.run(candidates, authority), outside any transaction
+  -> read-only discovery: bulk counts vs every row, keep mismatches
+  -> per candidate, its own READ COMMITTED transaction:
+       lock AssetContent (waits for any writer holding it)
+       -> authority.countLogicalReferences(id), read after the lock
+       -> equal: nothing to do; stored zero: left at zero
+       -> otherwise set ref_count and append dedup4j_reference_repair, commit together
+  -> repaired to zero: delete flow's transaction 2 after commit
 ```
 
 Planned monitoring flow:
