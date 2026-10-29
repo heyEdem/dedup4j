@@ -114,6 +114,8 @@ Application deletes logical asset
        -> per row, its own transaction: lock, still zero and object exists: delete
 ```
 
+Applications meet the writer contract by changing counts through `TransactionalBlobReferences` (`store`, `retain`, `release`) inside the same transaction as their own reference rows; the auto-configured `BlobDeduplicationService` and `BlobStore` commit in their own transactions and do not.
+
 Repair flow (applications following the single-transaction writer contract):
 
 ```text
