@@ -40,8 +40,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
@@ -278,6 +280,40 @@ class UploadHistoryRecordingTest {
             assertThat(history(context).recentFailures(Instant.EPOCH, 10)).isEmpty();
             assertThat(count(context, "dedup4j.uploads")).isEqualTo(1);
             assertThat(count(context, "dedup4j.skipped.physical.writes")).isZero();
+        });
+    }
+
+    @Test
+    void joinedUploadIsAppendedToHistoryWithTheCallersCommit() {
+        runner().run(context -> {
+            TransactionalBlobReferences references = context.getBean(TransactionalBlobReferences.class);
+            TransactionTemplate transaction = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
+
+            transaction.executeWithoutResult(status -> {
+                references.store(command());
+                assertTotals(history(context).totals(), 0, 0, 0, 0, 0);
+            });
+            transaction.executeWithoutResult(status -> {
+                references.store(command());
+                status.setRollbackOnly();
+            });
+
+            assertTotals(history(context).totals(), 1, 0, 1, N, 0);
+            assertThat(count(context, "dedup4j.uploads")).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void rejectedJoinedUploadIsListedAfterTheCallerCommits() {
+        runner().withPropertyValues("dedup4j.deduplication.allowed-content-types=image/*").run(context -> {
+            TransactionalBlobReferences references = context.getBean(TransactionalBlobReferences.class);
+
+            new TransactionTemplate(context.getBean(PlatformTransactionManager.class)).executeWithoutResult(status ->
+                    assertThatThrownBy(() -> references.store(command()))
+                            .isInstanceOf(BlobValidationException.class));
+
+            assertThat(history(context).recentFailures(Instant.EPOCH, 10)).singleElement()
+                    .satisfies(failure -> assertThat(failure.operation()).isEqualTo("upload"));
         });
     }
 

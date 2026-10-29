@@ -25,6 +25,7 @@ import com.edem.dedup4j.service.BlobDeduplicationService;
 import com.edem.dedup4j.service.ContentTypePolicy;
 import com.edem.dedup4j.service.DefaultBlobDeduplicationService;
 import com.edem.dedup4j.service.SpringTransactionalBlobDeduplicationService;
+import com.edem.dedup4j.service.TransactionalBlobReferences;
 import com.edem.dedup4j.facade.BlobStore;
 import com.edem.dedup4j.facade.DefaultBlobStore;
 import jakarta.persistence.EntityManager;
@@ -148,22 +149,41 @@ public class Dedup4jServiceAutoConfiguration {
             ObjectProvider<UploadHistory> history,
             Dedup4jProperties properties
     ) {
-        BlobDeduplicationService delegate = new DefaultBlobDeduplicationService(
-                repository,
-                referenceCountService,
-                mutationService,
-                storage,
-                contentHasher,
-                objectKeyStrategy,
-                metrics,
-                properties.getDeduplication().getMaxUploadSize().toBytes(),
-                contentTypePolicy.getIfAvailable(() -> ContentTypePolicy.of(
-                        properties.getDeduplication().getAllowedContentTypes()))
-        );
+        BlobDeduplicationService delegate = defaultService(repository, referenceCountService, mutationService,
+                storage, contentHasher, objectKeyStrategy, metrics, contentTypePolicy, properties);
         return new SpringTransactionalBlobDeduplicationService(
                 delegate,
                 repository,
                 referenceCountService,
+                transactionManager,
+                history.getIfAvailable(DisabledUploadHistory::new),
+                metrics
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(TransactionalBlobReferences.class)
+    TransactionalBlobReferences transactionalBlobReferences(
+            ObjectProvider<EntityManager> entityManagers,
+            ObjectProvider<EntityManagerFactory> entityManagerFactories,
+            AssetContentRepository repository,
+            ReferenceCountService referenceCountService,
+            AssetContentMutationService mutationService,
+            BlobStorage storage,
+            ContentHasher contentHasher,
+            ObjectKeyStrategy objectKeyStrategy,
+            Dedup4jMetrics metrics,
+            ObjectProvider<ContentTypePolicy> contentTypePolicy,
+            PlatformTransactionManager transactionManager,
+            ObjectProvider<UploadHistory> history,
+            Dedup4jProperties properties
+    ) {
+        return new TransactionalBlobReferences(
+                defaultService(repository, referenceCountService, mutationService, storage, contentHasher,
+                        objectKeyStrategy, metrics, contentTypePolicy, properties),
+                repository,
+                referenceCountService,
+                resolveEntityManager(entityManagers, entityManagerFactories),
                 transactionManager,
                 history.getIfAvailable(DisabledUploadHistory::new),
                 metrics
@@ -230,6 +250,31 @@ public class Dedup4jServiceAutoConfiguration {
     @ConditionalOnMissingBean(BlobStore.class)
     BlobStore blobStore(BlobDeduplicationService service) {
         return new DefaultBlobStore(service);
+    }
+
+    private static DefaultBlobDeduplicationService defaultService(
+            AssetContentRepository repository,
+            ReferenceCountService referenceCountService,
+            AssetContentMutationService mutationService,
+            BlobStorage storage,
+            ContentHasher contentHasher,
+            ObjectKeyStrategy objectKeyStrategy,
+            Dedup4jMetrics metrics,
+            ObjectProvider<ContentTypePolicy> contentTypePolicy,
+            Dedup4jProperties properties
+    ) {
+        return new DefaultBlobDeduplicationService(
+                repository,
+                referenceCountService,
+                mutationService,
+                storage,
+                contentHasher,
+                objectKeyStrategy,
+                metrics,
+                properties.getDeduplication().getMaxUploadSize().toBytes(),
+                contentTypePolicy.getIfAvailable(() -> ContentTypePolicy.of(
+                        properties.getDeduplication().getAllowedContentTypes()))
+        );
     }
 
     /** Read when a repair runs, so applications that never repair start on any database. */
