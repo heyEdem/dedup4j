@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
+import java.util.function.Supplier;
 
 /**
  * Repairs reference-count drift without acting on application writes still in flight, for
@@ -38,14 +40,18 @@ import java.util.concurrent.CancellationException;
  * {@link ReferenceCountService#deleteIfReleased}, which rechecks the count under the lock, so an
  * upload that restores it first keeps its bytes.</p>
  *
- * <p>Content at zero that the application still references is reported and left at zero, and so
- * are references to unknown content. Rows created or drifting after discovery passed them wait for
- * the next pass. Nothing schedules a pass; call {@link #run} outside any transaction.</p>
+ * <p>Content at zero that the application still references is logged, counted and left at zero.
+ * References to content dedup4j has no row for are ignored here; {@link ReconciliationService#summarize}
+ * reports them. Rows created or drifting after discovery passed them wait for the next pass. Nothing
+ * schedules a pass; call {@link #run} outside any transaction.</p>
+ *
+ * <p>Runs only on PostgreSQL and H2, whose schema makes the repair audit append-only.</p>
  */
 public final class CoordinatedRepair {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CoordinatedRepair.class);
     private static final String DELETE = "delete";
+    private static final Set<String> AUDITED_DATABASES = Set.of("PostgreSQL", "H2");
 
     private final AssetContentRepository contents;
     private final ReferenceRepairService repairService;
@@ -57,6 +63,7 @@ public final class CoordinatedRepair {
     private final String instanceId;
     private final Clock clock;
     private final int pageSize;
+    private final Supplier<String> databaseProduct;
 
     public CoordinatedRepair(
             AssetContentRepository contents,
@@ -67,7 +74,8 @@ public final class CoordinatedRepair {
             Dedup4jMetrics metrics,
             String instanceId,
             Clock clock,
-            int pageSize
+            int pageSize,
+            Supplier<String> databaseProduct
     ) {
         this.contents = Objects.requireNonNull(contents, "contents must not be null");
         this.repairService = Objects.requireNonNull(repairService, "repairService must not be null");
@@ -84,6 +92,7 @@ public final class CoordinatedRepair {
             throw new IllegalArgumentException("pageSize must be positive");
         }
         this.pageSize = pageSize;
+        this.databaseProduct = Objects.requireNonNull(databaseProduct, "databaseProduct must not be null");
         // A rejected isolation level fails the transaction's begin, so no repair runs without it.
         this.repairs = new TransactionTemplate(transactionManager);
         this.repairs.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -97,13 +106,19 @@ public final class CoordinatedRepair {
      * @param candidates nominates rows to recheck; it may be stale or approximate
      * @param authority  the application's count for one content, read under that content's lock
      * @throws IllegalStateException when called inside a transaction, whose locks repair could wait on forever,
-     *                               or when the transaction manager cannot run READ COMMITTED transactions
+     *                               on a database other than PostgreSQL or H2, or when the transaction
+     *                               manager cannot run READ COMMITTED transactions
      */
     public CoordinatedRepairResult run(LogicalReferenceCountSource candidates, ContentReferenceCountSource authority) {
         Objects.requireNonNull(candidates, "candidates must not be null");
         Objects.requireNonNull(authority, "authority must not be null");
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("CoordinatedRepair.run must be called outside a transaction");
+        }
+        String product = databaseProduct.get();
+        if (!AUDITED_DATABASES.contains(product)) {
+            throw new IllegalStateException("CoordinatedRepair requires PostgreSQL or H2, whose schema keeps the "
+                    + "repair audit append-only, but the database is '" + product + "'");
         }
         UUID runId = UUID.randomUUID();
         Discovery discovery = discover(candidates);

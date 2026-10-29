@@ -23,4 +23,14 @@ class CoordinatedRepairPostgresTest extends AbstractCoordinatedRepairTest {
                 "jakarta.persistence.jdbc.user", POSTGRES.getUsername(),
                 "jakarta.persistence.jdbc.password", POSTGRES.getPassword());
     }
+
+    @Override
+    protected String databaseProduct() {
+        return "PostgreSQL";
+    }
+
+    @Override
+    protected String lockWaitersQuery() {
+        return "select count(*) from pg_stat_activity where wait_event_type = 'Lock' and datname = current_database()";
+    }
 }

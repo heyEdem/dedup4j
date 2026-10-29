@@ -50,8 +50,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 abstract class AbstractCoordinatedRepairTest {
 
-    private static final long HOLD_MILLIS = 700;
-
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;
     private JpaTransactionManager transactionManager;
@@ -66,6 +64,12 @@ abstract class AbstractCoordinatedRepairTest {
 
     /** JDBC settings for a new, empty database; each test gets its own, so no drift carries over. */
     protected abstract Map<String, Object> connectionProperties();
+
+    /** The JDBC product name, as {@code DatabaseMetaData} reports it. */
+    protected abstract String databaseProduct();
+
+    /** Counts sessions that are waiting on a row lock another session holds. */
+    protected abstract String lockWaitersQuery();
 
     @BeforeEach
     void createDatabase() {
@@ -131,7 +135,7 @@ abstract class AbstractCoordinatedRepairTest {
         // Discovery is told the count is off, so the row is rechecked while the writer holds its lock.
         Future<CoordinatedRepairResult> repair = executor.submit(() ->
                 repair().run(() -> Map.of(content.getId(), 5L), this::lookup));
-        Thread.sleep(HOLD_MILLIS);
+        awaitLockWaiter();
         assertThat(repair).isNotDone();
         assertThat(lookups).hasValue(0);
         finish.countDown();
@@ -155,8 +159,9 @@ abstract class AbstractCoordinatedRepairTest {
 
         Future<CoordinatedRepairResult> repair = executor.submit(() ->
                 repair().run(() -> Map.of(content.getId(), 5L), this::lookup));
-        Thread.sleep(HOLD_MILLIS);
+        awaitLockWaiter();
         assertThat(repair).isNotDone();
+        assertThat(lookups).hasValue(0);
         finish.countDown();
         writer.get(10, TimeUnit.SECONDS);
         CoordinatedRepairResult result = repair.get(10, TimeUnit.SECONDS);
@@ -251,11 +256,25 @@ abstract class AbstractCoordinatedRepairTest {
         AssetContent content = content(3, 1);
         CoordinatedRepair withoutIsolation = new CoordinatedRepair(contents, new ReferenceRepairService(contents, audit),
                 referenceCounts, new JpaTransactionManager(entityManagerFactory), new DisabledUploadHistory(),
-                new Dedup4jMetrics(registry), "test-instance", Clock.systemUTC(), 2);
+                new Dedup4jMetrics(registry), "test-instance", Clock.systemUTC(), 2, this::databaseProduct);
 
         assertThatThrownBy(() -> withoutIsolation.run(this::bulkCounts, this::lookup))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("READ COMMITTED");
+        assertThat(refCount(content)).isEqualTo(3);
+        assertThat(repairsOf(content)).isEmpty();
+    }
+
+    @Test
+    void refusesADatabaseWithoutAnAppendOnlyAudit() {
+        AssetContent content = content(3, 1);
+        CoordinatedRepair onMySql = new CoordinatedRepair(contents, new ReferenceRepairService(contents, audit),
+                referenceCounts, hooking, new DisabledUploadHistory(), new Dedup4jMetrics(registry),
+                "test-instance", Clock.systemUTC(), 2, () -> "MySQL");
+
+        assertThatThrownBy(() -> onMySql.run(this::bulkCounts, this::lookup))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("PostgreSQL or H2");
         assertThat(refCount(content)).isEqualTo(3);
         assertThat(repairsOf(content)).isEmpty();
     }
@@ -278,7 +297,21 @@ abstract class AbstractCoordinatedRepairTest {
     private CoordinatedRepair repair(String instanceId) {
         return new CoordinatedRepair(contents, new ReferenceRepairService(contents, audit), referenceCounts,
                 hooking, new DisabledUploadHistory(), new Dedup4jMetrics(registry), instanceId,
-                Clock.systemUTC(), 2);
+                Clock.systemUTC(), 2, this::databaseProduct);
+    }
+
+    /** Waits until the database reports a session blocked on a lock: repair, waiting for the writer. */
+    private void awaitLockWaiter() throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (System.nanoTime() < deadline) {
+            Number waiters = new TransactionTemplate(transactionManager).execute(status ->
+                    (Number) entityManager.createNativeQuery(lockWaitersQuery()).getSingleResult());
+            if (waiters.longValue() > 0) {
+                return;
+            }
+            Thread.sleep(20);
+        }
+        throw new AssertionError("repair never waited on the writer's lock");
     }
 
     /** The application's writer: one transaction adds its reference row and retains the content. */

@@ -47,6 +47,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.Clock;
 
 @AutoConfiguration(before = Dedup4jAutoConfiguration.class)
@@ -206,6 +209,7 @@ public class Dedup4jServiceAutoConfiguration {
             PlatformTransactionManager transactionManager,
             ObjectProvider<UploadHistory> history,
             Dedup4jMetrics metrics,
+            ObjectProvider<DataSource> dataSource,
             @Value("${dedup4j.history.instance-id:${dedup4j.management.instance-id:}}") String instanceId
     ) {
         return new CoordinatedRepair(
@@ -217,7 +221,8 @@ public class Dedup4jServiceAutoConfiguration {
                 metrics,
                 instanceId == null || instanceId.isBlank() ? DefaultInstanceId.value() : instanceId,
                 Clock.systemUTC(),
-                REPAIR_PAGE_SIZE
+                REPAIR_PAGE_SIZE,
+                () -> databaseProduct(dataSource)
         );
     }
 
@@ -225,6 +230,19 @@ public class Dedup4jServiceAutoConfiguration {
     @ConditionalOnMissingBean(BlobStore.class)
     BlobStore blobStore(BlobDeduplicationService service) {
         return new DefaultBlobStore(service);
+    }
+
+    /** Read when a repair runs, so applications that never repair start on any database. */
+    private static String databaseProduct(ObjectProvider<DataSource> dataSource) {
+        DataSource source = dataSource.getIfUnique();
+        if (source == null) {
+            throw new IllegalStateException("CoordinatedRepair needs a single DataSource to check the database");
+        }
+        try (Connection connection = source.getConnection()) {
+            return connection.getMetaData().getDatabaseProductName();
+        } catch (SQLException failure) {
+            throw new IllegalStateException("Unable to determine the database product for CoordinatedRepair", failure);
+        }
     }
 
     private static EntityManager resolveEntityManager(
