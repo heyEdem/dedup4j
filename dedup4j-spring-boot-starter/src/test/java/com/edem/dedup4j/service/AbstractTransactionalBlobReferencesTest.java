@@ -32,6 +32,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
 import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.UnexpectedRollbackException;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -339,6 +340,50 @@ abstract class AbstractTransactionalBlobReferencesTest {
         assertThat(refCount(stored.assetContentId())).isZero();
         assertThat(storage.objects).containsKey(stored.objectKey());
         assertThat(history.failures).singleElement().isSameAs(storage.deleteFailure);
+    }
+
+    @Test
+    void anEarlierFailingAfterCommitCallbackDoesNotSkipTheDeleteOrTheMeters() {
+        TransactionalBlobReferences references = references();
+        BlobReference stored = inTransaction(() -> references.store(command("released")));
+        RuntimeException callbackFailure = new IllegalStateException("application callback failed");
+
+        Throwable thrown = catchThrowable(() -> inTransaction(() -> {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    throw callbackFailure;
+                }
+            });
+            references.release(stored.assetContentId());
+            references.store(command("stored too"));
+        }));
+
+        assertThat(thrown).isSameAs(callbackFailure);
+        assertThat(storage.objects).doesNotContainKey(stored.objectKey());
+        assertThat(registry.counter("dedup4j.uploads").count()).isEqualTo(2.0);
+    }
+
+    @Test
+    void uploadMadeDuringTheCommitIsStillAppendedToHistory() {
+        history.persistent = true;
+        TransactionalBlobReferences references = references();
+
+        UUID contentId = inTransaction(() -> {
+            java.util.concurrent.atomic.AtomicReference<UUID> stored = new java.util.concurrent.atomic.AtomicReference<>();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void beforeCommit(boolean readOnly) {
+                    stored.set(references.store(command("during commit")).assetContentId());
+                }
+            });
+            return stored;
+        }).get();
+
+        assertThat(refCount(contentId)).isEqualTo(1);
+        assertThat(history.uploads).singleElement()
+                .satisfies(upload -> assertThat(upload.assetContentId()).isEqualTo(contentId));
+        assertThat(registry.counter("dedup4j.uploads").count()).isEqualTo(1.0);
     }
 
     private TransactionalBlobReferences references() {

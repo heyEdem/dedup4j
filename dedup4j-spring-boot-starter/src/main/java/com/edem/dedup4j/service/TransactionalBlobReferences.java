@@ -38,12 +38,16 @@ import java.util.concurrent.atomic.AtomicReference;
  * <ul>
  *   <li>Uploads that race to create the same content: the loser gets a
  *   {@link ContentIdentityConflictException} and retries its whole transaction.</li>
- *   <li>Upload history is appended just before commit, after the transaction's own changes are
- *   flushed, so its shared lock is the last one taken and is held only through commit. While history
+ *   <li>Upload history is appended in a before-commit callback, after the transaction's pending
+ *   changes are flushed, so its shared lock is held only through commit. Application before-commit
+ *   callbacks that take further locks must run first (a lower order, or registered earlier); otherwise
+ *   they can deadlock with another upload's append. An upload made during the commit itself, after
+ *   that callback ran, is appended in a new transaction once the caller's has committed. While history
  *   is persistent, the transaction must run at READ COMMITTED (the PostgreSQL and H2 default).</li>
- *   <li>Content released to zero has its object deleted after commit, in a new transaction, unless a
- *   later upload restored it. A rollback deletes nothing.</li>
- *   <li>Failures are recorded in history after the transaction completes; meters only after commit.</li>
+ *   <li>Content released to zero has its object deleted once the transaction has committed, in a new
+ *   transaction, unless a later upload restored it. A rollback deletes nothing.</li>
+ *   <li>Failures are recorded in history after the transaction completes; meters only after commit.
+ *   Both run on completion, so a failing callback of the application's cannot skip them.</li>
  *   <li>Locks are held until the caller commits; a transaction touching several contents should take
  *   them in a consistent order, or retry on deadlock.</li>
  * </ul>
@@ -59,7 +63,7 @@ public final class TransactionalBlobReferences {
     private final ReferenceCountService referenceCountService;
     private final EntityManager entityManager;
     private final TransactionTemplate joined;
-    private final TransactionTemplate deletes;
+    private final TransactionTemplate afterCommit;
     private final UploadHistory history;
     private final Dedup4jMetrics metrics;
 
@@ -80,8 +84,8 @@ public final class TransactionalBlobReferences {
         Objects.requireNonNull(transactionManager, "transactionManager must not be null");
         this.joined = new TransactionTemplate(transactionManager);
         this.joined.setPropagationBehavior(TransactionDefinition.PROPAGATION_MANDATORY);
-        this.deletes = new TransactionTemplate(transactionManager);
-        this.deletes.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.afterCommit = new TransactionTemplate(transactionManager);
+        this.afterCommit.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.history = Objects.requireNonNull(history, "history must not be null");
         this.metrics = Objects.requireNonNull(metrics, "metrics must not be null");
     }
@@ -139,8 +143,10 @@ public final class TransactionalBlobReferences {
         releasedKey.ifPresent(objectKey -> TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
-                    public void afterCommit() {
-                        deleteReleased(assetContentId, objectKey);
+                    public void afterCompletion(int status) {
+                        if (status == STATUS_COMMITTED) {
+                            deleteReleased(assetContentId, objectKey);
+                        }
                     }
                 }));
     }
@@ -148,7 +154,7 @@ public final class TransactionalBlobReferences {
     /** The release has committed; a failure leaves the object for {@code ReleasedObjectCleanup} and is never thrown. */
     private void deleteReleased(UUID assetContentId, String objectKey) {
         try {
-            deletes.executeWithoutResult(status -> delegate.deleteReleased(assetContentId));
+            afterCommit.executeWithoutResult(status -> delegate.deleteReleased(assetContentId));
         } catch (RuntimeException failure) {
             LOGGER.warn(
                     "event=blob.cleanup.failed contentId={} objectKey={} errorType={} failureMessage={} "
@@ -205,10 +211,11 @@ public final class TransactionalBlobReferences {
         }
     }
 
-    /** Appends the upload to history last, just before commit, and records its meters after commit. */
+    /** Appends the upload to history just before commit and records its meters once committed. */
     private final class CompletedUpload implements TransactionSynchronization {
 
         private final StoreOutcome outcome;
+        private boolean appendAttempted;
         private RuntimeException appendFailure;
 
         private CompletedUpload(StoreOutcome outcome) {
@@ -217,16 +224,14 @@ public final class TransactionalBlobReferences {
 
         @Override
         public void beforeCommit(boolean readOnly) {
+            appendAttempted = true;
             if (!history.persistent()) {
                 return;
             }
-            BlobReference reference = outcome.reference();
-            ContentHash hash = reference.contentHash();
             try {
-                // Takes the transaction's remaining row locks before the history lock, never after.
+                // Takes the transaction's pending row locks before the history lock.
                 entityManager.flush();
-                history.recordUpload(UploadContribution.completed(reference.assetContentId(), hash.algorithm(),
-                        hash.hash(), hash.sizeBytes(), reference.duplicate(), outcome.physicalWrite()));
+                history.recordUpload(contribution());
             } catch (RuntimeException failure) {
                 appendFailure = failure;
                 throw failure;
@@ -234,7 +239,16 @@ public final class TransactionalBlobReferences {
         }
 
         @Override
-        public void afterCommit() {
+        public void afterCompletion(int status) {
+            if (appendFailure != null) {
+                recordGuarded(UPLOAD, outcome.reference().contentHash().hash(), null, appendFailure);
+            }
+            if (status != STATUS_COMMITTED) {
+                return;
+            }
+            if (!appendAttempted && history.persistent()) {
+                appendLate();
+            }
             BlobReference reference = outcome.reference();
             try {
                 metrics.recordUpload(reference.contentHash().sizeBytes(), reference.duplicate(), outcome.physicalWrite());
@@ -245,11 +259,25 @@ public final class TransactionalBlobReferences {
             }
         }
 
-        @Override
-        public void afterCompletion(int status) {
-            if (appendFailure != null) {
-                recordGuarded(UPLOAD, outcome.reference().contentHash().hash(), null, appendFailure);
+        /** The upload was made during the commit, after the before-commit callbacks had been collected. */
+        private void appendLate() {
+            BlobReference reference = outcome.reference();
+            LOGGER.warn("event=history.upload.late contentId={} detail=\"stored during commit; "
+                    + "appended to history in a new transaction\"", reference.assetContentId());
+            try {
+                afterCommit.executeWithoutResult(status -> history.recordUpload(contribution()));
+            } catch (RuntimeException failure) {
+                LOGGER.warn("event=history.upload.unrecorded contentId={} errorType={} failureMessage={}",
+                        reference.assetContentId(), failure.getClass().getSimpleName(), failure.getMessage(),
+                        failure);
             }
+        }
+
+        private UploadContribution contribution() {
+            BlobReference reference = outcome.reference();
+            ContentHash hash = reference.contentHash();
+            return UploadContribution.completed(reference.assetContentId(), hash.algorithm(), hash.hash(),
+                    hash.sizeBytes(), reference.duplicate(), outcome.physicalWrite());
         }
     }
 }

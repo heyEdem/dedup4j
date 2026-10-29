@@ -3,7 +3,7 @@
 ## 2026-10-29 — Transaction-joining write service for the repair writer contract (#81, part 2)
 
 - New `TransactionalBlobReferences` bean: `store`, `retain` and `release` join the caller's transaction, so an application's reference row and the dedup4j count change commit together, as `CoordinatedRepair` requires. Calls outside a read-write transaction are rejected; with persistent history, an explicit isolation other than READ COMMITTED is refused.
-- A lost insert race throws the new `ContentIdentityConflictException` (a Spring `ConcurrencyFailureException`); the caller retries its whole transaction. Upload history is appended just before commit, meters after commit, and failures after completion. Released content is deleted after commit. No batch method.
+- A lost insert race throws the new `ContentIdentityConflictException` (a Spring `ConcurrencyFailureException`); the caller retries its whole transaction. Upload history is appended in a before-commit callback (an upload made during the commit is appended afterwards in a new transaction); meters, failure recording and the delete of released content run on completion, so an earlier failing application callback cannot skip them. No batch method.
 - `AssetContentMutationService` flushes pending changes before inserting new content, so a caller's own constraint failure is not reported as an identity race.
 - A rollback after new content was written leaves an orphaned object; tracked in #89.
 - Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`.
