@@ -4,6 +4,8 @@
 
 - `PutBlobRequest.contentDisposition()` encodes the original filename as `attachment; filename="<ASCII fallback>"; filename*=UTF-8''<percent-encoded>` (RFC 6266, RFC 8187).
 - `S3BlobStorage` and `AzureBlobStorage` send it instead of the raw filename. Before, a filename with a non-ASCII character (such as the narrow no-break space in macOS screenshot names) made S3 reject the upload with `403 SignatureDoesNotMatch`.
+- The fallback name is cut to 255 characters and the UTF-8 form is dropped past 1024 characters, keeping the header under S3's 2 KB system-metadata limit.
+- **Behaviour change:** S3 and Azure uploads with non-ASCII metadata keys or values now fail with `BlobValidationException` before any request (`PutBlobRequest.requireAsciiMetadata()`), instead of a provider error.
 - Modules affected: `dedup4j-core`, `dedup4j-storage-s3`, `dedup4j-storage-azure`.
 
 ## 2026-10-30 — Skip released rows whose object is confirmed deleted (#92)

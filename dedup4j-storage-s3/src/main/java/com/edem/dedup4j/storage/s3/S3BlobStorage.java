@@ -52,6 +52,7 @@ public class S3BlobStorage implements ListableBlobStorage, AutoCloseable {
 
     @Override
     public StoredBlob put(PutBlobRequest request) {
+        request.requireAsciiMetadata();
         String bucket = bucket();
         try (InputStream content = request.content()) {
             software.amazon.awssdk.services.s3.model.PutObjectRequest objectRequest = putRequest(bucket, request);

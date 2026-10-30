@@ -52,6 +52,7 @@ public class AzureBlobStorage implements ListableBlobStorage {
         if (request == null) {
             throw new BlobValidationException("request must not be null");
         }
+        request.requireAsciiMetadata();
         String container = container();
         try (InputStream content = request.content()) {
             BlobHttpHeaders headers = new BlobHttpHeaders();

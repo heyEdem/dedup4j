@@ -47,6 +47,25 @@ class StorageModelsTest {
         assertEquals(null, withFilename(null).contentDisposition());
     }
 
+    @Test
+    void contentDispositionStaysShortForVeryLongFilenames() {
+        String header = withFilename("x".repeat(1014) + ".txt").contentDisposition();
+
+        assertEquals("attachment; filename=\"" + "x".repeat(255) + "\"", header);
+    }
+
+    @Test
+    void rejectsMetadataProvidersCannotSend() {
+        PutBlobRequest unicode = new PutBlobRequest("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain",
+                null, Map.of("owner", "Edém"));
+        PutBlobRequest ascii = new PutBlobRequest("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain",
+                null, Map.of("owner", "edem"));
+
+        BlobValidationException rejected = assertThrows(BlobValidationException.class, unicode::requireAsciiMetadata);
+        assertTrue(rejected.getMessage().contains("owner"));
+        ascii.requireAsciiMetadata();
+    }
+
     private static PutBlobRequest withFilename(String filename) {
         return new PutBlobRequest("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain", filename, Map.of());
     }

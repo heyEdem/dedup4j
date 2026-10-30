@@ -15,6 +15,9 @@ public record PutBlobRequest(
         Map<String, String> metadata
 ) {
 
+    private static final int MAX_FALLBACK_LENGTH = 255;
+    private static final int MAX_HEADER_LENGTH = 1024;
+
     public PutBlobRequest {
         if (objectKey == null || objectKey.isBlank()) {
             throw new BlobValidationException("objectKey must not be blank");
@@ -31,7 +34,9 @@ public record PutBlobRequest(
     /**
      * The {@code Content-Disposition} header for the original filename, or {@code null} without one.
      * Header values must be ASCII, and signed requests fail on anything else, so the name is sent as
-     * an ASCII fallback plus its UTF-8 form (RFC 6266, RFC 8187).
+     * an ASCII fallback plus its UTF-8 form (RFC 6266, RFC 8187). The fallback is cut to 255
+     * characters, and the UTF-8 form is left out when the header would exceed 1024 characters, so it
+     * stays within provider limits on system metadata.
      */
     public String contentDisposition() {
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -39,7 +44,7 @@ public record PutBlobRequest(
         }
         StringBuilder fallback = new StringBuilder();
         StringBuilder encoded = new StringBuilder();
-        originalFilename.codePoints().forEach(codePoint ->
+        originalFilename.codePoints().limit(MAX_FALLBACK_LENGTH).forEach(codePoint ->
                 fallback.append(codePoint >= 0x20 && codePoint < 0x7f && codePoint != '"' && codePoint != '\\'
                         ? (char) codePoint : '_'));
         for (byte b : originalFilename.getBytes(StandardCharsets.UTF_8)) {
@@ -50,6 +55,24 @@ public record PutBlobRequest(
                 encoded.append('%').append(String.format("%02X", b & 0xff));
             }
         }
-        return "attachment; filename=\"" + fallback + "\"; filename*=UTF-8''" + encoded;
+        String header = "attachment; filename=\"" + fallback + "\"";
+        String withUtf8 = header + "; filename*=UTF-8''" + encoded;
+        return withUtf8.length() <= MAX_HEADER_LENGTH ? withUtf8 : header;
+    }
+
+    /**
+     * Rejects metadata that providers cannot carry in request headers: S3 fails to sign non-ASCII
+     * values and Azure requires ASCII. Storage adapters call it before writing.
+     */
+    public void requireAsciiMetadata() {
+        metadata.forEach((key, value) -> {
+            if (!isPrintableAscii(key) || (value != null && !isPrintableAscii(value))) {
+                throw new BlobValidationException("Metadata '" + key + "' must be printable ASCII for this storage provider");
+            }
+        });
+    }
+
+    private static boolean isPrintableAscii(String text) {
+        return text.chars().allMatch(c -> c >= 0x20 && c < 0x7f);
     }
 }
