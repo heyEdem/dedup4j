@@ -58,8 +58,8 @@ public class AzureBlobStorage implements ListableBlobStorage {
             if (request.contentType() != null && !request.contentType().isBlank()) {
                 headers.setContentType(request.contentType());
             }
-            if (request.originalFilename() != null && !request.originalFilename().isBlank()) {
-                headers.setContentDisposition(request.originalFilename());
+            if (request.contentDisposition() != null) {
+                headers.setContentDisposition(request.contentDisposition());
             }
 
             BlobParallelUploadOptions options = new BlobParallelUploadOptions(content)

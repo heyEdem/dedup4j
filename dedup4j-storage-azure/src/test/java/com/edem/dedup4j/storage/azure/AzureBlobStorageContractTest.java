@@ -69,7 +69,7 @@ class AzureBlobStorageContractTest {
         assertNotNull(stored.createdAt());
         assertArrayEquals(payload, fake.objects.get(OBJECT_KEY).content);
         assertEquals("text/plain", fake.objects.get(OBJECT_KEY).contentType);
-        assertEquals("notes.txt", fake.objects.get(OBJECT_KEY).contentDisposition);
+        assertEquals("attachment; filename=\"notes.txt\"; filename*=UTF-8''notes.txt", fake.objects.get(OBJECT_KEY).contentDisposition);
         assertEquals(Map.of("origin", "test"), fake.objects.get(OBJECT_KEY).metadata);
 
         assertTrue(storage.exists(OBJECT_KEY));

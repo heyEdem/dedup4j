@@ -60,7 +60,7 @@ class S3BlobStorageContractTest {
         assertEquals("blob-bucket", fake.putRequest.bucket());
         assertEquals("sha256/ab/abcdef", fake.putRequest.key());
         assertEquals("text/plain", fake.putRequest.contentType());
-        assertEquals("notes.txt", fake.putRequest.contentDisposition());
+        assertEquals("attachment; filename=\"notes.txt\"; filename*=UTF-8''notes.txt", fake.putRequest.contentDisposition());
         assertEquals(Map.of("origin", "test"), fake.putRequest.metadata());
 
         assertTrue(storage.exists("sha256/ab/abcdef"));

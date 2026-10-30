@@ -34,6 +34,24 @@ class StorageModelsTest {
     }
 
     @Test
+    void contentDispositionKeepsHeadersAsciiForAnyFilename() {
+        assertEquals("attachment; filename=\"notes.txt\"; filename*=UTF-8''notes.txt",
+                withFilename("notes.txt").contentDisposition());
+        // macOS screenshot names put a narrow no-break space (U+202F) before "PM".
+        assertEquals("attachment; filename=\"Screenshot at 4.25.10_PM.png\"; "
+                        + "filename*=UTF-8''Screenshot%20at%204.25.10%E2%80%AFPM.png",
+                withFilename("Screenshot at 4.25.10\u202FPM.png").contentDisposition());
+        assertEquals("attachment; filename=\"a_b_c_.txt\"; filename*=UTF-8''a%22b%5Cc%0D.txt",
+                withFilename("a\"b\\c\r.txt").contentDisposition());
+        assertEquals(null, withFilename(" ").contentDisposition());
+        assertEquals(null, withFilename(null).contentDisposition());
+    }
+
+    private static PutBlobRequest withFilename(String filename) {
+        return new PutBlobRequest("key", new ByteArrayInputStream(new byte[0]), 0, "text/plain", filename, Map.of());
+    }
+
+    @Test
     void storedBlobCarriesProviderNeutralLocation() {
         Instant createdAt = Instant.parse("2026-07-15T00:00:00Z");
 
