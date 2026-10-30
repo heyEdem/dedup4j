@@ -108,7 +108,8 @@ class AssetContentMappingTest {
         assertEquals(Map.of(
                 "idx_dedup4j_asset_content_hash", "content_hash",
                 "idx_dedup4j_asset_content_object_key", "object_key",
-                "idx_dedup4j_asset_content_ref_count", "ref_count"
+                "idx_dedup4j_asset_content_ref_count", "ref_count",
+                "idx_dedup4j_asset_content_released", "ref_count, object_deleted_at, id"
         ), indexes);
     }
 

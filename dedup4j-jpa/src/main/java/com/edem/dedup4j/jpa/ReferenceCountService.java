@@ -93,6 +93,7 @@ public final class ReferenceCountService {
             return false;
         }
         storage.delete(content.getObjectKey());
+        content.markObjectDeleted();
         return true;
     }
 
@@ -100,7 +101,8 @@ public final class ReferenceCountService {
      * Removes an object left behind by a released content row, for a later pass over rows at zero
      * references. Like {@link #deleteIfReleased} it locks the row and keeps the object of content
      * referenced again; it also checks storage first, so objects already deleted are not deleted
-     * again. Run it in its own transaction.
+     * again. Either way it marks the object deleted, so later passes skip the row until the content
+     * is referenced again. Run it in its own transaction.
      */
     public ReleasedCleanupOutcome cleanUpReleased(UUID assetContentId) {
         AssetContent content = findForUpdate(assetContentId);
@@ -108,9 +110,11 @@ public final class ReferenceCountService {
             return ReleasedCleanupOutcome.REFERENCED;
         }
         if (!storage.exists(content.getObjectKey())) {
+            content.markObjectDeleted();
             return ReleasedCleanupOutcome.ABSENT;
         }
         storage.delete(content.getObjectKey());
+        content.markObjectDeleted();
         return ReleasedCleanupOutcome.DELETED;
     }
 

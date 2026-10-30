@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/dedup4j/changes/003-reference-repair-append-only-postgresql.yaml
   - include:
       file: db/dedup4j/changes/004-reference-repair-append-only-h2.yaml
+  - include:
+      file: db/dedup4j/changes/005-asset-content-object-deleted-at.yaml

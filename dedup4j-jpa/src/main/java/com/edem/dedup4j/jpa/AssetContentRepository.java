@@ -24,17 +24,17 @@ public final class AssetContentRepository {
         this.entityManager = Objects.requireNonNull(entityManager, "entityManager must not be null");
     }
 
-    /** Whether any content row, referenced or released, points at this object key. */
-    public boolean existsByObjectKey(String objectKey) {
-        return !entityManager.createQuery("""
-                        select content.id
+    /** Up to {@code limit} rows pointing to the object key, which is not unique. */
+    public List<AssetContent> findByObjectKey(String objectKey, int limit) {
+        return entityManager.createQuery("""
+                        select content
                         from AssetContent content
                         where content.objectKey = :objectKey
-                        """, UUID.class)
+                        order by content.id
+                        """, AssetContent.class)
                 .setParameter("objectKey", objectKey)
-                .setMaxResults(1)
-                .getResultList()
-                .isEmpty();
+                .setMaxResults(limit)
+                .getResultList();
     }
 
     public Optional<AssetContent> findByIdentity(
@@ -95,7 +95,10 @@ public final class AssetContentRepository {
         return query.setMaxResults(limit).getResultList();
     }
 
-    /** Keyset page of released rows (zero references), ordered by ID, as {@link #findPageAfter}. */
+    /**
+     * Keyset page of released rows (zero references) whose object is not yet confirmed deleted,
+     * ordered by ID, as {@link #findPageAfter}.
+     */
     public List<AssetContent> findReleasedPageAfter(UUID afterId, int limit) {
         if (limit < 1) {
             throw new IllegalArgumentException("limit must be positive");
@@ -104,13 +107,13 @@ public final class AssetContentRepository {
                 ? entityManager.createQuery("""
                                 select content
                                 from AssetContent content
-                                where content.refCount = 0
+                                where content.refCount = 0 and content.objectDeletedAt is null
                                 order by content.id
                                 """, AssetContent.class)
                 : entityManager.createQuery("""
                                 select content
                                 from AssetContent content
-                                where content.refCount = 0 and content.id > :afterId
+                                where content.refCount = 0 and content.objectDeletedAt is null and content.id > :afterId
                                 order by content.id
                                 """, AssetContent.class)
                         .setParameter("afterId", afterId);

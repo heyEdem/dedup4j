@@ -26,7 +26,9 @@ import java.util.concurrent.CancellationException;
  *
  * <p>Each released row is handled in its own transaction through
  * {@link ReferenceCountService#cleanUpReleased}, which locks the row and keeps the object of
- * content an upload referenced again. A failed row is logged, counted and recorded in failure
+ * content an upload referenced again. Once a row's object is confirmed gone it is marked deleted
+ * and skipped by later passes, until an upload references the content again; an object written back
+ * behind a marked row is left to {@link OrphanedObjectSweep}. A failed row is logged, counted and recorded in failure
  * history, and the pass carries on; the next pass retries it. An interrupted pass stops before the
  * next row with a {@link CancellationException}.</p>
  */

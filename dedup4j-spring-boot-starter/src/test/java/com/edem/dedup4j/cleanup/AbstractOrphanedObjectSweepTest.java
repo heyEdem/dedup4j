@@ -53,6 +53,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -331,6 +332,86 @@ abstract class AbstractOrphanedObjectSweepTest {
         assertThat(storage.objects).containsKey(key);
     }
 
+    @Test
+    void releasedPassSkipsObjectsAlreadyConfirmedDeleted() {
+        BlobReference stored = releasedAndCleanedUp("released once");
+        int existsCalls = storage.existsCalls.get();
+
+        ReleasedCleanupResult second = releasedPass().run();
+
+        assertThat(second.checked()).isZero();
+        assertThat(storage.existsCalls.get()).isEqualTo(existsCalls);
+        assertThat(objectDeletedAt(stored)).isNotNull();
+    }
+
+    @Test
+    void uploadOfConfirmedDeletedContentClearsTheMarker() {
+        BlobReference stored = releasedAndCleanedUp("restored later");
+
+        inTransaction(() -> uploads().store(command("restored later")));
+
+        assertThat(storage.objects).containsKey(stored.objectKey());
+        assertThat(refCount(stored)).isEqualTo(1);
+        assertThat(objectDeletedAt(stored)).isNull();
+    }
+
+    @Test
+    void objectWrittenBackByARolledBackRestoreIsDeletedByTheSweep() {
+        BlobReference stored = releasedAndCleanedUp("restore rolled back");
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            uploads().store(command("restore rolled back"));
+            status.setRollbackOnly();
+        });
+        assertThat(storage.objects).containsKey(stored.objectKey());
+        assertThat(objectDeletedAt(stored)).isNotNull();
+        assertThat(releasedPass().run().checked()).isZero();
+        storage.age(stored.objectKey());
+
+        OrphanSweepResult result = sweep().run();
+
+        assertThat(result).isEqualTo(new OrphanSweepResult(1, 0, 0, 0, 1, 0, 0));
+        assertThat(storage.objects).doesNotContainKey(stored.objectKey());
+        assertThat(refCount(stored)).isZero();
+        assertThat(objectDeletedAt(stored)).isNotNull();
+    }
+
+    @Test
+    void keySeveralRowsPointToIsKept() {
+        String key = orphan("shared key");
+        for (String text : List.of("first owner", "second owner")) {
+            ContentHash hash = hash(text);
+            AssetContent row = inTransaction(() -> mutations.insertReleased(new AssetContent(hash.algorithm(),
+                    hash.hash(), hash.sizeBytes(), key, "memory", "bucket", "text/plain", "txt")));
+            storage.objects.remove(key);
+            inTransaction(() -> referenceCounts.cleanUpReleased(row.getId()));
+            storage.putAged(key, "shared key");
+        }
+
+        OrphanSweepResult result = sweep().run();
+
+        assertThat(result.owned()).isEqualTo(1);
+        assertThat(storage.objects).containsKey(key);
+    }
+
+    /** Stores content, releases its only reference and lets the released pass delete its object. */
+    private BlobReference releasedAndCleanedUp(String text) {
+        BlobReference stored = inTransaction(() -> uploads().store(command(text)));
+        inTransaction(() -> referenceCounts.release(stored.assetContentId()));
+        assertThat(releasedPass().run().deleted()).isEqualTo(1);
+        assertThat(storage.objects).doesNotContainKey(stored.objectKey());
+        return stored;
+    }
+
+    private ReleasedObjectCleanup releasedPass() {
+        return new ReleasedObjectCleanup(contents, referenceCounts, transactionManager, history,
+                new Dedup4jMetrics(registry), 10);
+    }
+
+    private Instant objectDeletedAt(BlobReference reference) {
+        return inTransaction(() -> contents.findByIdForUpdate(reference.assetContentId()).orElseThrow()
+                .getObjectDeletedAt());
+    }
+
     private OrphanedObjectSweep sweep() {
         return sweep(PREFIX);
     }
@@ -412,6 +493,7 @@ abstract class AbstractOrphanedObjectSweepTest {
         private volatile PutHook afterPut;
         private volatile boolean interruptOnRead;
         private volatile boolean failList;
+        private final AtomicInteger existsCalls = new AtomicInteger();
 
         void putAged(String key, String text) {
             objects.put(key, text.getBytes(StandardCharsets.UTF_8));
@@ -469,6 +551,7 @@ abstract class AbstractOrphanedObjectSweepTest {
 
         @Override
         public boolean exists(String objectKey) {
+            existsCalls.incrementAndGet();
             return objects.containsKey(objectKey);
         }
 
