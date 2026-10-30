@@ -52,6 +52,7 @@ public class S3BlobStorage implements ListableBlobStorage, AutoCloseable {
 
     @Override
     public StoredBlob put(PutBlobRequest request) {
+        request.requireAsciiMetadata();
         String bucket = bucket();
         try (InputStream content = request.content()) {
             software.amazon.awssdk.services.s3.model.PutObjectRequest objectRequest = putRequest(bucket, request);
@@ -154,8 +155,8 @@ public class S3BlobStorage implements ListableBlobStorage, AutoCloseable {
         if (request.contentType() != null && !request.contentType().isBlank()) {
             builder.contentType(request.contentType());
         }
-        if (request.originalFilename() != null && !request.originalFilename().isBlank()) {
-            builder.contentDisposition(request.originalFilename());
+        if (request.contentDisposition() != null) {
+            builder.contentDisposition(request.contentDisposition());
         }
         return builder.build();
     }

@@ -36,6 +36,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class S3BlobStorageContractTest {
 
     @Test
+    void nonAsciiMetadataIsRejectedBeforeAnyRequest() {
+        FakeS3 fake = new FakeS3();
+        S3BlobStorage storage = new S3BlobStorage(fake.client(), properties());
+        byte[] payload = "bytes".getBytes(StandardCharsets.UTF_8);
+
+        assertThrows(com.edem.dedup4j.core.exception.BlobValidationException.class, () -> storage.put(
+                new PutBlobRequest("sha256/ab/abcdef", new ByteArrayInputStream(payload), payload.length,
+                        "text/plain", "notes.txt", Map.of("owner", "Edém"))));
+        assertEquals(null, fake.putRequest);
+    }
+
+    @Test
     void putGetDeleteAndExistsRoundTrip() throws IOException {
         FakeS3 fake = new FakeS3();
         S3BlobStorage storage = new S3BlobStorage(fake.client(), properties());
@@ -60,7 +72,7 @@ class S3BlobStorageContractTest {
         assertEquals("blob-bucket", fake.putRequest.bucket());
         assertEquals("sha256/ab/abcdef", fake.putRequest.key());
         assertEquals("text/plain", fake.putRequest.contentType());
-        assertEquals("notes.txt", fake.putRequest.contentDisposition());
+        assertEquals("attachment; filename=\"notes.txt\"; filename*=UTF-8''notes.txt", fake.putRequest.contentDisposition());
         assertEquals(Map.of("origin", "test"), fake.putRequest.metadata());
 
         assertTrue(storage.exists("sha256/ab/abcdef"));

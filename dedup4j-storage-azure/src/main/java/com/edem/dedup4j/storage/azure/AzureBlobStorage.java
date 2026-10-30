@@ -52,14 +52,15 @@ public class AzureBlobStorage implements ListableBlobStorage {
         if (request == null) {
             throw new BlobValidationException("request must not be null");
         }
+        request.requireAsciiMetadata();
         String container = container();
         try (InputStream content = request.content()) {
             BlobHttpHeaders headers = new BlobHttpHeaders();
             if (request.contentType() != null && !request.contentType().isBlank()) {
                 headers.setContentType(request.contentType());
             }
-            if (request.originalFilename() != null && !request.originalFilename().isBlank()) {
-                headers.setContentDisposition(request.originalFilename());
+            if (request.contentDisposition() != null) {
+                headers.setContentDisposition(request.contentDisposition());
             }
 
             BlobParallelUploadOptions options = new BlobParallelUploadOptions(content)
