@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-30 — Orphaned object sweep and scheduled storage cleanup (#89)
+
+- `ListableBlobStorage` (core) with `list(keyPrefix)` and `ListedBlob`; implemented by `LocalBlobStorage`, `S3BlobStorage` and `AzureBlobStorage`.
+- `OrphanedObjectSweep`: objects under `{key-prefix}/` older than the grace period with no row are hashed, adopted as released rows and deleted under the row lock; counted in `OrphanSweepResult`, logged as `event=storage.orphan.deleted`, metered as `dedup4j.cleanup.orphans.deleted`.
+- `ScheduledCleanup` runs the sweep and `ReleasedObjectCleanup` on `dedup4j.cleanup.cron` (default `0 30 3 * * *`), on by default (`dedup4j.cleanup.enabled`); the sweep needs `dedup4j.storage.key-prefix`. New `dedup4j.cleanup.zone` and `dedup4j.cleanup.orphan-grace-period` (24h).
+- `AssetContentMutationService.insertReleased`, `AssetContentRepository.existsByObjectKey`.
+- Management and embedded dashboard content totals count only referenced rows.
+- Modules affected: `dedup4j-core`, `dedup4j-jpa`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`.
+
 ## 2026-10-30 — Scheduled coordinated repair (`dedup4j.reconciliation.mode=repair`)
 
 - `ReconciliationMode.REPAIR`: the scheduled reconciliation runs `CoordinatedRepair` instead of the read-only report. Startup fails without one `ContentReferenceCountSource`, without a `CoordinatedRepair` bean, or on a database other than PostgreSQL or H2. Only correct when every writer follows the writer contract.
