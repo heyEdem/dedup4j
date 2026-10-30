@@ -115,11 +115,7 @@ public final class CoordinatedRepair {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("CoordinatedRepair.run must be called outside a transaction");
         }
-        String product = databaseProduct.get();
-        if (!AUDITED_DATABASES.contains(product)) {
-            throw new IllegalStateException("CoordinatedRepair requires PostgreSQL or H2, whose schema keeps the "
-                    + "repair audit append-only, but the database is '" + product + "'");
-        }
+        requireSupportedDatabase();
         UUID runId = UUID.randomUUID();
         Discovery discovery = discover(candidates);
         long repaired = 0;
@@ -137,11 +133,20 @@ public final class CoordinatedRepair {
             } catch (InvalidIsolationLevelException unsupported) {
                 throw new IllegalStateException("CoordinatedRepair needs a transaction manager that can run "
                         + "READ COMMITTED transactions; no count was changed", unsupported);
+            } catch (CancellationException cancelled) {
+                throw cancelled;
             } catch (RuntimeException failure) {
                 failed++;
                 LOGGER.warn(
                         "event=reconcile.repair.failed runId={} contentId={} errorType={} failureMessage={}",
                         runId, candidate.id(), failure.getClass().getSimpleName(), failure.getMessage(), failure);
+                if (Thread.currentThread().isInterrupted()) {
+                    // Stopped mid-row: that row committed or rolled back on its own; end the pass as cancelled.
+                    CancellationException cancelled = new CancellationException(
+                            "Coordinated repair interrupted after " + repaired + " repairs");
+                    cancelled.initCause(failure);
+                    throw cancelled;
+                }
                 continue;
             }
             switch (result.outcome()) {
@@ -163,6 +168,9 @@ public final class CoordinatedRepair {
                 }
             }
         }
+        if (Thread.currentThread().isInterrupted()) {
+            throw new CancellationException("Coordinated repair interrupted after " + repaired + " repairs");
+        }
         CoordinatedRepairResult result = new CoordinatedRepairResult(
                 runId, discovery.checked(), discovery.candidates().size(), repaired, consistent, released, failed);
         String message = "event=reconcile.repair.completed runId={} checked={} candidates={} repaired={} "
@@ -175,6 +183,18 @@ public final class CoordinatedRepair {
             LOGGER.warn(message, counts);
         }
         return result;
+    }
+
+    /**
+     * @throws IllegalStateException unless the database is PostgreSQL or H2, whose schema keeps the
+     *                               repair audit append-only
+     */
+    public void requireSupportedDatabase() {
+        String product = databaseProduct.get();
+        if (!AUDITED_DATABASES.contains(product)) {
+            throw new IllegalStateException("CoordinatedRepair requires PostgreSQL or H2, whose schema keeps the "
+                    + "repair audit append-only, but the database is '" + product + "'");
+        }
     }
 
     private Discovery discover(LogicalReferenceCountSource source) {

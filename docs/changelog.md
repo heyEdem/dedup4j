@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-30 — Scheduled coordinated repair (`dedup4j.reconciliation.mode=repair`)
+
+- `ReconciliationMode.REPAIR`: the scheduled reconciliation runs `CoordinatedRepair` instead of the read-only report. Startup fails without one `ContentReferenceCountSource`, without a `CoordinatedRepair` bean, or on a database other than PostgreSQL or H2. Only correct when every writer follows the writer contract.
+- `ScheduledReconciliation` has a repair constructor and `mode()`; in repair mode `runNow` refuses an ambient transaction before waiting for a running pass, and drift gauges keep the last report's counts.
+- `CoordinatedRepair.requireSupportedDatabase()` is public; an interrupt that makes a row fail, or arrives during the last row, now ends the pass as cancelled.
+- **Breaking:** `ReconciliationRun` gains `mode` and `repair` components (public constructor changed); the management `/reconciliation` JSON adds `mode` and `repair`.
+- Modules affected: `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management` (tests).
+
 ## 2026-10-29 — Transaction-joining write service for the repair writer contract (#81, part 2)
 
 - New `TransactionalBlobReferences` bean: `store`, `retain` and `release` join the caller's transaction, so an application's reference row and the dedup4j count change commit together, as `CoordinatedRepair` requires. Calls outside a read-write transaction are rejected; with persistent history, an explicit isolation other than READ COMMITTED is refused.

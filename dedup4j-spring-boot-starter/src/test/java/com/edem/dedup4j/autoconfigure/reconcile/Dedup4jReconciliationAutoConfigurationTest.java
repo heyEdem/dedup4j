@@ -5,7 +5,9 @@ import com.edem.dedup4j.core.storage.BlobResource;
 import com.edem.dedup4j.core.storage.BlobStorage;
 import com.edem.dedup4j.core.storage.PutBlobRequest;
 import com.edem.dedup4j.core.storage.StoredBlob;
+import com.edem.dedup4j.reconcile.ContentReferenceCountSource;
 import com.edem.dedup4j.reconcile.LogicalReferenceCountSource;
+import com.edem.dedup4j.reconcile.ReconciliationMode;
 import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import com.edem.dedup4j.jpa.AssetContent;
 import jakarta.persistence.EntityManager;
@@ -22,7 +24,10 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
 
+import javax.sql.DataSource;
 import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.Map;
 import java.util.UUID;
 
@@ -109,11 +114,72 @@ class Dedup4jReconciliationAutoConfigurationTest {
     }
 
     @Test
-    void repairModeIsRejected() {
-        runner.withUserConfiguration(OneSource.class)
+    void repairModeSchedulesCoordinatedRepair() {
+        runner.withUserConfiguration(TransactionsAndStorage.class, OneSource.class, OneAuthority.class)
+                .withBean(DataSource.class, () -> database("H2"))
                 .withPropertyValues("dedup4j.reconciliation.enabled=true", "dedup4j.reconciliation.mode=repair")
-                .run(context -> assertThat(context).getFailure()
-                        .hasStackTraceContaining("dedup4j.reconciliation.mode"));
+                .run(context -> {
+                    ScheduledReconciliation scheduled = context.getBean(ScheduledReconciliation.class);
+                    assertThat(scheduled.mode()).isEqualTo(ReconciliationMode.REPAIR);
+                    assertThat(scheduled.isRunning()).isTrue();
+                });
+    }
+
+    @Test
+    void repairModeWithoutAContentReferenceCountSourceFailsStartup() {
+        runner.withUserConfiguration(TransactionsAndStorage.class, OneSource.class)
+                .withBean(DataSource.class, () -> database("H2"))
+                .withPropertyValues("dedup4j.reconciliation.enabled=true", "dedup4j.reconciliation.mode=repair")
+                .run(context -> assertThat(context).getFailure().rootCause().hasMessage(
+                        "dedup4j.reconciliation.mode=repair requires one ContentReferenceCountSource bean, or one marked @Primary, found 0"));
+    }
+
+    @Test
+    void repairModeWithoutADataSourceFailsStartup() {
+        runner.withUserConfiguration(TransactionsAndStorage.class, OneSource.class, OneAuthority.class)
+                .withPropertyValues("dedup4j.reconciliation.enabled=true", "dedup4j.reconciliation.mode=repair")
+                .run(context -> assertThat(context).getFailure().rootCause().hasMessage(
+                        "CoordinatedRepair needs a single DataSource to check the database"));
+    }
+
+    @Test
+    void repairModeWithoutACoordinatedRepairFailsStartup() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(Dedup4jReconciliationAutoConfiguration.class))
+                .withUserConfiguration(Infrastructure.class, OneSource.class, OneAuthority.class)
+                .withPropertyValues("dedup4j.reconciliation.enabled=true", "dedup4j.reconciliation.mode=repair")
+                .run(context -> assertThat(context).getFailure().rootCause().hasMessage(
+                        "dedup4j.reconciliation.mode=repair requires a CoordinatedRepair bean"));
+    }
+
+    @Test
+    void repairModeOnAnUnsupportedDatabaseFailsStartup() {
+        runner.withUserConfiguration(TransactionsAndStorage.class, OneSource.class, OneAuthority.class)
+                .withBean(DataSource.class, () -> database("MySQL"))
+                .withPropertyValues("dedup4j.reconciliation.enabled=true", "dedup4j.reconciliation.mode=repair")
+                .run(context -> assertThat(context).getFailure().rootCause()
+                        .hasMessageContaining("requires PostgreSQL or H2")
+                        .hasMessageContaining("'MySQL'"));
+    }
+
+    /** A DataSource whose connections report {@code product} and nothing else. */
+    private static DataSource database(String product) {
+        DatabaseMetaData metaData = proxy(DatabaseMetaData.class, (method, args) ->
+                method.getName().equals("getDatabaseProductName") ? product : null);
+        Connection connection = proxy(Connection.class, (method, args) ->
+                method.getName().equals("getMetaData") ? metaData : null);
+        return proxy(DataSource.class, (method, args) ->
+                method.getName().equals("getConnection") ? connection : null);
+    }
+
+    private static <T> T proxy(Class<T> type, java.util.function.BiFunction<java.lang.reflect.Method, Object[], Object> answer) {
+        return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    case "toString" -> type.getSimpleName();
+                    default -> answer.apply(method, args);
+                }));
     }
 
     @Test
@@ -186,6 +252,10 @@ class Dedup4jReconciliationAutoConfigurationTest {
     @Configuration(proxyBeanMethods = false)
     static class OneSource {
         @Bean LogicalReferenceCountSource logicalReferenceCountSource() { return Map::of; }
+    }
+
+    static class OneAuthority {
+        @Bean ContentReferenceCountSource contentReferenceCountSource() { return contentId -> 0L; }
     }
 
     @Configuration(proxyBeanMethods = false)

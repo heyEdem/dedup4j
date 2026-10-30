@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -288,6 +289,106 @@ abstract class AbstractCoordinatedRepairTest {
 
         assertThat(second.candidates()).isZero();
         assertThat(repairsOf(content)).hasSize(1);
+    }
+
+    @Test
+    void scheduledRepairRecordsTheRepairResultAndLeavesTheDriftGauges() {
+        AssetContent content = content(3, 1);
+        ScheduledReconciliation scheduled = scheduledRepair(repair());
+
+        ReconciliationRun run = scheduled.runNow();
+
+        assertThat(run.mode()).isEqualTo(ReconciliationMode.REPAIR);
+        assertThat(run.outcome()).isEqualTo(ReconciliationRun.Outcome.SUCCEEDED);
+        assertThat(run.summary()).isNull();
+        assertThat(run.repair().repaired()).isEqualTo(1);
+        assertThat(refCount(content)).isEqualTo(1);
+        assertThat(registry.get("dedup4j.reconciliation.runs").tag("outcome", "success").timer().count())
+                .isEqualTo(1);
+        assertThat(registry.find("dedup4j.reconciliation.mismatches").gauge()).isNull();
+    }
+
+    @Test
+    void scheduledRepairRefusesARunNowInsideATransaction() {
+        AssetContent content = content(3, 1);
+        ScheduledReconciliation scheduled = scheduledRepair(repair());
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+                assertThatThrownBy(scheduled::runNow)
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("outside a transaction"));
+
+        assertThat(scheduled.lastRun()).isEmpty();
+        assertThat(refCount(content)).isEqualTo(3);
+    }
+
+    @Test
+    void failedScheduledRepairKeepsItsMode() {
+        ScheduledReconciliation scheduled = scheduledRepair(new CoordinatedRepair(contents,
+                new ReferenceRepairService(contents, audit), referenceCounts, hooking, new DisabledUploadHistory(),
+                new Dedup4jMetrics(registry), "test-instance", Clock.systemUTC(), 2, () -> "MySQL"));
+
+        ReconciliationRun run = scheduled.runNow();
+
+        assertThat(run.mode()).isEqualTo(ReconciliationMode.REPAIR);
+        assertThat(run.outcome()).isEqualTo(ReconciliationRun.Outcome.FAILED);
+        assertThat(run.failureMessage()).contains("PostgreSQL or H2");
+    }
+
+    @Test
+    void interruptDuringARowEndsThePassAsCancelledNotFailed() {
+        AssetContent first = content(3, 1);
+        content(3, 1);
+
+        try {
+            assertThatThrownBy(() -> repair().run(this::bulkCounts, contentId -> {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("lookup interrupted");
+            })).isInstanceOf(CancellationException.class)
+                    .hasCauseInstanceOf(IllegalStateException.class);
+        } finally {
+            Thread.interrupted();
+        }
+        assertThat(refCount(first)).isEqualTo(3);
+    }
+
+    @Test
+    void cancellationFromTheLookupEndsThePassEvenWithoutTheInterruptFlag() {
+        AssetContent first = content(3, 1);
+        AssetContent second = content(3, 1);
+        AtomicInteger calls = new AtomicInteger();
+
+        assertThatThrownBy(() -> repair().run(this::bulkCounts, contentId -> {
+            calls.incrementAndGet();
+            throw new CancellationException("lookup cancelled");
+        })).isInstanceOf(CancellationException.class).hasMessage("lookup cancelled");
+
+        assertThat(calls).hasValue(1);
+        assertThat(refCount(first)).isEqualTo(3);
+        assertThat(refCount(second)).isEqualTo(3);
+    }
+
+    @Test
+    void interruptDuringTheLastRowStillEndsThePassAsCancelled() {
+        AssetContent content = content(3, 1);
+
+        try {
+            assertThatThrownBy(() -> repair().run(this::bulkCounts, contentId -> {
+                Thread.currentThread().interrupt();
+                return lookup(contentId);
+            })).isInstanceOf(CancellationException.class);
+        } finally {
+            Thread.interrupted();
+        }
+        // The row's own transaction completed before the pass noticed the interrupt.
+        assertThat(refCount(content)).isEqualTo(1);
+        assertThat(repairsOf(content)).hasSize(1);
+    }
+
+    private ScheduledReconciliation scheduledRepair(CoordinatedRepair repair) {
+        return new ScheduledReconciliation(repair, this::bulkCounts, this::lookup,
+                new org.springframework.scheduling.support.CronTrigger("0 0 3 * * *"),
+                new Dedup4jMetrics(registry), Clock.systemUTC());
     }
 
     private CoordinatedRepair repair() {

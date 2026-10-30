@@ -85,7 +85,7 @@ public final class Dedup4jMetrics {
         }
     }
 
-    /** Gauges hold the counts from the last successful run. */
+    /** Gauges hold the counts from the last successful report run; repair runs leave them unchanged. */
     public void recordReconciliationDrift(long mismatches, long dangling) {
         lastMismatches.set(mismatches);
         lastDangling.set(dangling);
