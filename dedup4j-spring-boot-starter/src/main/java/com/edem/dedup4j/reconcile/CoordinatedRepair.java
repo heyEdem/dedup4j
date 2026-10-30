@@ -133,15 +133,20 @@ public final class CoordinatedRepair {
             } catch (InvalidIsolationLevelException unsupported) {
                 throw new IllegalStateException("CoordinatedRepair needs a transaction manager that can run "
                         + "READ COMMITTED transactions; no count was changed", unsupported);
+            } catch (CancellationException cancelled) {
+                throw cancelled;
             } catch (RuntimeException failure) {
-                if (Thread.currentThread().isInterrupted()) {
-                    // Stopped mid-row: that row committed or rolled back on its own; end the pass as cancelled.
-                    throw new CancellationException("Coordinated repair interrupted after " + repaired + " repairs");
-                }
                 failed++;
                 LOGGER.warn(
                         "event=reconcile.repair.failed runId={} contentId={} errorType={} failureMessage={}",
                         runId, candidate.id(), failure.getClass().getSimpleName(), failure.getMessage(), failure);
+                if (Thread.currentThread().isInterrupted()) {
+                    // Stopped mid-row: that row committed or rolled back on its own; end the pass as cancelled.
+                    CancellationException cancelled = new CancellationException(
+                            "Coordinated repair interrupted after " + repaired + " repairs");
+                    cancelled.initCause(failure);
+                    throw cancelled;
+                }
                 continue;
             }
             switch (result.outcome()) {

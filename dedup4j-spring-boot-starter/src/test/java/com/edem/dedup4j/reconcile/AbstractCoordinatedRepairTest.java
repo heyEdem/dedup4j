@@ -344,11 +344,28 @@ abstract class AbstractCoordinatedRepairTest {
             assertThatThrownBy(() -> repair().run(this::bulkCounts, contentId -> {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("lookup interrupted");
-            })).isInstanceOf(CancellationException.class);
+            })).isInstanceOf(CancellationException.class)
+                    .hasCauseInstanceOf(IllegalStateException.class);
         } finally {
             Thread.interrupted();
         }
         assertThat(refCount(first)).isEqualTo(3);
+    }
+
+    @Test
+    void cancellationFromTheLookupEndsThePassEvenWithoutTheInterruptFlag() {
+        AssetContent first = content(3, 1);
+        AssetContent second = content(3, 1);
+        AtomicInteger calls = new AtomicInteger();
+
+        assertThatThrownBy(() -> repair().run(this::bulkCounts, contentId -> {
+            calls.incrementAndGet();
+            throw new CancellationException("lookup cancelled");
+        })).isInstanceOf(CancellationException.class).hasMessage("lookup cancelled");
+
+        assertThat(calls).hasValue(1);
+        assertThat(refCount(first)).isEqualTo(3);
+        assertThat(refCount(second)).isEqualTo(3);
     }
 
     @Test
