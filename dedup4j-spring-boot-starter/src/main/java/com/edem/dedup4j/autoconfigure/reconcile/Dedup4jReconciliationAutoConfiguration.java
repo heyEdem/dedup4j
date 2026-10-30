@@ -4,7 +4,10 @@ import com.edem.dedup4j.autoconfigure.Dedup4jProperties;
 import com.edem.dedup4j.autoconfigure.service.Dedup4jServiceAutoConfiguration;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
+import com.edem.dedup4j.reconcile.ContentReferenceCountSource;
+import com.edem.dedup4j.reconcile.CoordinatedRepair;
 import com.edem.dedup4j.reconcile.LogicalReferenceCountSource;
+import com.edem.dedup4j.reconcile.ReconciliationMode;
 import com.edem.dedup4j.reconcile.ReconciliationService;
 import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import jakarta.persistence.EntityManager;
@@ -23,8 +26,9 @@ import java.time.DateTimeException;
 import java.time.ZoneId;
 
 /**
- * Registers the read-only scheduled reconciliation when {@code dedup4j.reconciliation.enabled}
- * is true. Misconfiguration fails startup rather than leaving drift silently unchecked.
+ * Registers scheduled reconciliation when {@code dedup4j.reconciliation.enabled} is true: a
+ * read-only report by default, or coordinated repair with {@code mode=repair}. Misconfiguration
+ * fails startup rather than leaving drift silently unchecked or repairing on an unsupported setup.
  */
 @AutoConfiguration(after = Dedup4jServiceAutoConfiguration.class)
 @ConditionalOnBooleanProperty(name = "dedup4j.reconciliation.enabled")
@@ -41,6 +45,8 @@ public class Dedup4jReconciliationAutoConfiguration {
             ObjectProvider<EntityManagerFactory> entityManagerFactories,
             ObjectProvider<EntityManager> entityManagers,
             ObjectProvider<LogicalReferenceCountSource> sources,
+            ObjectProvider<ContentReferenceCountSource> authorities,
+            ObjectProvider<CoordinatedRepair> repairs,
             ObjectProvider<Dedup4jMetrics> metrics
     ) {
         Dedup4jProperties.Reconciliation reconciliation = properties.getReconciliation();
@@ -48,6 +54,9 @@ public class Dedup4jReconciliationAutoConfiguration {
         if (source == null) {
             throw new IllegalStateException(PREFIX + "enabled=true requires one LogicalReferenceCountSource "
                     + "bean, or one marked @Primary, found " + sources.stream().count());
+        }
+        if (reconciliation.getMode() == ReconciliationMode.REPAIR) {
+            return repairSchedule(reconciliation, source, authorities, repairs, metrics);
         }
         AssetContentRepository contentRepository = readRepository(entityManagerFactories, entityManagers);
         if (reconciliation.getSampleSize() < 0) {
@@ -62,6 +71,31 @@ public class Dedup4jReconciliationAutoConfiguration {
                 metrics.getIfAvailable(() -> new Dedup4jMetrics(null)),
                 Clock.systemUTC()
         );
+    }
+
+    /**
+     * Uses the application's {@link CoordinatedRepair} bean, which runs every read and write in its
+     * own transaction, so its EntityManager must be a transaction-bound shared one (as Spring Boot's is).
+     */
+    private static ScheduledReconciliation repairSchedule(
+            Dedup4jProperties.Reconciliation reconciliation,
+            LogicalReferenceCountSource source,
+            ObjectProvider<ContentReferenceCountSource> authorities,
+            ObjectProvider<CoordinatedRepair> repairs,
+            ObjectProvider<Dedup4jMetrics> metrics
+    ) {
+        ContentReferenceCountSource authority = authorities.getIfUnique();
+        if (authority == null) {
+            throw new IllegalStateException(PREFIX + "mode=repair requires one ContentReferenceCountSource "
+                    + "bean, or one marked @Primary, found " + authorities.stream().count());
+        }
+        CoordinatedRepair repair = repairs.getIfUnique();
+        if (repair == null) {
+            throw new IllegalStateException(PREFIX + "mode=repair requires a CoordinatedRepair bean");
+        }
+        repair.requireSupportedDatabase();
+        return new ScheduledReconciliation(repair, source, authority, trigger(reconciliation),
+                metrics.getIfAvailable(() -> new Dedup4jMetrics(null)), Clock.systemUTC());
     }
 
     /**

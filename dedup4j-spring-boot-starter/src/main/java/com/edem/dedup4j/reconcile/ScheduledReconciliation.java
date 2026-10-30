@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -19,14 +20,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Runs a read-only reconciliation pass on a cron trigger and keeps this instance's last result.
+ * Runs a reconciliation pass on a cron trigger and keeps this instance's last result: a read-only
+ * {@link ReconciliationService#summarize} in {@link ReconciliationMode#REPORT} mode, or a
+ * {@link CoordinatedRepair#run} in {@link ReconciliationMode#REPAIR} mode.
  *
  * <p>The scheduler is private to this bean, so enabling reconciliation does not switch on
  * {@code @EnableScheduling} for the application. Its single thread and the cron trigger, which
  * computes the next time only after a run finishes, mean runs never overlap; {@link #runNow()} is
- * serialized with them, and reads in the caller's transaction if one is active. A failed run is logged, counted and kept as the last result, and the
+ * serialized with them; a report reads in the caller's transaction if one is active, while a repair
+ * refuses one. A failed run is logged, counted and kept as the last result, and the
  * schedule carries on. {@link #stop()} rejects runs that have not started, interrupts an active
- * run, scheduled or manual, which ends at the next page, and waits up to {@value #SHUTDOWN_WAIT_SECONDS} seconds for it before returning; a
+ * run, scheduled or manual, which ends at the next page or row, and waits up to {@value #SHUTDOWN_WAIT_SECONDS} seconds for it before returning; a
  * database call that ignores interrupts can outlast that wait. Enable it on one instance per shared database; nothing coordinates
  * instances.</p>
  */
@@ -35,8 +39,11 @@ public final class ScheduledReconciliation implements SmartLifecycle {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledReconciliation.class);
     private static final int SHUTDOWN_WAIT_SECONDS = 30;
 
+    private final ReconciliationMode mode;
     private final ReconciliationService service;
+    private final CoordinatedRepair repair;
     private final LogicalReferenceCountSource source;
+    private final ContentReferenceCountSource authority;
     private final CronTrigger trigger;
     private final int pageSize;
     private final int sampleLimit;
@@ -58,7 +65,39 @@ public final class ScheduledReconciliation implements SmartLifecycle {
             Dedup4jMetrics metrics,
             Clock clock
     ) {
-        this.service = Objects.requireNonNull(service, "service must not be null");
+        this(ReconciliationMode.REPORT, Objects.requireNonNull(service, "service must not be null"), null,
+                source, null, trigger, pageSize, sampleLimit, metrics, clock);
+    }
+
+    /** Repairs drift on the trigger; see {@link ReconciliationMode#REPAIR} for when that is safe. */
+    public ScheduledReconciliation(
+            CoordinatedRepair repair,
+            LogicalReferenceCountSource source,
+            ContentReferenceCountSource authority,
+            CronTrigger trigger,
+            Dedup4jMetrics metrics,
+            Clock clock
+    ) {
+        this(ReconciliationMode.REPAIR, null, Objects.requireNonNull(repair, "repair must not be null"),
+                source, Objects.requireNonNull(authority, "authority must not be null"), trigger, 1, 0, metrics, clock);
+    }
+
+    private ScheduledReconciliation(
+            ReconciliationMode mode,
+            ReconciliationService service,
+            CoordinatedRepair repair,
+            LogicalReferenceCountSource source,
+            ContentReferenceCountSource authority,
+            CronTrigger trigger,
+            int pageSize,
+            int sampleLimit,
+            Dedup4jMetrics metrics,
+            Clock clock
+    ) {
+        this.mode = mode;
+        this.service = service;
+        this.repair = repair;
+        this.authority = authority;
         this.source = Objects.requireNonNull(source, "source must not be null");
         this.trigger = Objects.requireNonNull(trigger, "trigger must not be null");
         if (pageSize < 1) {
@@ -77,9 +116,13 @@ public final class ScheduledReconciliation implements SmartLifecycle {
      * Runs a pass now, after any run in progress.
      *
      * @throws IllegalStateException if {@link #stop()} has begun, including for a call that was
-     *                               waiting when it did
+     *                               waiting when it did, or, in repair mode, when called inside a
+     *                               transaction, whose locks a scheduled repair could be waiting on
      */
     public ReconciliationRun runNow() {
+        if (mode == ReconciliationMode.REPAIR && TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("A repair run must be started outside a transaction");
+        }
         runLock.lock();
         try {
             if (!claimRun()) {
@@ -125,20 +168,27 @@ public final class ScheduledReconciliation implements SmartLifecycle {
         long startNanos = System.nanoTime();
         ReconciliationRun run;
         try {
-            ReconciliationSummary summary = service.summarize(source, pageSize, sampleLimit);
-            Duration elapsed = Duration.ofNanos(System.nanoTime() - startNanos);
-            run = ReconciliationRun.succeeded(startedAt, clock.instant(), summary);
-            metrics.recordReconciliationRun(true, elapsed);
-            metrics.recordReconciliationDrift(summary.mismatchCount(), summary.danglingReferenceCount());
-            log(summary, elapsed);
+            if (mode == ReconciliationMode.REPAIR) {
+                // CoordinatedRepair logs its own completion; the drift gauges stay those of the last report.
+                CoordinatedRepairResult result = repair.run(source, authority);
+                run = ReconciliationRun.repaired(startedAt, clock.instant(), result);
+                metrics.recordReconciliationRun(true, Duration.ofNanos(System.nanoTime() - startNanos));
+            } else {
+                ReconciliationSummary summary = service.summarize(source, pageSize, sampleLimit);
+                Duration elapsed = Duration.ofNanos(System.nanoTime() - startNanos);
+                run = ReconciliationRun.succeeded(startedAt, clock.instant(), summary);
+                metrics.recordReconciliationRun(true, elapsed);
+                metrics.recordReconciliationDrift(summary.mismatchCount(), summary.danglingReferenceCount());
+                log(summary, elapsed);
+            }
         } catch (CancellationException cancelled) {
             Duration elapsed = Duration.ofNanos(System.nanoTime() - startNanos);
-            run = ReconciliationRun.failed(startedAt, clock.instant(), cancelled);
+            run = ReconciliationRun.failed(startedAt, clock.instant(), mode, cancelled);
             metrics.recordReconciliationRun(false, elapsed);
             LOGGER.info("event=reconcile.run.cancelled durationMs={} reason={}", elapsed.toMillis(), cancelled.getMessage());
         } catch (RuntimeException failure) {
             Duration elapsed = Duration.ofNanos(System.nanoTime() - startNanos);
-            run = ReconciliationRun.failed(startedAt, clock.instant(), failure);
+            run = ReconciliationRun.failed(startedAt, clock.instant(), mode, failure);
             metrics.recordReconciliationRun(false, elapsed);
             LOGGER.error(
                     "event=reconcile.run.failed durationMs={} errorType={} failureMessage={}",
@@ -154,6 +204,10 @@ public final class ScheduledReconciliation implements SmartLifecycle {
 
     public Optional<ReconciliationRun> lastRun() {
         return Optional.ofNullable(lastRun.get());
+    }
+
+    public ReconciliationMode mode() {
+        return mode;
     }
 
     public String cronExpression() {

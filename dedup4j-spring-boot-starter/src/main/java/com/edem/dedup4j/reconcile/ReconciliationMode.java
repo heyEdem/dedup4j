@@ -1,10 +1,12 @@
 package com.edem.dedup4j.reconcile;
 
-/**
- * What a scheduled reconciliation run may do. Only {@link #REPORT} exists: scheduled repair is
- * not offered, so repair stays an explicit
- * {@link CoordinatedRepair#run} call.
- */
+/** What a scheduled reconciliation run does. */
 public enum ReconciliationMode {
-    REPORT
+    /** Reports drift through {@link ReconciliationService#summarize}; never writes. */
+    REPORT,
+    /**
+     * Repairs drift through {@link CoordinatedRepair#run}. Only correct when every writer, on every
+     * instance, follows the writer contract on {@link ContentReferenceCountSource}.
+     */
+    REPAIR
 }

@@ -6,6 +6,8 @@ import com.edem.dedup4j.history.UploadHistory;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
 import com.edem.dedup4j.reconcile.ReconciliationMismatch;
+import com.edem.dedup4j.reconcile.CoordinatedRepairResult;
+import com.edem.dedup4j.reconcile.ReconciliationMode;
 import com.edem.dedup4j.reconcile.ReconciliationRun;
 import com.edem.dedup4j.reconcile.ReconciliationService;
 import com.edem.dedup4j.reconcile.ReconciliationSummary;
@@ -138,18 +140,25 @@ class Dedup4jManagementControllerTest {
     }
 
     @Test
-    void reconciliationSerializesSucceededAndAbsentRuns() {
+    void reconciliationSerializesReportRepairAndAbsentRuns() {
         ReconciliationRun run = new ReconciliationRun(
                 Instant.parse("2026-10-26T03:00:00Z"), Instant.parse("2026-10-26T03:00:01Z"),
-                ReconciliationRun.Outcome.SUCCEEDED,
+                ReconciliationMode.REPORT, ReconciliationRun.Outcome.SUCCEEDED,
                 new ReconciliationSummary(5, 2, 1,
                         List.of(new ReconciliationMismatch(UUID.fromString("00000000-0000-0000-0000-000000000001"), 3, 1)),
                         List.of(UUID.fromString("00000000-0000-0000-0000-000000000002"))),
+                null, null, null);
+        ReconciliationRun repairRun = new ReconciliationRun(
+                Instant.parse("2026-10-26T03:00:00Z"), Instant.parse("2026-10-26T03:00:02Z"),
+                ReconciliationMode.REPAIR, ReconciliationRun.Outcome.SUCCEEDED, null,
+                new CoordinatedRepairResult(UUID.fromString("00000000-0000-0000-0000-000000000003"), 5, 3, 2, 1, 0, 0),
                 null, null);
         JsonMapper json = JsonMapper.builder().build();
 
         String withRun = json.writeValueAsString(
                 new Dedup4jManagementSnapshot.Reconciliation(true, "orders-1", "0 0 3 * * *", run));
+        String repaired = json.writeValueAsString(
+                new Dedup4jManagementSnapshot.Reconciliation(true, "orders-1", "0 0 3 * * *", repairRun));
         String disabled = json.writeValueAsString(
                 new Dedup4jManagementSnapshot.Reconciliation(false, "orders-1", null, null));
 
@@ -159,6 +168,12 @@ class Dedup4jManagementControllerTest {
                 .contains("\"danglingReferenceSample\":[\"00000000-0000-0000-0000-000000000002\"]")
                 .contains("\"expectedReferenceCount\":3")
                 .contains("\"startedAt\":\"2026-10-26T03:00:00Z\"");
+        assertThat(withRun).contains("\"mode\":\"REPORT\"").contains("\"repair\":null");
+        assertThat(repaired)
+                .contains("\"mode\":\"REPAIR\"")
+                .contains("\"summary\":null")
+                .contains("\"repaired\":2")
+                .contains("\"candidates\":3");
         assertThat(disabled).contains("\"enabled\":false").contains("\"lastRun\":null");
     }
 
