@@ -72,7 +72,10 @@ public class Dedup4jManagementController {
 
     @GetMapping("/metrics")
     public Dedup4jManagementSnapshot.Metrics metrics() {
-        List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll();
+        List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll().stream()
+                // Released content keeps its row after its object is deleted; count only what is stored.
+                .filter(content -> content.getRefCount() > 0)
+                .toList();
         HistoryTotals totals = totals();
         return new Dedup4jManagementSnapshot.Metrics(
                 totals.datasetId(),

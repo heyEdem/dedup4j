@@ -136,6 +136,26 @@ class S3BlobStorageContractTest {
         }
     }
 
+    @Test
+    void listPagesThroughObjectsUnderThePrefix() {
+        FakeS3 fake = new FakeS3();
+        fake.objects.put("media/a", "one".getBytes(StandardCharsets.UTF_8));
+        fake.objects.put("media/b", "three".getBytes(StandardCharsets.UTF_8));
+        fake.objects.put("other/c", "x".getBytes(StandardCharsets.UTF_8));
+        S3BlobStorage storage = new S3BlobStorage(fake.client(), properties());
+
+        java.util.List<com.edem.dedup4j.core.storage.ListedBlob> listed;
+        try (java.util.stream.Stream<com.edem.dedup4j.core.storage.ListedBlob> stream = storage.list("media/")) {
+            listed = stream.toList();
+        }
+
+        assertEquals(java.util.List.of("media/a", "media/b"),
+                listed.stream().map(com.edem.dedup4j.core.storage.ListedBlob::objectKey).toList());
+        assertEquals(5, listed.get(1).sizeBytes());
+        assertEquals(S3BlobStorage.PROVIDER, listed.get(0).provider());
+        assertEquals(2, fake.listPages);
+    }
+
     private static final class FakeS3 implements InvocationHandler {
 
         private final Map<String, byte[]> objects = new HashMap<>();
@@ -143,6 +163,7 @@ class S3BlobStorageContractTest {
         private PutObjectRequest putRequest;
         private AwsServiceException failure;
         private boolean deleteMissing;
+        private int listPages;
 
         private S3Client client() {
             return (S3Client) Proxy.newProxyInstance(
@@ -194,6 +215,30 @@ class S3BlobStorageContractTest {
                 objects.remove(key);
                 metadata.remove(key);
                 return null;
+            }
+            if (method.getName().equals("listObjectsV2Paginator")) {
+                return new software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable(
+                        (S3Client) proxy, (software.amazon.awssdk.services.s3.model.ListObjectsV2Request) arguments[0]);
+            }
+            if (method.getName().equals("listObjectsV2")) {
+                // One object per page, so the listing has to follow continuation tokens.
+                var request = (software.amazon.awssdk.services.s3.model.ListObjectsV2Request) arguments[0];
+                listPages++;
+                java.util.List<String> keys = new java.util.TreeSet<>(objects.keySet()).stream()
+                        .filter(key -> key.startsWith(request.prefix()))
+                        .filter(key -> request.continuationToken() == null || key.compareTo(request.continuationToken()) >= 0)
+                        .toList();
+                String key = keys.isEmpty() ? null : keys.getFirst();
+                return software.amazon.awssdk.services.s3.model.ListObjectsV2Response.builder()
+                        .contents(key == null ? java.util.List.of() : java.util.List.of(
+                                software.amazon.awssdk.services.s3.model.S3Object.builder()
+                                        .key(key)
+                                        .size((long) objects.get(key).length)
+                                        .lastModified(java.time.Instant.parse("2026-10-01T00:00:00Z"))
+                                        .build()))
+                        .isTruncated(keys.size() > 1)
+                        .nextContinuationToken(keys.size() > 1 ? keys.get(1) : null)
+                        .build();
             }
             if (method.getName().equals("close")) {
                 return null;

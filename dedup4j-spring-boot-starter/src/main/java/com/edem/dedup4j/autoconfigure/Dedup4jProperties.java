@@ -8,6 +8,7 @@ import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +32,9 @@ public class Dedup4jProperties {
     @NestedConfigurationProperty
     private final Reconciliation reconciliation = new Reconciliation();
 
+    @NestedConfigurationProperty
+    private final Cleanup cleanup = new Cleanup();
+
     public Storage getStorage() {
         return storage;
     }
@@ -50,6 +54,79 @@ public class Dedup4jProperties {
 
     public Reconciliation getReconciliation() {
         return reconciliation;
+    }
+
+    public Cleanup getCleanup() {
+        return cleanup;
+    }
+
+    /**
+     * Scheduled storage cleanup: objects left by released content and, when a key prefix is set,
+     * objects no content row points to.
+     */
+    public static class Cleanup {
+
+        private boolean enabled = true;
+        private String cron = "0 30 3 * * *";
+        /** Time zone for the cron expression; the JVM default when unset. */
+        private String zone;
+        @NestedConfigurationProperty
+        private final Orphans orphans = new Orphans();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getCron() {
+            return cron;
+        }
+
+        public void setCron(String cron) {
+            this.cron = cron;
+        }
+
+        public String getZone() {
+            return zone;
+        }
+
+        public void setZone(String zone) {
+            this.zone = zone;
+        }
+
+        public Orphans getOrphans() {
+            return orphans;
+        }
+    }
+
+    /**
+     * The orphaned object sweep, off by default: against the wrong database (an empty schema or an
+     * older snapshot) every real object would look orphaned.
+     */
+    public static class Orphans {
+
+        private boolean enabled;
+        /** Objects written more recently than this are left for a later run. */
+        private Duration gracePeriod = Duration.ofHours(24);
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Duration getGracePeriod() {
+            return gracePeriod;
+        }
+
+        public void setGracePeriod(Duration gracePeriod) {
+            this.gracePeriod = Objects.requireNonNull(gracePeriod, "gracePeriod must not be null");
+        }
     }
 
     /**

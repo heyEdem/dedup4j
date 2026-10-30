@@ -24,6 +24,19 @@ public final class AssetContentRepository {
         this.entityManager = Objects.requireNonNull(entityManager, "entityManager must not be null");
     }
 
+    /** Whether any content row, referenced or released, points at this object key. */
+    public boolean existsByObjectKey(String objectKey) {
+        return !entityManager.createQuery("""
+                        select content.id
+                        from AssetContent content
+                        where content.objectKey = :objectKey
+                        """, UUID.class)
+                .setParameter("objectKey", objectKey)
+                .setMaxResults(1)
+                .getResultList()
+                .isEmpty();
+    }
+
     public Optional<AssetContent> findByIdentity(
             String hashAlgorithm,
             String contentHash,

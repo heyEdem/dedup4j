@@ -242,6 +242,31 @@ class LocalBlobStorageIntegrationTest {
         }
     }
 
+    @Test
+    void listReturnsObjectsUnderThePrefixWithoutTemporaryFiles() throws IOException {
+        properties.setRootDirectory(tempRoot);
+        LocalBlobStorage storage = new LocalBlobStorage(properties);
+        storage.put(request("media/sha-256/ab/abc", "one".getBytes(StandardCharsets.UTF_8)));
+        storage.put(request("media/sha-256/cd/cde", "three".getBytes(StandardCharsets.UTF_8)));
+        storage.put(request("mediaX/other", "x".getBytes(StandardCharsets.UTF_8)));
+        java.nio.file.Files.writeString(tempRoot.resolve("media/sha-256/ab/.dedup4j-123.tmp"), "partial");
+
+        java.util.List<com.edem.dedup4j.core.storage.ListedBlob> listed;
+        try (java.util.stream.Stream<com.edem.dedup4j.core.storage.ListedBlob> stream = storage.list("media/")) {
+            listed = stream.sorted(java.util.Comparator.comparing(com.edem.dedup4j.core.storage.ListedBlob::objectKey)).toList();
+        }
+
+        assertEquals(java.util.List.of("media/sha-256/ab/abc", "media/sha-256/cd/cde"),
+                listed.stream().map(com.edem.dedup4j.core.storage.ListedBlob::objectKey).toList());
+        assertEquals(5, listed.get(1).sizeBytes());
+        assertEquals(LocalBlobStorage.PROVIDER, listed.get(0).provider());
+        assertNotNull(listed.get(0).lastModified());
+        try (java.util.stream.Stream<com.edem.dedup4j.core.storage.ListedBlob> missing = storage.list("absent/")) {
+            assertEquals(0, missing.count());
+        }
+        assertThrows(BlobValidationException.class, () -> storage.list("../outside/"));
+    }
+
     private PutBlobRequest request(String objectKey, byte[] payload) {
         return new PutBlobRequest(
                 objectKey,

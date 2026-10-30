@@ -20,8 +20,9 @@ import java.util.concurrent.CancellationException;
 
 /**
  * Removes objects left in storage by released content, such as after a failed post-release delete
- * or a crash between the release and its delete. Nothing runs it automatically: call {@link #run()}
- * from the application, on one instance per shared database.
+ * or a crash between the release and its delete. {@link ScheduledCleanup} runs it on the
+ * {@code dedup4j.cleanup} schedule; {@link #run()} can also be called directly. Concurrent passes are
+ * safe, since each row is handled under its lock.
  *
  * <p>Each released row is handled in its own transaction through
  * {@link ReferenceCountService#cleanUpReleased}, which locks the row and keeps the object of

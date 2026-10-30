@@ -110,8 +110,15 @@ Application deletes logical asset
        -> still zero: delete physical object through BlobStorage
        -> restored by an upload meanwhile: keep the object
   -> a transaction 2 failure is logged and recorded, not thrown
-  -> ReleasedObjectCleanup.run(), called by the application, later pages through rows at zero
+  -> ScheduledCleanup (dedup4j.cleanup.cron) runs ReleasedObjectCleanup, which pages through rows at zero
        -> per row, its own transaction: lock, still zero and object exists: delete
+
+Orphaned object sweep (dedup4j.cleanup.orphans.enabled=true; same schedule, before the released pass; needs a key prefix and ListableBlobStorage)
+  -> list objects under {key-prefix}/; skip those inside the grace period or with a row
+  -> hash the bytes; require the key strategy to give the same key, else keep
+  -> transaction 1: insert a released row (ref_count 0); a duplicate identity means an upload owns it
+  -> transaction 2: cleanUpReleased locks the row and deletes the object
+  -> an upload of the same bytes later finds the released row and restores the object under its lock
 ```
 
 Applications meet the writer contract by changing counts through `TransactionalBlobReferences` (`store`, `retain`, `release`) inside the same transaction as their own reference rows; the auto-configured `BlobDeduplicationService` and `BlobStore` commit in their own transactions and do not.
