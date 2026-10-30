@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-30 — Skip released rows whose object is confirmed deleted (#92)
+
+- New nullable `dedup4j_asset_content.object_deleted_at` and index `idx_dedup4j_asset_content_released` (`ref_count, object_deleted_at, id`), changeset `005-asset-content-object-deleted-at`; the startup schema check requires the column.
+- `deleteIfReleased` and `cleanUpReleased` mark the row once its object is deleted or absent; `ReleasedObjectCleanup` skips marked rows, so each released row costs at most one more `exists` check. Any upload referencing the content again clears the mark.
+- `OrphanedObjectSweep` deletes an object whose only row is released and marked (written back by a rolled-back restore or a late put); keys several rows point to are kept.
+- `AssetContentRepository.findByObjectKey(key, limit)` replaces `existsByObjectKey`.
+- **Behaviour change:** without the orphan sweep, an object written back behind a marked row is no longer removed by the released pass.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-starter`.
+
 ## 2026-10-30 — Orphaned object sweep and scheduled storage cleanup (#89)
 
 - `ListableBlobStorage` (core) with `list(keyPrefix)` and `ListedBlob`; implemented by `LocalBlobStorage`, `S3BlobStorage` and `AzureBlobStorage`.
