@@ -94,11 +94,16 @@ class AssetContentMutationServiceTest {
         AssetContent candidate = newContent("e".repeat(64));
         AtomicInteger transactionCalls = new AtomicInteger();
         AtomicInteger clearCalls = new AtomicInteger();
+        AtomicInteger persistCalls = new AtomicInteger();
         EntityManager failingEntityManager = (EntityManager) Proxy.newProxyInstance(
                 EntityManager.class.getClassLoader(),
                 new Class<?>[]{EntityManager.class},
                 (proxy, method, args) -> {
-                    if (method.getName().equals("flush") && method.getParameterCount() == 0) {
+                    if (method.getName().equals("persist")) {
+                        persistCalls.incrementAndGet();
+                    }
+                    // Only the flush of the new row fails; the flush of earlier pending changes succeeds.
+                    if (method.getName().equals("flush") && method.getParameterCount() == 0 && persistCalls.get() > 0) {
                         throw new PersistenceException(new SQLException("duplicate", "23505"));
                     }
                     if (method.getName().equals("getTransaction")) {
@@ -128,6 +133,30 @@ class AssetContentMutationServiceTest {
         assertTrue(failure.getMessage().contains(candidate.getContentHash()));
         assertEquals(0, transactionCalls.get());
         assertEquals(0, clearCalls.get());
+    }
+
+    @Test
+    void callersPendingConstraintFailureIsNotReportedAsAnIdentityRace() {
+        EntityManager failingEntityManager = (EntityManager) Proxy.newProxyInstance(
+                EntityManager.class.getClassLoader(),
+                new Class<?>[]{EntityManager.class},
+                (proxy, method, args) -> {
+                    // The caller's own pending change fails before the new row is persisted.
+                    if (method.getName().equals("flush") && method.getParameterCount() == 0) {
+                        throw new PersistenceException(new SQLException("duplicate", "23505"));
+                    }
+                    try {
+                        return method.invoke(entityManager, args);
+                    } catch (InvocationTargetException exception) {
+                        throw exception.getCause();
+                    }
+                }
+        );
+
+        entityManager.getTransaction().begin();
+        // DuplicateContentIdentityException is not a PersistenceException, so the original failure escapes.
+        assertThrows(PersistenceException.class,
+                () -> new AssetContentMutationService(failingEntityManager).createOrRetain(newContent("f".repeat(64))));
     }
 
     @Test
@@ -185,12 +214,17 @@ class AssetContentMutationServiceTest {
         }
     }
 
+    /** Signals when the flush of the new row starts, not the flush of earlier pending changes. */
     private EntityManager signalFlush(EntityManager delegate, CountDownLatch flushStarted) {
+        AtomicInteger persistCalls = new AtomicInteger();
         return (EntityManager) Proxy.newProxyInstance(
                 EntityManager.class.getClassLoader(),
                 new Class<?>[]{EntityManager.class},
                 (proxy, method, args) -> {
-                    if (method.getName().equals("flush") && method.getParameterCount() == 0) {
+                    if (method.getName().equals("persist")) {
+                        persistCalls.incrementAndGet();
+                    }
+                    if (method.getName().equals("flush") && method.getParameterCount() == 0 && persistCalls.get() > 0) {
                         flushStarted.countDown();
                     }
                     try {

@@ -47,6 +47,8 @@ public final class AssetContentMutationService {
     }
 
     private AssetContent insertOrRetry(AssetContent candidate) {
+        // A joined caller may have pending changes of its own; their failures must not read as an identity race.
+        entityManager.flush();
         try {
             entityManager.persist(candidate);
             entityManager.flush();
