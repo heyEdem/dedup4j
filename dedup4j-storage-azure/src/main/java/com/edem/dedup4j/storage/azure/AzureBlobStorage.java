@@ -7,21 +7,25 @@ import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.BlobRequestConditions;
+import com.azure.storage.blob.models.ListBlobsOptions;
 import com.azure.storage.blob.options.BlobParallelUploadOptions;
 import com.azure.core.util.Context;
 import com.edem.dedup4j.core.exception.BlobStorageException;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.exception.ContentNotFoundException;
 import com.edem.dedup4j.core.storage.BlobResource;
-import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.ListableBlobStorage;
+import com.edem.dedup4j.core.storage.ListedBlob;
 import com.edem.dedup4j.core.storage.PutBlobRequest;
 import com.edem.dedup4j.core.storage.StoredBlob;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.stream.Stream;
 
-public class AzureBlobStorage implements BlobStorage {
+public class AzureBlobStorage implements ListableBlobStorage {
 
     public static final String PROVIDER = "azure";
 
@@ -139,6 +143,22 @@ public class AzureBlobStorage implements BlobStorage {
                 return false;
             }
             throw new BlobStorageException("Failed to check object: " + objectKey, failure);
+        }
+    }
+
+    /** Pages through the container listing lazily; a later page that fails throws the SDK exception while the stream is read. */
+    @Override
+    public Stream<ListedBlob> list(String keyPrefix) {
+        Objects.requireNonNull(keyPrefix, "keyPrefix must not be null");
+        String container = container();
+        try {
+            return client.listBlobs(new ListBlobsOptions().setPrefix(keyPrefix), null)
+                    .stream()
+                    .map(item -> new ListedBlob(item.getName(), PROVIDER, container,
+                            item.getProperties().getContentLength(),
+                            item.getProperties().getLastModified().toInstant()));
+        } catch (com.azure.storage.blob.models.BlobStorageException failure) {
+            throw new BlobStorageException("Failed to list objects under: " + keyPrefix, failure);
         }
     }
 

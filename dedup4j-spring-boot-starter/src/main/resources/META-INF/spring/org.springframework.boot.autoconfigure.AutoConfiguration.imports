@@ -6,3 +6,4 @@ com.edem.dedup4j.autoconfigure.service.Dedup4jServiceAutoConfiguration
 com.edem.dedup4j.autoconfigure.Dedup4jAutoConfiguration
 com.edem.dedup4j.autoconfigure.history.Dedup4jHistoryAutoConfiguration
 com.edem.dedup4j.autoconfigure.reconcile.Dedup4jReconciliationAutoConfiguration
+com.edem.dedup4j.autoconfigure.cleanup.Dedup4jCleanupAutoConfiguration

@@ -46,6 +46,23 @@ public final class AssetContentMutationService {
                 .orElseGet(() -> insertOrRetry(candidate));
     }
 
+    /**
+     * Inserts the candidate as released content (zero references), never retaining an existing row.
+     * Used for an object found in storage with no row: once committed, the object can be deleted
+     * under this row's lock, and an upload of the same bytes restores it instead of inserting.
+     *
+     * @throws DuplicateContentIdentityException when a row for this identity exists or is being
+     *                                           committed by another transaction
+     */
+    public AssetContent insertReleased(AssetContent candidate) {
+        Objects.requireNonNull(candidate, "candidate must not be null");
+        if (candidate.getRefCount() != 1L || candidate.getId() != null) {
+            throw new IllegalArgumentException("candidate must be a new, unsaved row");
+        }
+        candidate.decrementRefCount();
+        return insertOrRetry(candidate);
+    }
+
     private AssetContent insertOrRetry(AssetContent candidate) {
         // A joined caller may have pending changes of its own; their failures must not read as an identity race.
         entityManager.flush();

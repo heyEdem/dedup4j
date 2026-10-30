@@ -8,6 +8,7 @@ import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +32,9 @@ public class Dedup4jProperties {
     @NestedConfigurationProperty
     private final Reconciliation reconciliation = new Reconciliation();
 
+    @NestedConfigurationProperty
+    private final Cleanup cleanup = new Cleanup();
+
     public Storage getStorage() {
         return storage;
     }
@@ -50,6 +54,56 @@ public class Dedup4jProperties {
 
     public Reconciliation getReconciliation() {
         return reconciliation;
+    }
+
+    public Cleanup getCleanup() {
+        return cleanup;
+    }
+
+    /**
+     * Scheduled storage cleanup: objects left by released content and, when a key prefix is set,
+     * objects no content row points to.
+     */
+    public static class Cleanup {
+
+        private boolean enabled = true;
+        private String cron = "0 30 3 * * *";
+        /** Time zone for the cron expression; the JVM default when unset. */
+        private String zone;
+        /** Objects written more recently than this are left for a later run by the orphan sweep. */
+        private Duration orphanGracePeriod = Duration.ofHours(24);
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getCron() {
+            return cron;
+        }
+
+        public void setCron(String cron) {
+            this.cron = cron;
+        }
+
+        public String getZone() {
+            return zone;
+        }
+
+        public void setZone(String zone) {
+            this.zone = zone;
+        }
+
+        public Duration getOrphanGracePeriod() {
+            return orphanGracePeriod;
+        }
+
+        public void setOrphanGracePeriod(Duration orphanGracePeriod) {
+            this.orphanGracePeriod = Objects.requireNonNull(orphanGracePeriod, "orphanGracePeriod must not be null");
+        }
     }
 
     /**

@@ -31,7 +31,10 @@ public class EmbeddedDashboardSnapshotService {
     }
 
     public Snapshot current() {
-        List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll();
+        List<AssetContent> contents = contentRepository == null ? List.of() : contentRepository.findAll().stream()
+                // Released content keeps its row after its object is deleted; count only what is stored.
+                .filter(content -> content.getRefCount() > 0)
+                .toList();
         HistoryTotals totals = uploadHistory.totals();
         return new Snapshot(
                 managementProperties.getInstanceId(), managementProperties.getInstanceName(), provider(),

@@ -30,6 +30,7 @@ public final class Dedup4jMetrics {
     private static final String RECONCILIATION_MISMATCHES = "dedup4j.reconciliation.mismatches";
     private static final String RECONCILIATION_DANGLING = "dedup4j.reconciliation.dangling";
     private static final String CLEANUP_DELETED = "dedup4j.cleanup.deleted";
+    private static final String ORPHANS_DELETED = "dedup4j.cleanup.orphans.deleted";
     private static final String CLEANUP_REMAINING = "dedup4j.cleanup.remaining";
 
     private final MeterRegistry registry;
@@ -103,6 +104,13 @@ public final class Dedup4jMetrics {
     }
 
     /** The gauge holds the failed rows of the last completed pass; their objects may remain. */
+    /** One object with no content row, deleted by the orphaned object sweep. */
+    public void recordOrphanedObjectDeleted() {
+        if (registry != null) {
+            registry.counter(ORPHANS_DELETED).increment();
+        }
+    }
+
     public void recordReleasedCleanupCompleted(long failed) {
         cleanupRemaining.set(failed);
         if (registry != null) {

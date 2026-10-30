@@ -145,6 +145,27 @@ class AzureBlobStorageContractTest {
         assertDoesNotThrow(() -> storage.delete(OBJECT_KEY));
     }
 
+    @Test
+    void listPagesThroughObjectsUnderThePrefix() {
+        fake = new FakeAzure();
+        AzureBlobStorage storage = new AzureBlobStorage(client(fake), properties());
+        storage.put(request("media/a", "one".getBytes(StandardCharsets.UTF_8)));
+        storage.put(request("media/b", "three".getBytes(StandardCharsets.UTF_8)));
+        storage.put(request("other/c", "x".getBytes(StandardCharsets.UTF_8)));
+
+        java.util.List<com.edem.dedup4j.core.storage.ListedBlob> listed;
+        try (java.util.stream.Stream<com.edem.dedup4j.core.storage.ListedBlob> stream = storage.list("media/")) {
+            listed = stream.toList();
+        }
+
+        assertEquals(java.util.List.of("media/a", "media/b"),
+                listed.stream().map(com.edem.dedup4j.core.storage.ListedBlob::objectKey).toList());
+        assertEquals(5, listed.get(1).sizeBytes());
+        assertEquals(AzureBlobStorage.PROVIDER, listed.get(0).provider());
+        assertEquals(CONTAINER, listed.get(0).bucketOrContainer());
+        assertEquals(2, fake.listPages);
+    }
+
     private BlobContainerClient client(FakeAzure server) {
         return new BlobServiceClientBuilder()
                 .endpoint(server.endpoint().toString())
@@ -185,6 +206,7 @@ class AzureBlobStorageContractTest {
         private int failureStatus;
         private int writes;
         private Runnable beforeDelete;
+        private int listPages;
 
         private FakeAzure() {
             try {
@@ -209,6 +231,11 @@ class AzureBlobStorageContractTest {
                     return;
                 }
 
+                String query = exchange.getRequestURI().getQuery();
+                if (query != null && query.contains("comp=list")) {
+                    list(exchange, query);
+                    return;
+                }
                 String key = key(exchange);
                 switch (exchange.getRequestMethod()) {
                     case "PUT" -> put(exchange, key);
@@ -298,6 +325,37 @@ class AzureBlobStorageContractTest {
             }
             objects.remove(key);
             respond(exchange, 202, new byte[0]);
+        }
+
+        /** One blob per page, so the listing has to follow NextMarker. */
+        private void list(HttpExchange exchange, String query) throws IOException {
+            listPages++;
+            Map<String, String> parameters = new HashMap<>();
+            for (String pair : query.split("&")) {
+                String[] parts = pair.split("=", 2);
+                parameters.put(parts[0], parts.length > 1 ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8) : "");
+            }
+            String prefix = parameters.getOrDefault("prefix", "");
+            String marker = parameters.get("marker");
+            java.util.List<String> keys = new java.util.TreeSet<>(objects.keySet()).stream()
+                    .filter(key -> key.startsWith(prefix))
+                    .filter(key -> marker == null || key.compareTo(marker) >= 0)
+                    .toList();
+            StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                    + "<EnumerationResults ContainerName=\"" + CONTAINER + "\"><Blobs>");
+            if (!keys.isEmpty()) {
+                xml.append("<Blob><Name>").append(keys.getFirst()).append("</Name><Properties>")
+                        .append("<Last-Modified>Thu, 01 Oct 2026 00:00:00 GMT</Last-Modified>")
+                        .append("<Content-Length>").append(objects.get(keys.getFirst()).content.length)
+                        .append("</Content-Length><BlobType>BlockBlob</BlobType></Properties></Blob>");
+            }
+            xml.append("</Blobs>");
+            if (keys.size() > 1) {
+                xml.append("<NextMarker>").append(keys.get(1)).append("</NextMarker>");
+            }
+            xml.append("</EnumerationResults>");
+            exchange.getResponseHeaders().set("Content-Type", "application/xml");
+            respond(exchange, 200, xml.toString().getBytes(StandardCharsets.UTF_8));
         }
 
         private void addObjectHeaders(HttpExchange exchange, StoredObject object) {

@@ -4,7 +4,8 @@ import com.edem.dedup4j.core.exception.BlobStorageException;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.exception.ContentNotFoundException;
 import com.edem.dedup4j.core.storage.BlobResource;
-import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.ListableBlobStorage;
+import com.edem.dedup4j.core.storage.ListedBlob;
 import com.edem.dedup4j.core.storage.PutBlobRequest;
 import com.edem.dedup4j.core.storage.StoredBlob;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -18,13 +19,16 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest.Builder;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.stream.Stream;
 
-public class S3BlobStorage implements BlobStorage, AutoCloseable {
+public class S3BlobStorage implements ListableBlobStorage, AutoCloseable {
 
     public static final String PROVIDER = "s3";
 
@@ -154,6 +158,24 @@ public class S3BlobStorage implements BlobStorage, AutoCloseable {
             builder.contentDisposition(request.originalFilename());
         }
         return builder.build();
+    }
+
+    /** Pages through ListObjectsV2 lazily; a later page that fails throws the SDK exception while the stream is read. */
+    @Override
+    public Stream<ListedBlob> list(String keyPrefix) {
+        Objects.requireNonNull(keyPrefix, "keyPrefix must not be null");
+        String bucket = bucket();
+        try {
+            return client.listObjectsV2Paginator(ListObjectsV2Request.builder()
+                            .bucket(bucket)
+                            .prefix(keyPrefix)
+                            .build())
+                    .contents()
+                    .stream()
+                    .map(object -> new ListedBlob(object.key(), PROVIDER, bucket, object.size(), object.lastModified()));
+        } catch (SdkException failure) {
+            throw new BlobStorageException("Failed to list objects under: " + keyPrefix, failure);
+        }
     }
 
     private String bucket() {

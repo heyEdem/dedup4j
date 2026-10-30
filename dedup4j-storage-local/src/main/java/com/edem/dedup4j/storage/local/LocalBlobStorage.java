@@ -4,7 +4,8 @@ import com.edem.dedup4j.core.exception.BlobStorageException;
 import com.edem.dedup4j.core.exception.BlobValidationException;
 import com.edem.dedup4j.core.exception.ContentNotFoundException;
 import com.edem.dedup4j.core.storage.BlobResource;
-import com.edem.dedup4j.core.storage.BlobStorage;
+import com.edem.dedup4j.core.storage.ListableBlobStorage;
+import com.edem.dedup4j.core.storage.ListedBlob;
 import com.edem.dedup4j.core.storage.PutBlobRequest;
 import com.edem.dedup4j.core.storage.StoredBlob;
 
@@ -12,11 +13,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.stream.Stream;
 
-public class LocalBlobStorage implements BlobStorage {
+public class LocalBlobStorage implements ListableBlobStorage {
 
     public static final String PROVIDER = "local";
     private static final String TEMPORARY_FILE_PREFIX = ".dedup4j-";
@@ -111,6 +116,47 @@ public class LocalBlobStorage implements BlobStorage {
     public boolean exists(String objectKey) {
         validateKey(objectKey);
         return Files.exists(resolve(objectKey));
+    }
+
+    /** Walks the directory the prefix names, skipping this adapter's in-progress temporary files. */
+    @Override
+    public Stream<ListedBlob> list(String keyPrefix) {
+        Objects.requireNonNull(keyPrefix, "keyPrefix must not be null");
+        Path root = root();
+        int lastSlash = keyPrefix.lastIndexOf('/');
+        Path start = lastSlash < 0 ? root : root.resolve(keyPrefix.substring(0, lastSlash)).normalize();
+        if (!start.startsWith(root)) {
+            throw new BlobValidationException("keyPrefix must resolve inside the storage root: " + keyPrefix);
+        }
+        if (!Files.isDirectory(start)) {
+            return Stream.empty();
+        }
+        try {
+            return Files.walk(start)
+                    .filter(file -> !file.getFileName().toString().startsWith(TEMPORARY_FILE_PREFIX))
+                    .map(file -> listed(root, file))
+                    .filter(Objects::nonNull)
+                    .filter(blob -> blob.objectKey().startsWith(keyPrefix));
+        } catch (IOException failure) {
+            throw new BlobStorageException("Failed to list objects under: " + keyPrefix, failure);
+        }
+    }
+
+    /** Null for directories and for files deleted while the walk was running. */
+    private static ListedBlob listed(Path root, Path file) {
+        try {
+            BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
+            if (!attributes.isRegularFile()) {
+                return null;
+            }
+            String key = root.relativize(file).toString().replace(file.getFileSystem().getSeparator(), "/");
+            return new ListedBlob(key, PROVIDER, root.toString(), attributes.size(),
+                    attributes.lastModifiedTime().toInstant());
+        } catch (NoSuchFileException deleted) {
+            return null;
+        } catch (IOException failure) {
+            throw new BlobStorageException("Failed to read object attributes: " + file, failure);
+        }
     }
 
     private Path requireExisting(String objectKey) {
