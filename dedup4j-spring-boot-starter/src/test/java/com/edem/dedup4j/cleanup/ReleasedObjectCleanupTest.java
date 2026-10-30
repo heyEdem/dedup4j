@@ -92,7 +92,7 @@ class ReleasedObjectCleanupTest {
         assertThat(storage.deletedKeys).containsExactly(content.getObjectKey());
         assertThat(first.deleted()).isEqualTo(1);
         assertThat(second.deleted()).isZero();
-        assertThat(second.alreadyAbsent()).isGreaterThanOrEqualTo(1);
+        assertThat(second.checked()).isZero();
         assertThat(registry.counter("dedup4j.cleanup.deleted").count()).isEqualTo(1.0);
     }
 

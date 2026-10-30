@@ -25,7 +25,8 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_dedup4j_asset_content_hash", columnList = "content_hash"),
                 @Index(name = "idx_dedup4j_asset_content_object_key", columnList = "object_key"),
-                @Index(name = "idx_dedup4j_asset_content_ref_count", columnList = "ref_count")
+                @Index(name = "idx_dedup4j_asset_content_ref_count", columnList = "ref_count"),
+                @Index(name = "idx_dedup4j_asset_content_released", columnList = "ref_count, object_deleted_at, id")
         }
 )
 public class AssetContent {
@@ -60,6 +61,10 @@ public class AssetContent {
 
     @Column(name = "ref_count", nullable = false)
     private long refCount = 1L;
+
+    /** When released content's object was confirmed gone; cleared when the content is referenced again. */
+    @Column(name = "object_deleted_at")
+    private Instant objectDeletedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -158,6 +163,7 @@ public class AssetContent {
 
     void incrementRefCount() {
         refCount++;
+        objectDeletedAt = null;
     }
 
     void decrementRefCount() {
@@ -166,6 +172,14 @@ public class AssetContent {
 
     void repairRefCount(long refCount) {
         this.refCount = refCount;
+    }
+
+    public Instant getObjectDeletedAt() {
+        return objectDeletedAt;
+    }
+
+    void markObjectDeleted() {
+        objectDeletedAt = Instant.now();
     }
 
     public Instant getCreatedAt() {

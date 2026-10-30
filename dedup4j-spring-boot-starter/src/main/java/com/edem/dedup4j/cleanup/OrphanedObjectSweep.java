@@ -28,7 +28,9 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Stream;
 
@@ -43,6 +45,10 @@ import java.util.stream.Stream;
  * the same identity and loses to it; once adopted, the object is deleted under the row's lock by
  * {@link ReferenceCountService#cleanUpReleased}, and an upload of the same bytes restores it rather
  * than inserting. Adopted rows stay at zero references, like other released content.</p>
+ *
+ * <p>It also deletes an object whose only row is released content already marked deleted, which
+ * {@link ReleasedObjectCleanup} no longer checks: an object written back by a restore that rolled
+ * back, or by a late put. A key that several rows point to is kept.</p>
  *
  * <p>The key prefix must be non-empty, without a trailing slash, and belong to this database alone. Runs refuse an ambient
  * transaction, so an adoption never waits on the caller's own uncommitted upload. An interrupted
@@ -154,7 +160,14 @@ public final class OrphanedObjectSweep {
     }
 
     private void sweep(ListedBlob object, Counts counts) {
-        if (owned(object.objectKey())) {
+        List<AssetContent> owners = owners(object.objectKey());
+        if (owners.size() == 1 && owners.getFirst().getRefCount() == 0L && owners.getFirst().getObjectDeletedAt() != null) {
+            // Written back behind released content already marked deleted, for example by a restore that
+            // rolled back after its write; the released pass no longer checks that row.
+            cleanUp(owners.getFirst().getId(), object, counts);
+            return;
+        }
+        if (!owners.isEmpty()) {
             counts.owned++;
             return;
         }
@@ -181,22 +194,28 @@ public final class OrphanedObjectSweep {
             counts.owned++;
             return;
         }
+        cleanUp(adopted.getId(), object, counts);
+    }
+
+    /** Deletes under the row lock, which keeps the object of content an upload referenced again. */
+    private void cleanUp(UUID assetContentId, ListedBlob object, Counts counts) {
         ReleasedCleanupOutcome outcome = Objects.requireNonNull(
-                transactions.execute(status -> referenceCountService.cleanUpReleased(adopted.getId())));
+                transactions.execute(status -> referenceCountService.cleanUpReleased(assetContentId)));
         switch (outcome) {
             case DELETED -> {
                 counts.deleted++;
                 metrics.recordOrphanedObjectDeleted();
                 LOGGER.info("event=storage.orphan.deleted contentId={} objectKey={} sizeBytes={}",
-                        adopted.getId(), object.objectKey(), object.sizeBytes());
+                        assetContentId, object.objectKey(), object.sizeBytes());
             }
             case ABSENT -> counts.vanished++;
             case REFERENCED -> counts.owned++;
         }
     }
 
-    private boolean owned(String objectKey) {
-        return Boolean.TRUE.equals(readOnly.execute(status -> repository.existsByObjectKey(objectKey)));
+    /** At most two rows: one is enough to act on, and a second means the key is shared. */
+    private List<AssetContent> owners(String objectKey) {
+        return Objects.requireNonNull(readOnly.execute(status -> repository.findByObjectKey(objectKey, 2)));
     }
 
     /** Hashes the stored bytes and keeps the stored content type, which a later restore reuses. */

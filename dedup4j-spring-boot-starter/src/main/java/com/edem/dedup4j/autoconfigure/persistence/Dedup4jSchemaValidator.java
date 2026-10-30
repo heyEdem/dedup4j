@@ -40,7 +40,7 @@ final class Dedup4jSchemaValidator implements InitializingBean {
         try {
             jdbcTemplate.queryForList("select id, hash_algorithm, content_hash, size_bytes, object_key, "
                     + "storage_provider, bucket_or_container, content_type, original_extension, ref_count, "
-                    + "created_at, updated_at, version "
+                    + "created_at, updated_at, version, object_deleted_at "
                     + "from dedup4j_asset_content where 1 = 0");
             jdbcTemplate.queryForList("select id, asset_content_id, previous_count, repaired_count, run_id, "
                     + "instance_id, repaired_at, compensates_repair_id from dedup4j_reference_repair where 1 = 0");

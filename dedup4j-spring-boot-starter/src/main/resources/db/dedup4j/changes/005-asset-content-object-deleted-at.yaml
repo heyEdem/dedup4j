@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-asset-content-object-deleted-at
+      author: dedup4j
+      changes:
+        - addColumn:
+            tableName: dedup4j_asset_content
+            columns:
+              - column:
+                  name: object_deleted_at
+                  type: TIMESTAMP
+        - createIndex:
+            tableName: dedup4j_asset_content
+            indexName: idx_dedup4j_asset_content_released
+            columns:
+              - column:
+                  name: ref_count
+              - column:
+                  name: object_deleted_at
+              - column:
+                  name: id

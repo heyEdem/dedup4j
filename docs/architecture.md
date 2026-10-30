@@ -111,10 +111,14 @@ Application deletes logical asset
        -> restored by an upload meanwhile: keep the object
   -> a transaction 2 failure is logged and recorded, not thrown
   -> ScheduledCleanup (dedup4j.cleanup.cron) runs ReleasedObjectCleanup, which pages through rows at zero
-       -> per row, its own transaction: lock, still zero and object exists: delete
+       -> per row not yet marked deleted, its own transaction: lock, still zero and object exists: delete
+       -> deleted or already absent: set object_deleted_at, so later passes skip the row
+       -> any upload referencing the content again clears object_deleted_at
 
 Orphaned object sweep (dedup4j.cleanup.orphans.enabled=true; same schedule, before the released pass; needs a key prefix and ListableBlobStorage)
-  -> list objects under {key-prefix}/; skip those inside the grace period or with a row
+  -> list objects under {key-prefix}/; skip those inside the grace period
+  -> the key's only row is released and marked deleted: cleanUpReleased deletes the object written back behind it
+  -> any other key with a row is kept
   -> hash the bytes; require the key strategy to give the same key, else keep
   -> transaction 1: insert a released row (ref_count 0); a duplicate identity means an upload owns it
   -> transaction 2: cleanUpReleased locks the row and deletes the object

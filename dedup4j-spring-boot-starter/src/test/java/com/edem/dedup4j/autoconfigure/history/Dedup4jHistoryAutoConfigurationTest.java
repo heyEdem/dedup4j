@@ -232,7 +232,8 @@ class Dedup4jHistoryAutoConfigurationTest {
                     List<String> history = jdbc.queryForList(
                             "select id from DEDUP4J_HISTORY_DATABASE_CHANGELOG", String.class);
                     assertThat(asset).containsExactly(
-                            "001-create-asset-content", "002-create-reference-repair", "004-reference-repair-append-only-h2");
+                            "001-create-asset-content", "002-create-reference-repair", "004-reference-repair-append-only-h2",
+                            "005-asset-content-object-deleted-at");
                     assertThat(history).isNotEmpty().doesNotContain("001-create-asset-content");
                     assertThat(jdbc.queryForObject(
                             "select count(*) from DEDUP4J_HISTORY_DATABASE_CHANGELOG_LOCK", Integer.class))

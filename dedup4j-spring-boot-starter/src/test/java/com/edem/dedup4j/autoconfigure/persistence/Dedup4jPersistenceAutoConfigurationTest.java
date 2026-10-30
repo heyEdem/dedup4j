@@ -229,7 +229,7 @@ class Dedup4jPersistenceAutoConfigurationTest {
             assertThat(columns).containsExactlyInAnyOrder(
                     "id", "hash_algorithm", "content_hash", "size_bytes", "object_key",
                     "storage_provider", "bucket_or_container", "content_type", "original_extension",
-                    "ref_count", "created_at", "updated_at", "version");
+                    "ref_count", "created_at", "updated_at", "version", "object_deleted_at");
         }
 
         LocalContainerEntityManagerFactoryBean entityManagerFactory =
@@ -290,7 +290,7 @@ class Dedup4jPersistenceAutoConfigurationTest {
                     + "id uuid not null, hash_algorithm varchar(32) not null, content_hash varchar(128) not null,"
                     + "size_bytes bigint not null, object_key varchar(1024) not null, storage_provider varchar(64) not null,"
                     + "bucket_or_container varchar(255) not null, content_type varchar(255), original_extension varchar(32),"
-                    + "ref_count bigint not null, created_at timestamp not null, updated_at timestamp not null, version bigint not null,"
+                    + "ref_count bigint not null, created_at timestamp not null, updated_at timestamp not null, version bigint not null, object_deleted_at timestamp,"
                     + "constraint uk_dedup4j_asset_content_identity unique (hash_algorithm, content_hash, size_bytes))");
             new JdbcTemplate(dataSource).execute("create table dedup4j_reference_repair ("
                     + "id uuid not null primary key, asset_content_id uuid not null, previous_count bigint not null,"
