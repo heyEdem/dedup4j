@@ -177,6 +177,42 @@ class Dedup4jManagementControllerTest {
         assertThat(disabled).contains("\"enabled\":false").contains("\"lastRun\":null");
     }
 
+    @Test
+    void contentTotalsCountOnlyReferencedContent() throws Exception {
+        var factory = new org.springframework.beans.factory.support.DefaultListableBeanFactory();
+        factory.registerSingleton("contents", repositoryOf(List.of(content(10, 1), content(32, 0))));
+        var empty = new org.springframework.beans.factory.support.DefaultListableBeanFactory();
+        var controller = new Dedup4jManagementController(new Dedup4jManagementProperties(),
+                new com.edem.dedup4j.autoconfigure.Dedup4jProperties(), empty.getBeanProvider(UploadHistory.class),
+                factory.getBeanProvider(AssetContentRepository.class),
+                empty.getBeanProvider(Dedup4jManagementSnapshot.FailureSource.class));
+
+        Dedup4jManagementSnapshot.Metrics metrics = controller.metrics();
+
+        assertThat(metrics.contentCount()).isEqualTo(1);
+        assertThat(metrics.physicalBytes()).isEqualTo(10);
+    }
+
+    /** A repository whose findAll returns the given rows. */
+    private static com.edem.dedup4j.jpa.AssetContentRepository repositoryOf(java.util.List<com.edem.dedup4j.jpa.AssetContent> rows) {
+        Object query = java.lang.reflect.Proxy.newProxyInstance(jakarta.persistence.TypedQuery.class.getClassLoader(),
+                new Class<?>[]{jakarta.persistence.TypedQuery.class},
+                (proxy, method, args) -> method.getName().equals("getResultList") ? rows : proxy);
+        jakarta.persistence.EntityManager entityManager = (jakarta.persistence.EntityManager) java.lang.reflect.Proxy.newProxyInstance(
+                jakarta.persistence.EntityManager.class.getClassLoader(), new Class<?>[]{jakarta.persistence.EntityManager.class},
+                (proxy, method, args) -> method.getName().equals("createQuery") ? query : null);
+        return new com.edem.dedup4j.jpa.AssetContentRepository(entityManager);
+    }
+
+    private static com.edem.dedup4j.jpa.AssetContent content(long sizeBytes, long refCount) throws ReflectiveOperationException {
+        var content = new com.edem.dedup4j.jpa.AssetContent("sha-256", "hash" + sizeBytes, sizeBytes, "key" + sizeBytes,
+                "local", "root", null, null);
+        java.lang.reflect.Field count = com.edem.dedup4j.jpa.AssetContent.class.getDeclaredField("refCount");
+        count.setAccessible(true);
+        count.setLong(content, refCount);
+        return content;
+    }
+
     private static EntityManager unusedEntityManager() {
         return (EntityManager) Proxy.newProxyInstance(EntityManager.class.getClassLoader(),
                 new Class<?>[]{EntityManager.class}, (proxy, method, args) -> {

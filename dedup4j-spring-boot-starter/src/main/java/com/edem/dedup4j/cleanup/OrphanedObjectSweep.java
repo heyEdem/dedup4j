@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  * {@link ReferenceCountService#cleanUpReleased}, and an upload of the same bytes restores it rather
  * than inserting. Adopted rows stay at zero references, like other released content.</p>
  *
- * <p>The key prefix must be non-empty and belong to this database alone. Runs refuse an ambient
+ * <p>The key prefix must be non-empty, without a trailing slash, and belong to this database alone. Runs refuse an ambient
  * transaction, so an adoption never waits on the caller's own uncommitted upload. An interrupted
  * pass stops before the next object with a {@link CancellationException}.</p>
  */
@@ -107,9 +107,9 @@ public final class OrphanedObjectSweep {
      * @throws IllegalStateException when the key prefix is empty or a transaction is active
      */
     public OrphanSweepResult run() {
-        if (keyPrefix.isBlank()) {
-            throw new IllegalStateException("The orphaned object sweep needs dedup4j.storage.key-prefix; "
-                    + "without one it would scan the whole bucket, container or storage root");
+        if (keyPrefix.isBlank() || keyPrefix.endsWith("/")) {
+            throw new IllegalStateException("The orphaned object sweep needs dedup4j.storage.key-prefix without a "
+                    + "trailing slash; without one it would scan the whole bucket, container or storage root");
         }
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("Run the orphaned object sweep outside a transaction");
@@ -130,11 +130,23 @@ public final class OrphanedObjectSweep {
                 }
                 try {
                     sweep(object, counts);
+                } catch (CancellationException cancelled) {
+                    throw cancelled;
                 } catch (RuntimeException failure) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        // The failure is the interrupt's doing (an aborted read, say), not the object's.
+                        CancellationException cancelled = new CancellationException(
+                                "Orphaned object sweep interrupted at " + object.objectKey());
+                        cancelled.initCause(failure);
+                        throw cancelled;
+                    }
                     counts.failed++;
                     recordFailure(object, failure);
                 }
             }
+        }
+        if (Thread.currentThread().isInterrupted()) {
+            throw new CancellationException("Orphaned object sweep interrupted after its last object");
         }
         OrphanSweepResult result = counts.result();
         log(result);
@@ -146,13 +158,14 @@ public final class OrphanedObjectSweep {
             counts.owned++;
             return;
         }
-        ContentHash identity;
+        Read read;
         try {
-            identity = hash(object.objectKey());
+            read = read(object.objectKey());
         } catch (ContentNotFoundException gone) {
             counts.vanished++;
             return;
         }
+        ContentHash identity = read.identity();
         if (identity.sizeBytes() != object.sizeBytes() || !object.objectKey().equals(keyStrategy.generateKey(identity))) {
             counts.unrecognized++;
             LOGGER.warn("event=storage.orphan.unrecognized objectKey={} detail=\"bytes do not match the key; kept\"",
@@ -163,7 +176,7 @@ public final class OrphanedObjectSweep {
         try {
             adopted = Objects.requireNonNull(transactions.execute(status -> mutationService.insertReleased(
                     new AssetContent(identity.algorithm(), identity.hash(), identity.sizeBytes(), object.objectKey(),
-                            object.provider(), object.bucketOrContainer(), null, null))));
+                            object.provider(), object.bucketOrContainer(), read.contentType(), null))));
         } catch (DuplicateContentIdentityException rowExists) {
             counts.owned++;
             return;
@@ -186,12 +199,16 @@ public final class OrphanedObjectSweep {
         return Boolean.TRUE.equals(readOnly.execute(status -> repository.existsByObjectKey(objectKey)));
     }
 
-    private ContentHash hash(String objectKey) {
+    /** Hashes the stored bytes and keeps the stored content type, which a later restore reuses. */
+    private Read read(String objectKey) {
         try (BlobResource resource = storage.get(objectKey)) {
-            return hasher.hash(resource.content());
+            return new Read(hasher.hash(resource.content()), resource.contentType());
         } catch (IOException failure) {
             throw new UncheckedIOException("Failed to read object: " + objectKey, failure);
         }
+    }
+
+    private record Read(ContentHash identity, String contentType) {
     }
 
     private void recordFailure(ListedBlob object, RuntimeException failure) {

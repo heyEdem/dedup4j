@@ -70,8 +70,8 @@ public class Dedup4jProperties {
         private String cron = "0 30 3 * * *";
         /** Time zone for the cron expression; the JVM default when unset. */
         private String zone;
-        /** Objects written more recently than this are left for a later run by the orphan sweep. */
-        private Duration orphanGracePeriod = Duration.ofHours(24);
+        @NestedConfigurationProperty
+        private final Orphans orphans = new Orphans();
 
         public boolean isEnabled() {
             return enabled;
@@ -97,12 +97,35 @@ public class Dedup4jProperties {
             this.zone = zone;
         }
 
-        public Duration getOrphanGracePeriod() {
-            return orphanGracePeriod;
+        public Orphans getOrphans() {
+            return orphans;
+        }
+    }
+
+    /**
+     * The orphaned object sweep, off by default: against the wrong database (an empty schema or an
+     * older snapshot) every real object would look orphaned.
+     */
+    public static class Orphans {
+
+        private boolean enabled;
+        /** Objects written more recently than this are left for a later run. */
+        private Duration gracePeriod = Duration.ofHours(24);
+
+        public boolean isEnabled() {
+            return enabled;
         }
 
-        public void setOrphanGracePeriod(Duration orphanGracePeriod) {
-            this.orphanGracePeriod = Objects.requireNonNull(orphanGracePeriod, "orphanGracePeriod must not be null");
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Duration getGracePeriod() {
+            return gracePeriod;
+        }
+
+        public void setGracePeriod(Duration gracePeriod) {
+            this.gracePeriod = Objects.requireNonNull(gracePeriod, "gracePeriod must not be null");
         }
     }
 

@@ -15,8 +15,6 @@ import com.edem.dedup4j.jpa.AssetContentMutationService;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.jpa.ReferenceCountService;
 import com.edem.dedup4j.observability.Dedup4jMetrics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -33,8 +31,8 @@ import java.time.ZoneId;
 
 /**
  * Schedules storage cleanup unless {@code dedup4j.cleanup.enabled=false}. The orphaned object sweep
- * joins the schedule when the storage can list its objects and {@code dedup4j.storage.key-prefix} is
- * set; without a prefix it would scan the whole bucket, container or root, so it stays off.
+ * joins the schedule with {@code dedup4j.cleanup.orphans.enabled=true}; it then needs storage that can
+ * list its objects and a {@code dedup4j.storage.key-prefix} without a trailing slash, or startup fails.
  */
 @AutoConfiguration(after = Dedup4jServiceAutoConfiguration.class)
 @ConditionalOnBooleanProperty(name = "dedup4j.cleanup.enabled", matchIfMissing = true)
@@ -42,7 +40,6 @@ import java.time.ZoneId;
 @EnableConfigurationProperties(Dedup4jProperties.class)
 public class Dedup4jCleanupAutoConfiguration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Dedup4jCleanupAutoConfiguration.class);
     private static final String PREFIX = "dedup4j.cleanup.";
 
     @Bean
@@ -61,16 +58,20 @@ public class Dedup4jCleanupAutoConfiguration {
             Dedup4jMetrics metrics
     ) {
         Dedup4jProperties.Cleanup cleanup = properties.getCleanup();
-        String keyPrefix = properties.getStorage().getKeyPrefix();
         OrphanedObjectSweep sweep = null;
-        if (!(storage instanceof ListableBlobStorage listable)) {
-            LOGGER.info("event=cleanup.orphans.disabled reason=\"storage cannot list objects\"");
-        } else if (keyPrefix == null || keyPrefix.isBlank()) {
-            LOGGER.info("event=cleanup.orphans.disabled reason=\"set dedup4j.storage.key-prefix to sweep orphaned objects\"");
-        } else {
+        if (cleanup.getOrphans().isEnabled()) {
+            String keyPrefix = properties.getStorage().getKeyPrefix();
+            if (!(storage instanceof ListableBlobStorage listable)) {
+                throw new IllegalStateException(PREFIX + "orphans.enabled=true requires storage that can list its "
+                        + "objects (ListableBlobStorage); " + storage.getClass().getName() + " cannot");
+            }
+            if (keyPrefix == null || keyPrefix.isBlank() || keyPrefix.endsWith("/")) {
+                throw new IllegalStateException(PREFIX + "orphans.enabled=true requires dedup4j.storage.key-prefix "
+                        + "without a trailing slash, belonging to this database alone; found '" + keyPrefix + "'");
+            }
             sweep = new OrphanedObjectSweep(listable, hasher, keyStrategy, repository, mutationService,
                     referenceCountService, transactionManager, history.getIfAvailable(DisabledUploadHistory::new),
-                    metrics, keyPrefix, cleanup.getOrphanGracePeriod(), Clock.systemUTC());
+                    metrics, keyPrefix, cleanup.getOrphans().getGracePeriod(), Clock.systemUTC());
         }
         return new ScheduledCleanup(releasedCleanup, sweep, trigger(cleanup));
     }

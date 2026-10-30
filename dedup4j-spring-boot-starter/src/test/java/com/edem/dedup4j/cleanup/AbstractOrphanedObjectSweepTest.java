@@ -128,6 +128,7 @@ abstract class AbstractOrphanedObjectSweepTest {
         assertThat(adopted.getObjectKey()).isEqualTo(key[0]);
         assertThat(adopted.getRefCount()).isZero();
         assertThat(adopted.getHashAlgorithm()).isEqualTo(hash("rolled back").algorithm());
+        assertThat(adopted.getContentType()).isEqualTo("text/plain");
     }
 
     @Test
@@ -258,10 +259,61 @@ abstract class AbstractOrphanedObjectSweepTest {
     }
 
     @Test
+    void uploadWhoseObjectIsAdoptedAndDeletedMidwayWritesItBack() throws Exception {
+        String key = new HashObjectKeyStrategy(PREFIX).generateKey(hash("overtaken"));
+        OrphanSweepResult[] result = new OrphanSweepResult[1];
+        // Between the upload's lookup and its insert: the sweep adopts the object it just wrote and deletes it.
+        storage.afterPut = putKey -> {
+            storage.age(putKey);
+            result[0] = executor.submit(() -> sweep().run()).get(10, TimeUnit.SECONDS);
+        };
+
+        BlobReference stored = inTransaction(() -> uploads().store(command("overtaken")));
+
+        assertThat(result[0].deleted()).isEqualTo(1);
+        assertThat(stored.objectKey()).isEqualTo(key);
+        assertThat(storage.objects).containsKey(key);
+        assertThat(refCount(stored)).isEqualTo(1);
+    }
+
+    @Test
+    void interruptThatFailsAnObjectEndsThePassAsCancelled() {
+        orphan("aborted read");
+        storage.interruptOnRead = true;
+        try {
+            assertThatThrownBy(() -> sweep().run())
+                    .isInstanceOf(java.util.concurrent.CancellationException.class)
+                    .hasCauseInstanceOf(BlobStorageException.class);
+        } finally {
+            Thread.interrupted();
+        }
+        assertThat(history.failures).isEmpty();
+    }
+
+    @Test
+    void failedSweepStillRunsTheReleasedObjectPass() {
+        String released = orphan("released earlier");
+        ContentHash hash = hash("released earlier");
+        inTransaction(() -> mutations.insertReleased(new AssetContent(hash.algorithm(), hash.hash(), hash.sizeBytes(),
+                released, "memory", "bucket", "text/plain", "txt")));
+        storage.failList = true;
+        ScheduledCleanup cleanup = new ScheduledCleanup(
+                new ReleasedObjectCleanup(contents, referenceCounts, transactionManager, history,
+                        new Dedup4jMetrics(registry), 10),
+                sweep(), new org.springframework.scheduling.support.CronTrigger("0 0 3 * * *"));
+
+        assertThatThrownBy(cleanup::runNow).isInstanceOf(BlobStorageException.class).hasMessage("list failed");
+        assertThat(storage.objects).doesNotContainKey(released);
+    }
+
+    @Test
     void refusesAnEmptyPrefixAndAnAmbientTransaction() {
         assertThatThrownBy(() -> sweep("").run())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("dedup4j.storage.key-prefix");
+        assertThatThrownBy(() -> sweep(PREFIX + "/").run())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("trailing slash");
         assertThatThrownBy(() -> inTransaction(() -> sweep().run()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("outside a transaction");
@@ -356,9 +408,14 @@ abstract class AbstractOrphanedObjectSweepTest {
         private final Map<String, Instant> lastModified = new ConcurrentHashMap<>();
         private final Set<String> unreadable = ConcurrentHashMap.newKeySet();
         private final Set<String> vanishOnRead = ConcurrentHashMap.newKeySet();
+        private final Map<String, String> contentTypes = new ConcurrentHashMap<>();
+        private volatile PutHook afterPut;
+        private volatile boolean interruptOnRead;
+        private volatile boolean failList;
 
         void putAged(String key, String text) {
             objects.put(key, text.getBytes(StandardCharsets.UTF_8));
+            contentTypes.put(key, "text/plain");
             age(key);
         }
 
@@ -374,6 +431,16 @@ abstract class AbstractOrphanedObjectSweepTest {
                 throw new IllegalStateException(failure);
             }
             lastModified.put(request.objectKey(), NOW);
+            contentTypes.put(request.objectKey(), request.contentType());
+            PutHook hook = afterPut;
+            if (hook != null) {
+                afterPut = null;
+                try {
+                    hook.run(request.objectKey());
+                } catch (Exception failure) {
+                    throw new IllegalStateException(failure);
+                }
+            }
             return new StoredBlob(request.objectKey(), "memory", "bucket", request.sizeBytes(),
                     request.contentType(), null, NOW);
         }
@@ -383,11 +450,16 @@ abstract class AbstractOrphanedObjectSweepTest {
             if (unreadable.contains(objectKey)) {
                 throw new BlobStorageException("read failed");
             }
+            if (interruptOnRead) {
+                Thread.currentThread().interrupt();
+                throw new BlobStorageException("read aborted");
+            }
             byte[] bytes = vanishOnRead.contains(objectKey) ? null : objects.get(objectKey);
             if (bytes == null) {
                 throw new ContentNotFoundException("missing: " + objectKey);
             }
-            return new BlobResource(objectKey, new ByteArrayInputStream(bytes), bytes.length, null, Map.of());
+            return new BlobResource(objectKey, new ByteArrayInputStream(bytes), bytes.length,
+                    contentTypes.get(objectKey), Map.of());
         }
 
         @Override
@@ -402,12 +474,20 @@ abstract class AbstractOrphanedObjectSweepTest {
 
         @Override
         public Stream<ListedBlob> list(String keyPrefix) {
+            if (failList) {
+                throw new BlobStorageException("list failed");
+            }
             return objects.entrySet().stream()
                     .filter(entry -> entry.getKey().startsWith(keyPrefix))
                     .sorted(Map.Entry.comparingByKey())
                     .map(entry -> new ListedBlob(entry.getKey(), "memory", "bucket", entry.getValue().length,
                             Optional.ofNullable(lastModified.get(entry.getKey())).orElse(NOW)));
         }
+    }
+
+    @FunctionalInterface
+    private interface PutHook {
+        void run(String objectKey) throws Exception;
     }
 
     private static final class RecordingHistory implements UploadHistory {

@@ -12,8 +12,9 @@ import java.util.concurrent.CancellationException;
 /**
  * Runs storage cleanup on a cron schedule: the orphaned object sweep, when configured, then the
  * released object pass, which also catches an object a late put wrote back behind a released row.
- * Each run is logged; a failed run is logged and the schedule carries on. Stopping interrupts a
- * running pass, which ends before its next row or object.
+ * A failed orphan sweep is logged and the released pass still runs; the schedule carries on after
+ * any failure. Stopping interrupts a scheduled pass, which ends before its next row or object; a
+ * {@link #runNow()} on another thread is not stopped.
  *
  * <p>Every instance runs its own schedule. That is safe, since each deletion happens under the
  * content row's lock, but repeats the listing and reads per instance.</p>
@@ -36,12 +37,31 @@ public final class ScheduledCleanup implements SmartLifecycle {
         this.trigger = Objects.requireNonNull(trigger, "trigger must not be null");
     }
 
-    /** Runs one cleanup on the calling thread, outside any transaction. */
+    /**
+     * Runs one cleanup on the calling thread, outside any transaction.
+     *
+     * @throws CancellationException when the thread is interrupted
+     * @throws RuntimeException      from the released pass, or from the orphan sweep after the released
+     *                               pass has run
+     */
     public void runNow() {
+        RuntimeException sweepFailure = null;
         if (orphanSweep != null) {
-            orphanSweep.run();
+            try {
+                orphanSweep.run();
+            } catch (CancellationException cancelled) {
+                throw cancelled;
+            } catch (RuntimeException failure) {
+                LOGGER.warn("event=cleanup.orphans.failed errorType={} failureMessage={} "
+                                + "detail=\"released object pass runs anyway\"",
+                        failure.getClass().getSimpleName(), failure.getMessage(), failure);
+                sweepFailure = failure;
+            }
         }
         releasedCleanup.run();
+        if (sweepFailure != null) {
+            throw sweepFailure;
+        }
     }
 
     public boolean sweepsOrphans() {

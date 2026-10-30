@@ -113,7 +113,7 @@ Application deletes logical asset
   -> ScheduledCleanup (dedup4j.cleanup.cron) runs ReleasedObjectCleanup, which pages through rows at zero
        -> per row, its own transaction: lock, still zero and object exists: delete
 
-Orphaned object sweep (same schedule, before the released pass; needs a key prefix and ListableBlobStorage)
+Orphaned object sweep (dedup4j.cleanup.orphans.enabled=true; same schedule, before the released pass; needs a key prefix and ListableBlobStorage)
   -> list objects under {key-prefix}/; skip those inside the grace period or with a row
   -> hash the bytes; require the key strategy to give the same key, else keep
   -> transaction 1: insert a released row (ref_count 0); a duplicate identity means an upload owns it

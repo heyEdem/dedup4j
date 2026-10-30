@@ -4,9 +4,10 @@
 
 - `ListableBlobStorage` (core) with `list(keyPrefix)` and `ListedBlob`; implemented by `LocalBlobStorage`, `S3BlobStorage` and `AzureBlobStorage`.
 - `OrphanedObjectSweep`: objects under `{key-prefix}/` older than the grace period with no row are hashed, adopted as released rows and deleted under the row lock; counted in `OrphanSweepResult`, logged as `event=storage.orphan.deleted`, metered as `dedup4j.cleanup.orphans.deleted`.
-- `ScheduledCleanup` runs the sweep and `ReleasedObjectCleanup` on `dedup4j.cleanup.cron` (default `0 30 3 * * *`), on by default (`dedup4j.cleanup.enabled`); the sweep needs `dedup4j.storage.key-prefix`. New `dedup4j.cleanup.zone` and `dedup4j.cleanup.orphan-grace-period` (24h).
+- `ScheduledCleanup` runs `ReleasedObjectCleanup` on `dedup4j.cleanup.cron` (default `0 30 3 * * *`) on every instance, on by default (`dedup4j.cleanup.enabled`), and the sweep first when `dedup4j.cleanup.orphans.enabled=true` (default off; needs `ListableBlobStorage` and a key prefix without a trailing slash, or startup fails). New `dedup4j.cleanup.zone` and `dedup4j.cleanup.orphans.grace-period` (24h).
+- **Behaviour change:** released object cleanup now runs automatically; applications that already call `ReleasedObjectCleanup.run()` get an extra, harmless pass.
 - `AssetContentMutationService.insertReleased`, `AssetContentRepository.existsByObjectKey`.
-- Management and embedded dashboard content totals count only referenced rows.
+- **Behaviour change:** management and embedded dashboard content count and stored bytes count only referenced rows.
 - Modules affected: `dedup4j-core`, `dedup4j-jpa`, `dedup4j-storage-local`, `dedup4j-storage-s3`, `dedup4j-storage-azure`, `dedup4j-spring-boot-starter`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`.
 
 ## 2026-10-30 — Scheduled coordinated repair (`dedup4j.reconciliation.mode=repair`)

@@ -43,10 +43,11 @@ class Dedup4jCleanupAutoConfigurationTest {
     }
 
     @Test
-    void sweepsOrphansWhenStorageListsAndAPrefixIsSet() {
+    void sweepsOrphansOnlyWhenEnabled() {
         runner.withUserConfiguration(ListingStorage.class)
                 .withPropertyValues("dedup4j.storage.key-prefix=media", "dedup4j.cleanup.cron=0 0 1 * * *",
-                        "dedup4j.cleanup.zone=UTC", "dedup4j.cleanup.orphan-grace-period=2h")
+                        "dedup4j.cleanup.zone=UTC", "dedup4j.cleanup.orphans.enabled=true",
+                        "dedup4j.cleanup.orphans.grace-period=2h")
                 .run(context -> {
                     ScheduledCleanup cleanup = context.getBean(ScheduledCleanup.class);
                     assertThat(cleanup.sweepsOrphans()).isTrue();
@@ -55,9 +56,28 @@ class Dedup4jCleanupAutoConfigurationTest {
     }
 
     @Test
-    void leavesTheOrphanSweepOffWithoutAPrefix() {
+    void leavesTheOrphanSweepOffByDefault() {
         runner.withUserConfiguration(ListingStorage.class)
+                .withPropertyValues("dedup4j.storage.key-prefix=media")
                 .run(context -> assertThat(context.getBean(ScheduledCleanup.class).sweepsOrphans()).isFalse());
+    }
+
+    @Test
+    void enabledOrphanSweepWithoutAUsablePrefixFailsStartup() {
+        runner.withUserConfiguration(ListingStorage.class)
+                .withPropertyValues("dedup4j.cleanup.orphans.enabled=true")
+                .run(context -> assertThat(context).getFailure()
+                        .hasStackTraceContaining("orphans.enabled=true requires dedup4j.storage.key-prefix"));
+        runner.withUserConfiguration(ListingStorage.class)
+                .withPropertyValues("dedup4j.cleanup.orphans.enabled=true", "dedup4j.storage.key-prefix=media/")
+                .run(context -> assertThat(context).getFailure().hasStackTraceContaining("found 'media/'"));
+    }
+
+    @Test
+    void enabledOrphanSweepOnStorageThatCannotListFailsStartup() {
+        runner.withUserConfiguration(PlainStorage.class)
+                .withPropertyValues("dedup4j.cleanup.orphans.enabled=true", "dedup4j.storage.key-prefix=media")
+                .run(context -> assertThat(context).getFailure().hasStackTraceContaining("ListableBlobStorage"));
     }
 
     @Test
