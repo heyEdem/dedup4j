@@ -100,6 +100,42 @@ class AssetContentRepositoryTest {
         assertThrows(NullPointerException.class, () -> new AssetContentRepository(null));
     }
 
+    @Test
+    void pagesReferencedContentByReferencesOrSize() {
+        entityManager.getTransaction().begin();
+        entityManager.createQuery("delete from AssetContent").executeUpdate();
+        AssetContent small = persistWithReferences("c".repeat(64), 10L, 3);
+        AssetContent large = persistWithReferences("d".repeat(64), 900L, 1);
+        AssetContent middle = persistWithReferences("e".repeat(64), 50L, 2);
+        persistWithReferences("f".repeat(64), 5000L, 0);
+        entityManager.flush();
+
+        assertEquals(3, repository.countReferenced());
+        assertEquals(java.util.List.of(small.getId(), middle.getId(), large.getId()),
+                ids(repository.findReferencedPage(ContentOrder.REFERENCES, 0, 10)));
+        assertEquals(java.util.List.of(large.getId(), middle.getId()),
+                ids(repository.findReferencedPage(ContentOrder.SIZE, 0, 2)));
+        assertEquals(java.util.List.of(small.getId()),
+                ids(repository.findReferencedPage(ContentOrder.SIZE, 2, 2)));
+        assertThrows(IllegalArgumentException.class, () -> repository.findReferencedPage(ContentOrder.SIZE, -1, 2));
+    }
+
+    private AssetContent persistWithReferences(String contentHash, long sizeBytes, int references) {
+        AssetContent content = newAsset("SHA-256", contentHash, sizeBytes);
+        for (int extra = 1; extra < references; extra++) {
+            content.incrementRefCount();
+        }
+        if (references == 0) {
+            content.decrementRefCount();
+        }
+        entityManager.persist(content);
+        return content;
+    }
+
+    private static java.util.List<UUID> ids(java.util.List<AssetContent> contents) {
+        return contents.stream().map(AssetContent::getId).toList();
+    }
+
     private AssetContent persistContent(String hashAlgorithm, String contentHash, long sizeBytes) {
         AssetContent content = newAsset(hashAlgorithm, contentHash, sizeBytes);
 

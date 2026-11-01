@@ -103,7 +103,7 @@ class Dedup4jManagementControllerTest {
                 .flatMap(mapping -> Arrays.stream(mapping.method()))
                 .toList();
 
-        assertThat(methods).hasSize(5).containsOnly(RequestMethod.GET);
+        assertThat(methods).hasSize(7).containsOnly(RequestMethod.GET);
     }
 
     @Test
