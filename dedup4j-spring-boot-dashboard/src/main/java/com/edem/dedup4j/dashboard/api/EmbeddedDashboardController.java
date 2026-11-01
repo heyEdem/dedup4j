@@ -7,6 +7,7 @@ import com.edem.dedup4j.management.Dedup4jManagementSnapshot;
 import com.edem.dedup4j.reconcile.ContentReferenceCountSource;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,9 +33,13 @@ public class EmbeddedDashboardController {
     public EmbeddedDashboardController(EmbeddedDashboardSnapshotService snapshots,
                                         Dedup4jDashboardProperties properties,
                                         Dedup4jManagementSnapshot.FailureSource failureSource) {
-        this(snapshots, properties, failureSource, new ContentCatalog(
-                new StaticListableBeanFactory().getBeanProvider(AssetContentRepository.class),
-                new StaticListableBeanFactory().getBeanProvider(ContentReferenceCountSource.class)));
+        this(snapshots, properties, failureSource, emptyCatalog(new StaticListableBeanFactory()));
+    }
+
+    private static ContentCatalog emptyCatalog(StaticListableBeanFactory none) {
+        return new ContentCatalog(none.getBeanProvider(AssetContentRepository.class),
+                none.getBeanProvider(ContentReferenceCountSource.class),
+                none.getBeanProvider(PlatformTransactionManager.class));
     }
 
     public EmbeddedDashboardController(EmbeddedDashboardSnapshotService snapshots,

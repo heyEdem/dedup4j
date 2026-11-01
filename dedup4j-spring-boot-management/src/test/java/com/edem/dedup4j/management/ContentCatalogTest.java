@@ -11,6 +11,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.reflect.Proxy;
@@ -87,7 +92,8 @@ class ContentCatalogTest {
     void withoutPersistenceThePageIsEmptyAndRowsAreNotFound() {
         DefaultListableBeanFactory empty = new DefaultListableBeanFactory();
         ContentCatalog catalog = new ContentCatalog(empty.getBeanProvider(AssetContentRepository.class),
-                empty.getBeanProvider(ContentReferenceCountSource.class));
+                empty.getBeanProvider(ContentReferenceCountSource.class),
+                empty.getBeanProvider(PlatformTransactionManager.class));
 
         assertThat(catalog.page(null, 0, 10).items()).isEmpty();
         assertThat(catalog.find(UUID.randomUUID())).isEmpty();
@@ -107,14 +113,36 @@ class ContentCatalogTest {
                 failure -> assertThat(failure.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
-    private ContentCatalog catalog(List<AssetContent> rows, ContentReferenceCountSource source) {
+    @Test
+    void detailReadsTheApplicationsCountInsideAReadOnlyTransaction() {
+        AssetContent shared = content("cc", 2);
+        List<Boolean> readOnly = new ArrayList<>();
+        ContentReferenceCountSource source = id -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+            readOnly.add(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+            return 2;
+        };
         DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
+        beans.registerSingleton("transactionManager", new NoOpTransactionManager());
+
+        assertThat(catalog(List.of(shared), source, beans).find(shared.getId()).orElseThrow().logicalReferences())
+                .isEqualTo(2);
+        assertThat(readOnly).containsExactly(true);
+    }
+
+    private ContentCatalog catalog(List<AssetContent> rows, ContentReferenceCountSource source) {
+        return catalog(rows, source, new DefaultListableBeanFactory());
+    }
+
+    private ContentCatalog catalog(List<AssetContent> rows, ContentReferenceCountSource source,
+                                   DefaultListableBeanFactory beans) {
         beans.registerSingleton("contents", repository(rows));
         if (source != null) {
             beans.registerSingleton("references", source);
         }
         ObjectProvider<ContentReferenceCountSource> references = beans.getBeanProvider(ContentReferenceCountSource.class);
-        return new ContentCatalog(beans.getBeanProvider(AssetContentRepository.class), references);
+        return new ContentCatalog(beans.getBeanProvider(AssetContentRepository.class), references,
+                beans.getBeanProvider(PlatformTransactionManager.class));
     }
 
     /** A repository over a fixed result list that records each query, offset and limit. */
@@ -150,5 +178,24 @@ class ContentCatalogTest {
             throw new IllegalStateException(failure);
         }
         return content;
+    }
+
+    private static final class NoOpTransactionManager extends AbstractPlatformTransactionManager {
+        @Override
+        protected Object doGetTransaction() {
+            return new Object();
+        }
+
+        @Override
+        protected void doBegin(Object transaction, TransactionDefinition definition) {
+        }
+
+        @Override
+        protected void doCommit(DefaultTransactionStatus status) {
+        }
+
+        @Override
+        protected void doRollback(DefaultTransactionStatus status) {
+        }
     }
 }

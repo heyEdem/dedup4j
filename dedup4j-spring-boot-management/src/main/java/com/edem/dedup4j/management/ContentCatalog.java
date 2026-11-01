@@ -6,6 +6,8 @@ import com.edem.dedup4j.jpa.ContentOrder;
 import com.edem.dedup4j.reconcile.ContentReferenceCountSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -21,11 +23,18 @@ public class ContentCatalog {
 
     private final AssetContentRepository repository;
     private final ContentReferenceCountSource references;
+    private final TransactionTemplate readOnly;
 
     public ContentCatalog(ObjectProvider<AssetContentRepository> repository,
-                          ObjectProvider<ContentReferenceCountSource> references) {
+                          ObjectProvider<ContentReferenceCountSource> references,
+                          ObjectProvider<PlatformTransactionManager> transactionManager) {
         this.repository = repository.getIfAvailable();
         this.references = references.getIfUnique();
+        PlatformTransactionManager manager = transactionManager.getIfUnique();
+        this.readOnly = manager == null ? null : new TransactionTemplate(manager);
+        if (readOnly != null) {
+            readOnly.setReadOnly(true);
+        }
     }
 
     /** Rows that still have references. Rejects an unknown sort or a negative or out-of-range page with 400. */
@@ -49,12 +58,18 @@ public class ContentCatalog {
         return new Dedup4jManagementSnapshot.ContentPage(items, pageNumber, pageSize, repository.countReferenced());
     }
 
-    /** Any row, released ones included. */
+    /**
+     * Any row, released ones included. Runs in a read-only transaction when there is a transaction
+     * manager, because {@link ContentReferenceCountSource} reads through the caller's transaction.
+     */
     public Optional<Dedup4jManagementSnapshot.ContentDetail> find(UUID id) {
         if (repository == null) {
             return Optional.empty();
         }
-        return repository.findById(id).map(this::detail);
+        if (readOnly == null) {
+            return repository.findById(id).map(this::detail);
+        }
+        return readOnly.execute(status -> repository.findById(id).map(this::detail));
     }
 
     private Dedup4jManagementSnapshot.ContentDetail detail(AssetContent content) {

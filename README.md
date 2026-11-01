@@ -195,8 +195,8 @@ still have references, most-shared first, and show one row in detail:
   row can be skipped or repeated.
 - The detail view returns released rows too (`refCount: 0`), and `404` for an
   unknown ID. `logicalReferences` is the application's own count from a
-  `ContentReferenceCountSource` bean, read separately from `refCount`; it is
-  `null` without one.
+  `ContentReferenceCountSource` bean, read in a read-only transaction and
+  separately from `refCount`; it is `null` without one.
 - The embedded dashboard shows the top 10 under **Most-shared content**; click a
   row for its details.
 

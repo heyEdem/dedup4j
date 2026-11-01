@@ -10,6 +10,7 @@ import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,8 +55,8 @@ public class Dedup4jManagementController {
             ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
             ObjectProvider<ScheduledReconciliation> reconciliation
     ) {
-        this(managementProperties, dedup4jProperties, uploadHistory, contentRepository, failureSource, reconciliation,
-                null);
+        this(managementProperties, dedup4jProperties, uploadHistory, contentRepository, failureSource,
+                reconciliation, null);
     }
 
     public Dedup4jManagementController(
@@ -65,11 +66,12 @@ public class Dedup4jManagementController {
             ObjectProvider<AssetContentRepository> contentRepository,
             ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
             ObjectProvider<ScheduledReconciliation> reconciliation,
-            ObjectProvider<ContentReferenceCountSource> references
+            ContentCatalog contents
     ) {
-        this.contents = new ContentCatalog(contentRepository,
-                references == null ? new StaticListableBeanFactory().getBeanProvider(ContentReferenceCountSource.class)
-                        : references);
+        StaticListableBeanFactory none = new StaticListableBeanFactory();
+        this.contents = contents != null ? contents : new ContentCatalog(contentRepository,
+                none.getBeanProvider(ContentReferenceCountSource.class),
+                none.getBeanProvider(PlatformTransactionManager.class));
         this.reconciliation = reconciliation == null ? null : reconciliation.getIfAvailable();
         this.managementProperties = managementProperties;
         this.dedup4jProperties = dedup4jProperties;

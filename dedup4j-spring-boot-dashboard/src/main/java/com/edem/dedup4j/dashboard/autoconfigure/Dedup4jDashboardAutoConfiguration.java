@@ -43,11 +43,12 @@ public class Dedup4jDashboardAutoConfiguration {
             ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
             ObjectProvider<UploadHistory> uploadHistory,
             ObjectProvider<com.edem.dedup4j.jpa.AssetContentRepository> contentRepository,
-            ObjectProvider<com.edem.dedup4j.reconcile.ContentReferenceCountSource> references) {
+            ObjectProvider<com.edem.dedup4j.reconcile.ContentReferenceCountSource> references,
+            ObjectProvider<org.springframework.transaction.PlatformTransactionManager> transactionManager) {
         return new EmbeddedDashboardController(snapshots, properties, failureSource.getIfAvailable(() -> {
             UploadHistory history = uploadHistory.getIfAvailable();
             return history == null ? since -> java.util.List.of() : new UploadHistoryFailureSource(history);
-        }), new com.edem.dedup4j.management.ContentCatalog(contentRepository, references));
+        }), new com.edem.dedup4j.management.ContentCatalog(contentRepository, references, transactionManager));
     }
 
     @Bean
