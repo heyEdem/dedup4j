@@ -12,6 +12,7 @@
 .content-row:hover, .content-row:focus-visible { background: var(--surface); outline: none; }
 .content-hash { color: var(--ink); font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .content-detail { display: grid; font-size: 13px; gap: 8px 20px; grid-template-columns: max-content 1fr; margin: 16px 4px 0; }
+.content-detail[hidden] { display: none; }
 .content-detail dt { color: var(--muted); }
 .content-detail dd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 760px) {
