@@ -5,12 +5,7 @@ import com.edem.dedup4j.dashboard.persistence.FailureEventRepository;
 import com.edem.dedup4j.dashboard.persistence.InstanceRepository;
 import com.edem.dedup4j.dashboard.persistence.MetricSnapshotRepository;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -36,8 +31,7 @@ public class InstancePollingService {
     private final DatasetTotalsRepository totals;
     private final DashboardDatabaseProperties properties;
     private final Clock clock;
-    private final HttpClient client = HttpClient.newBuilder().build();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ManagementClient management = new ManagementClient();
     /** The last cumulative reading per dataset, so replicas of one dataset never multiply trends. */
     private final Map<String, MetricDeltaCalculator.Cumulative> previous = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -158,10 +152,5 @@ public class InstancePollingService {
 
     private static String text(JsonNode node, String field) { return node.hasNonNull(field) ? node.get(field).asString() : ""; }
 
-    private JsonNode get(String url) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(java.time.Duration.ofSeconds(3)).GET().build();
-        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 300) throw new IllegalStateException("HTTP " + response.statusCode());
-        return mapper.readTree(response.body());
-    }
+    private JsonNode get(String url) throws Exception { return management.get(url); }
 }
