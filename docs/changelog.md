@@ -6,7 +6,8 @@
 - The embedded dashboard serves the same routes under `/api/v1` and adds a **Most-shared content** section with row details.
 - `AssetContentRepository.findReferencedPage` and `countReferenced`, with the `ContentOrder` enum; `ContentCatalog` is shared by both modules.
 - README documents the routes and that neither management nor dashboard paths are authenticated.
-- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`.
+- The standalone dashboard adds `GET /api/v1/instances/{id}/contents` and `/contents/{contentId}`, a live proxy (`ContentProxyController`) to the registered instance's management routes: unknown instance `404`, instance without content listing `501`, unreachable or other upstream errors `502`; nothing is stored. Its UI adds a **Most-shared content** section with an instance picker. The poller's HTTP GET moved to the shared `ManagementClient`.
+- Modules affected: `dedup4j-jpa`, `dedup4j-spring-boot-management`, `dedup4j-spring-boot-dashboard`, `dedup4j-dashboard`.
 
 ## 2026-10-30 — ASCII-safe Content-Disposition for uploads
 

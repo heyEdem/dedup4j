@@ -181,13 +181,13 @@ dedup4j:
 
 ### Browsing shared content
 
-Both the management API and the embedded dashboard list the content rows that
-still have references, most-shared first, and show one row in detail:
+The management API and both dashboards list the content rows that still have
+references, most-shared first, and show one row in detail:
 
-| Management | Embedded dashboard |
-|---|---|
-| `GET /dedup4j/management/v1/contents?sort=references\|size&page=0&size=20` | `GET /dedup4j/dashboard/api/v1/contents` (same parameters) |
-| `GET /dedup4j/management/v1/contents/{id}` | `GET /dedup4j/dashboard/api/v1/contents/{id}` |
+| Management | Embedded dashboard | Standalone dashboard |
+|---|---|---|
+| `GET /dedup4j/management/v1/contents?sort=references\|size&page=0&size=20` | `GET /dedup4j/dashboard/api/v1/contents` (same parameters) | `GET /api/v1/instances/{instanceId}/contents` (same parameters) |
+| `GET /dedup4j/management/v1/contents/{id}` | `GET /dedup4j/dashboard/api/v1/contents/{id}` | `GET /api/v1/instances/{instanceId}/contents/{id}` |
 
 - `sort` is `references` (default) or `size`, largest first. `size` is clamped
   to 1–200 (default 20). An unknown sort or a negative page returns `400`.
@@ -199,6 +199,15 @@ still have references, most-shared first, and show one row in detail:
   separately from `refCount`; it is `null` without one.
 - The embedded dashboard shows the top 10 under **Most-shared content**; click a
   row for its details.
+- The standalone dashboard reads these live from the chosen instance's
+  management API, through the URL the instance registered with; it stores
+  nothing. Pick an instance under **Most-shared content**; replicas of one
+  dataset show the same rows. It answers `404` for an unknown instance, `501`
+  when the instance predates content listing, and `502` when the instance is
+  unreachable or answers with another error (such as `401`).
+- The detail view includes the object key and bucket or container. The
+  standalone dashboard binds to loopback by default; keep it there, or put it
+  behind your own authentication, like the management and embedded paths.
 
 dedup4j stores content, not the application's assets, so these views show how
 many references a row has, not which assets hold them.
