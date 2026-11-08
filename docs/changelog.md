@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-08 — 1.0.0, stable API and schema
+
+- First stable release. The public API and the managed schema are now stable: 1.x releases only add, and breaking changes wait for 2.0.
+- Published to Maven Central under `io.github.heyedem`: the same parent and nine artifacts as 0.1.0, signed with key `1E7D14C37ABE8D6E5EDD0B05D0A31632E4C94CE3`. The standalone `dedup4j-dashboard` is not on Central.
+- Requires Java 21 or later and Spring Boot 4.0 or 4.1 (tested on 4.0.9 and 4.1.1). Spring Boot 3.x is not supported.
+- Upgrading from 0.1.0: the managed changelog adds `002-create-reference-repair`, `003-reference-repair-append-only-postgresql` or `004-reference-repair-append-only-h2`, and `005-asset-content-object-deleted-at`. Two breaking changes (`ReconciliationService.repair` removed; `ReconciliationRun` gains `mode` and `repair`) and the behaviour changes are listed in the entries below and in the GitHub release notes.
+- Known limitation, unchanged from 0.1.0: the Azure adapter does not configure a managed identity or any other credential; `dedup4j.storage.azure.account-name` is accepted but not used.
+- Modules affected: all published modules (version), `README.md`.
+
 ## 2026-11-08 — Test against Spring Boot 4.0
 
 - CI adds a `Spring Boot 4.0 compatibility` job that runs every test, PostgreSQL included, with `-Dspring-boot.version=4.0.9`; the other jobs keep using the version in `pom.xml` (4.1.1).
