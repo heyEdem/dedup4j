@@ -88,6 +88,7 @@
 - `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/ContentHasher.java`: stream-based content hashing contract.
 - `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/ContentHash.java`: content identity value carrying algorithm, hash, and byte size.
 - `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/Sha256ContentHasher.java`: streaming SHA-256 implementation that returns lowercase hex.
+- `dedup4j-core/src/main/java/com/edem/dedup4j/core/hash/SimilarityHasher.java` and `SimilarityHash.java`: SPI for a perceptual (near-duplicate) hash, `supports(contentType)` then `hash(InputStream)`, returning algorithm plus zero-padded hex. Outside content identity; no implementation and no caller yet (#66).
 - `dedup4j-core/src/main/java/com/edem/dedup4j/core/key/ObjectKeyStrategy.java`: contract for generating storage object keys from content identity.
 - `dedup4j-core/src/main/java/com/edem/dedup4j/core/key/HashObjectKeyStrategy.java`: deterministic key strategy using `{prefix}/{algorithm}/{first_two_hash_chars}/{content_hash}`.
 - `dedup4j-core/src/main/java/com/edem/dedup4j/core/storage/BlobStorage.java`: provider-neutral storage SPI for put, get, idempotent delete, and existence checks.
