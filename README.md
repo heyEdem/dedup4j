@@ -179,6 +179,48 @@ dedup4j:
     enabled: false
 ```
 
+### Browsing shared content
+
+The management API and both dashboards list the content rows that still have
+references, most-shared first, and show one row in detail:
+
+| Management | Embedded dashboard | Standalone dashboard |
+|---|---|---|
+| `GET /dedup4j/management/v1/contents?sort=references\|size&page=0&size=20` | `GET /dedup4j/dashboard/api/v1/contents` (same parameters) | `GET /api/v1/instances/{instanceId}/contents` (same parameters) |
+| `GET /dedup4j/management/v1/contents/{id}` | `GET /dedup4j/dashboard/api/v1/contents/{id}` | `GET /api/v1/instances/{instanceId}/contents/{id}` |
+
+- `sort` is `references` (default) or `size`, largest first. `size` is clamped
+  to 1–200 (default 20). An unknown sort or a negative page returns `400`.
+- Paging uses offsets and is best-effort: counts change while you page, so a
+  row can be skipped or repeated.
+- The detail view returns released rows too (`refCount: 0`), and `404` for an
+  unknown ID. `logicalReferences` is the application's own count from a
+  `ContentReferenceCountSource` bean, read in a read-only transaction and
+  separately from `refCount`; it is `null` without one.
+- The embedded dashboard shows the top 10 under **Most-shared content**; click a
+  row for its details.
+- The standalone dashboard reads these live from the chosen instance's
+  management API, through the URL the instance registered with; it stores
+  nothing. Pick an instance under **Most-shared content**; replicas of one
+  dataset show the same rows. It answers `404` for an unknown instance, `501`
+  when the instance predates content listing, and `502` when the instance is
+  unreachable or answers with another error (such as `401`).
+- The detail view includes the object key and bucket or container. The
+  standalone dashboard binds to loopback by default; keep it there, or put it
+  behind your own authentication, like the management and embedded paths.
+
+dedup4j stores content, not the application's assets, so these views show how
+many references a row has, not which assets hold them.
+
+### Securing management and dashboard paths
+
+dedup4j adds no authentication. The management API and the embedded dashboard
+expose content hashes, object keys, bucket names, sizes and failure messages.
+Both are enabled independently (`dedup4j.management.enabled`,
+`dedup4j.dashboard.enabled`), so protect **both** base paths
+(`dedup4j.management.base-path` and `dedup4j.dashboard.base-path`) with your
+application's security, or keep them off public networks.
+
 `dedup4j-spring-boot-observability` is the embedded current-application
 UI/API. Use the separate `dedup4j-dashboard` application when you need
 multi-instance polling and SQLite history.

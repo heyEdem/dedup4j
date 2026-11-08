@@ -6,6 +6,16 @@
 .settings-panel dd { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; margin: 4px 0 0; }
 .error { color: var(--danger); }
 .status-badge.stale::before { background: var(--accent); }
+.content-picker { align-items: center; display: flex; gap: 8px; }
+.content-picker select { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 5px; color: var(--ink); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; padding: 5px 8px; }
+.content-row { all: unset; align-items: center; border-bottom: 1px solid var(--line); box-sizing: border-box; cursor: pointer; display: flex; gap: 20px; justify-content: space-between; padding: 16px 4px; width: 100%; }
+.content-row:hover, .content-row:focus-visible { background: var(--surface); outline: none; }
+.content-hash { color: var(--ink); font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.content-detail { display: grid; font-size: 13px; gap: 8px 20px; grid-template-columns: max-content 1fr; margin: 16px 4px 0; }
+.content-detail[hidden] { display: none; }
+.content-detail dt { color: var(--muted); }
+.content-detail dd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 760px) {
+  .section-heading:has(.content-picker) { flex-direction: column; gap: 10px; }
   .settings-panel dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

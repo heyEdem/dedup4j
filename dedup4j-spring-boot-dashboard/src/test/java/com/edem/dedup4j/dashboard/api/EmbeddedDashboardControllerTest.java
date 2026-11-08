@@ -38,6 +38,15 @@ class EmbeddedDashboardControllerTest {
                 .andExpect(status().isOk());
         mvc.perform(post("/dedup4j/dashboard/api/v1/overview"))
                 .andExpect(status().is4xxClientError());
+        var contents = mvc.perform(get("/dedup4j/dashboard/api/v1/contents?sort=size&size=10"))
+                .andExpect(status().isOk()).andReturn();
+        assertThat(contents.getResponse().getContentAsString()).contains("\"items\":[]").contains("\"size\":10");
+        mvc.perform(get("/dedup4j/dashboard/api/v1/contents?sort=name"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/dedup4j/dashboard/api/v1/contents/" + java.util.UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/dedup4j/dashboard/api/v1/contents"))
+                .andExpect(status().is4xxClientError());
     }
 
     @Test

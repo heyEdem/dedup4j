@@ -120,6 +120,29 @@ public final class AssetContentRepository {
         return query.setMaxResults(limit).getResultList();
     }
 
+    /**
+     * Offset page of rows that still have references, in {@code order}. Paging is best-effort:
+     * counts change while a caller pages, so a row can be skipped or repeated.
+     */
+    public List<AssetContent> findReferencedPage(ContentOrder order, int offset, int limit) {
+        Objects.requireNonNull(order, "order must not be null");
+        if (offset < 0 || limit < 1) {
+            throw new IllegalArgumentException("offset must not be negative and limit must be positive");
+        }
+        return entityManager.createQuery(
+                        "select content from AssetContent content where content.refCount > 0 order by " + order.jpql,
+                        AssetContent.class)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
+    public long countReferenced() {
+        return entityManager.createQuery(
+                        "select count(content) from AssetContent content where content.refCount > 0", Long.class)
+                .getSingleResult();
+    }
+
     public List<AssetContent> findAll() {
         return entityManager.createQuery("select content from AssetContent content", AssetContent.class)
                 .getResultList();

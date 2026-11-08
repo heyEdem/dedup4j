@@ -55,6 +55,23 @@ public record Dedup4jManagementSnapshot(
         }
     }
 
+    /** One content row in a listing, most-shared or largest first. */
+    public record Content(UUID id, String hashAlgorithm, String contentHash, long sizeBytes, String contentType,
+                          long refCount) { }
+
+    /** Best-effort offset page: counts change while paging, so a row can be skipped or repeated. */
+    public record ContentPage(List<Content> items, int page, int size, long total) { }
+
+    /**
+     * One content row. {@code logicalReferences} comes from the application's
+     * {@code ContentReferenceCountSource} and is null without one; it is read separately and can
+     * differ from {@code refCount} while uploads or releases are in flight.
+     */
+    public record ContentDetail(UUID id, String hashAlgorithm, String contentHash, long sizeBytes, String contentType,
+                                String originalExtension, String objectKey, String storageProvider,
+                                String bucketOrContainer, long refCount, Long logicalReferences, Instant createdAt,
+                                Instant updatedAt, Instant objectDeletedAt) { }
+
     @FunctionalInterface
     public interface FailureSource {
         List<Failure> recentFailures(Instant since);

@@ -5,12 +5,18 @@ import com.edem.dedup4j.jpa.AssetContent;
 import com.edem.dedup4j.jpa.AssetContentRepository;
 import com.edem.dedup4j.history.HistoryTotals;
 import com.edem.dedup4j.history.UploadHistory;
+import com.edem.dedup4j.reconcile.ContentReferenceCountSource;
 import com.edem.dedup4j.reconcile.ScheduledReconciliation;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,6 +35,7 @@ public class Dedup4jManagementController {
     private final AssetContentRepository contentRepository;
     private final Dedup4jManagementSnapshot.FailureSource failureSource;
     private final ScheduledReconciliation reconciliation;
+    private final ContentCatalog contents;
 
     public Dedup4jManagementController(
             Dedup4jManagementProperties managementProperties,
@@ -48,6 +55,23 @@ public class Dedup4jManagementController {
             ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
             ObjectProvider<ScheduledReconciliation> reconciliation
     ) {
+        this(managementProperties, dedup4jProperties, uploadHistory, contentRepository, failureSource,
+                reconciliation, null);
+    }
+
+    public Dedup4jManagementController(
+            Dedup4jManagementProperties managementProperties,
+            Dedup4jProperties dedup4jProperties,
+            ObjectProvider<UploadHistory> uploadHistory,
+            ObjectProvider<AssetContentRepository> contentRepository,
+            ObjectProvider<Dedup4jManagementSnapshot.FailureSource> failureSource,
+            ObjectProvider<ScheduledReconciliation> reconciliation,
+            ContentCatalog contents
+    ) {
+        StaticListableBeanFactory none = new StaticListableBeanFactory();
+        this.contents = contents != null ? contents : new ContentCatalog(contentRepository,
+                none.getBeanProvider(ContentReferenceCountSource.class),
+                none.getBeanProvider(PlatformTransactionManager.class));
         this.reconciliation = reconciliation == null ? null : reconciliation.getIfAvailable();
         this.managementProperties = managementProperties;
         this.dedup4jProperties = dedup4jProperties;
@@ -112,6 +136,20 @@ public class Dedup4jManagementController {
         }
         return new Dedup4jManagementSnapshot.Reconciliation(
                 true, instanceId, reconciliation.cronExpression(), reconciliation.lastRun().orElse(null));
+    }
+
+    @GetMapping("/contents")
+    public Dedup4jManagementSnapshot.ContentPage contents(
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size
+    ) {
+        return contents.page(sort, page, size);
+    }
+
+    @GetMapping("/contents/{id}")
+    public Dedup4jManagementSnapshot.ContentDetail content(@PathVariable("id") UUID id) {
+        return contents.find(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     private HistoryTotals totals() {
