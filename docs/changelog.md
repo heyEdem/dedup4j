@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08 — Leave room for a similarity hash (#66)
+
+- `dedup4j-core` adds the `SimilarityHasher` SPI and `SimilarityHash` record for a perceptual hash that finds near-duplicate images. Nothing calls it yet, and it never joins content identity.
+- No schema change: the side table, an optional implementation module and a similarity lookup are to be added together in a 1.x release (see decisions).
+- Modules affected: `dedup4j-core`.
+
 ## 2026-11-01 — Browse shared content (#70)
 
 - Management adds read-only `GET /v1/contents` (rows with references, `sort=references|size`, offset paging, size 1–200) and `GET /v1/contents/{id}` (any row, `404` when missing, `logicalReferences` from a `ContentReferenceCountSource` bean or null).
