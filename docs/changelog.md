@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08 — Test against Spring Boot 4.0
+
+- CI adds a `Spring Boot 4.0 compatibility` job that runs every test, PostgreSQL included, with `-Dspring-boot.version=4.0.9`; the other jobs keep using the version in `pom.xml` (4.1.1).
+- README gains a Requirements section: Java 21+, Spring Boot 4.0 or 4.1, no Spring Boot 3.x.
+- Modules affected: none (CI and docs only).
+
 ## 2026-11-08 — Leave room for a similarity hash (#66)
 
 - `dedup4j-core` adds the `SimilarityHasher` SPI and `SimilarityHash` record for a perceptual hash that finds near-duplicate images. Nothing calls it yet, and it never joins content identity.

@@ -10,6 +10,13 @@ plugs in through the `BlobStorage` interface.
 
 **Documentation:** [dedup4j-docs.akato.dev](https://dedup4j-docs.akato.dev)
 
+## Requirements
+
+- Java 21 or later
+- Spring Boot 4.0 or 4.1. Every build runs the full test suite, PostgreSQL
+  included, on Spring Boot 4.1.1 and 4.0.9. Spring Boot 3.x is not supported:
+  dedup4j uses the auto-configuration packages introduced in Spring Boot 4.
+
 ## Problem
 
 Applications often upload the same file many times:
