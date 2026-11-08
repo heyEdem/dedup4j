@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-08 — Test against Spring Boot 4.0
+
+- CI adds a `Spring Boot 4.0 compatibility` job that runs every test, PostgreSQL included, with `-Dspring-boot.version=4.0.9`; the other jobs keep using the version in `pom.xml` (4.1.1).
+- `dedup4j-jpa` no longer pins Hibernate (7.4.7.Final) and H2 (2.5.250) for its tests; the Spring Boot BOM manages them, so its tests run on the same versions as applications (Hibernate 7.4.5 on Boot 4.1.1, 7.2.25 on 4.0.9).
+- README gains a Requirements section: Java 21+, Spring Boot 4.0 or 4.1, no Spring Boot 3.x.
+- Modules affected: `dedup4j-jpa` (test dependencies only).
+
 ## 2026-11-08 — Leave room for a similarity hash (#66)
 
 - `dedup4j-core` adds the `SimilarityHasher` SPI and `SimilarityHash` record for a perceptual hash that finds near-duplicate images. Nothing calls it yet, and it never joins content identity.
